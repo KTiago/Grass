@@ -24,11 +24,11 @@ int main( int argc, const char* argv[] )
     istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
     ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
 
+    string cmd;
     while(true){
-        if(!automated_mode){
+        if(!automated_mode) {
             cout << ">> ";
         }
-        string cmd;
         infile >> cmd;
 
         if(infile.eof()){
