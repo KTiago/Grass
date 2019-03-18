@@ -1,6 +1,6 @@
 
 #include "grass.h"
-#include<iostream>
+#include <iostream>
 #include <fstream>
 
 #define DEFAULT_MODE_ARGC 3
@@ -8,25 +8,39 @@
 
 using namespace std;
 
-bool automated_mode(int argc);
 
 int main( int argc, const char* argv[] )
-{
-    if(argc != DEFAULT_MODE_ARGC and !automated_mode(argc)){
+{    bool automated_mode = (argc == AUTO_MODE_ARGC);
+
+    if(argc != DEFAULT_MODE_ARGC and !automated_mode){
         cerr << "Expected command: ./client server-ip server-port [infile outfile]\n";
         return -1;
     }
 
+   ;
     // parsing command line arguments
     string serverIp = argv[1];
     int serverPort = stoi(argv[2]);
-    istream& infile = automated_mode(argc) ? *(new ifstream(argv[3])) : cin;
-    ostream& outfile = automated_mode(argc) ? *(new ofstream(argv[4])) : cout;
+    istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
+    ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
 
-    // test
-    outfile << serverIp << " " << serverPort << "\n";
+    while(true){
+        if(!automated_mode){
+            cout << ">> ";
+        }
+        string cmd;
+        infile >> cmd;
 
-    if(automated_mode(argc)){
+        if(infile.eof()){
+            outfile << "\n[EOF reached]\n";
+            break;
+        }
+
+        outfile << cmd << "\n";
+    }
+
+
+    if(automated_mode){
         // FIXME does delete() close fstreams ?
         delete(&infile);
         delete(&outfile);
@@ -35,6 +49,3 @@ int main( int argc, const char* argv[] )
     return 0;
 }
 
-bool automated_mode(int argc){
-    return argc == AUTO_MODE_ARGC;
-}
