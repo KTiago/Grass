@@ -1,10 +1,24 @@
-
-#include "grass.h"
 #include <iostream>
 #include <fstream>
 
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
+
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <sys/stat.h>
+
+// new include here (cpp related)
+#include <arpa/inet.h>
 
 using namespace std;
 
@@ -15,28 +29,68 @@ int main( int argc, const char* argv[] )
     if(argc != DEFAULT_MODE_ARGC and !automated_mode){
         cerr << "Expected command: ./client server-ip server-port [infile outfile]\n";
         return -1;
-    }
+    };
 
-   ;
     // parsing command line arguments
-    string serverIp = argv[1];
+    char serverIp[1024];
+    //FIXME
+    //UNSAAAAFE lol
+    strcpy(serverIp, argv[1]);
     int serverPort = stoi(argv[2]);
     istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
     ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
 
+    //Network setup
+    int sock = 0, valread;
+    struct sockaddr_in serv_addr;
+    char buffer[1024] = {0};
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("Socket creation error");
+        return 1;
+    }
+
+    memset(&serv_addr, '0', sizeof(serv_addr));
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(serverPort);
+
+    if(inet_pton(AF_INET, serverIp, &serv_addr.sin_addr)<=0)
+    {
+        printf("Address error");
+        return 1;
+    }
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    {
+        printf("Connection error\n");
+        return 1;
+    }
+
+    valread = read(sock , buffer, 1024);
+    printf("%s\n", buffer);
+    memset(buffer, 0, 1024);
     string cmd;
+
     while(true){
         if(!automated_mode) {
             cout << ">> ";
         }
-        infile >> cmd;
-
+        getline(infile, cmd);
         if(infile.eof()){
             outfile << "\n[EOF reached]\n";
+            // closing connection
+            close(sock);
             break;
         }
+        // sends command to the server
+        send(sock , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
-        outfile << cmd << "\n";
+        // server response to the command sent
+        valread = read(sock , buffer, 1024);
+        printf("%s\n",buffer);
+        memset(buffer, 0, 1024);
+        // outfile << cmd << "\n";
     }
 
 
