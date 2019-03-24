@@ -12,13 +12,14 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include <parser.h>
+#include "parser.h"
 
 // new include here (cpp related)
 #include <arpa/inet.h>
 
 using namespace std;
 
+// FIXME file << ... instead of printf
 int main()
 {
     // Start parser code
@@ -26,12 +27,13 @@ int main()
     parser.initialize();
     // End parser code
 
-    int server_fd, new_socket, valread, sd, max_sd, activity, i;
+    int server_fd, new_socket, sd, max_sd, activity, i;
+    ssize_t  valread;
     int max_clients = 3;
     int client_sockets[3];
     struct sockaddr_in address;
     struct sockaddr_in client_address;
-    int port = 8080;
+    uint16_t port = 8080;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
@@ -91,9 +93,9 @@ int main()
                 max_sd = sd;
         }
 
-        activity = select(max_sd + 1, &master_fd, NULL, NULL, NULL);
+        activity = select(max_sd + 1, &master_fd, nullptr, nullptr, nullptr);
 
-        // A new TCP connection has be opened
+        // A new TCP connection has been opened
         if (FD_ISSET(server_fd, &master_fd)) {
 
             if ((new_socket = accept(server_fd,

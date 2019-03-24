@@ -1,9 +1,5 @@
 #include <iostream>
 #include <fstream>
-
-#define DEFAULT_MODE_ARGC 3
-#define AUTO_MODE_ARGC 5
-
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -20,9 +16,14 @@
 // new include here (cpp related)
 #include <arpa/inet.h>
 
+
+#define DEFAULT_MODE_ARGC 3
+#define AUTO_MODE_ARGC 5
+#define IP_SIZE 32
+
 using namespace std;
 
-
+// FIXME file << ... instead of printf
 int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
@@ -31,17 +32,28 @@ int main( int argc, const char* argv[] )
         return -1;
     };
 
-    // parsing command line arguments
+    // parsing server IP
     char serverIp[1024];
-    //FIXME
-    //UNSAAAAFE lol
-    strcpy(serverIp, argv[1]);
-    int serverPort = stoi(argv[2]);
+    strncpy(serverIp, argv[1], IP_SIZE);
+
+    // parsing server port
+    int tmp = stoi(argv[2]);
+    uint16_t serverPort(0);
+    if (tmp <= static_cast<int>(UINT16_MAX) && tmp >=0) {
+        serverPort = static_cast<uint16_t>(tmp);
+    }
+    else {
+        cout << "Error: server port cannot be cast to uint16\n";
+        return 1;
+    }
+
+    // parsing input/output files
     istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
     ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
 
     //Network setup
-    int sock = 0, valread;
+    int sock = 0;
+    ssize_t valread;
     struct sockaddr_in serv_addr;
     char buffer[1024] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -50,6 +62,7 @@ int main( int argc, const char* argv[] )
         return 1;
     }
 
+    // FIXME '0' or 0 ?
     memset(&serv_addr, '0', sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;

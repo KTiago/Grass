@@ -75,7 +75,7 @@ private:
     std::string command;
     std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
     int arg_n;
-    int authenticated;
+    bool authenticated;
 };
 
 
