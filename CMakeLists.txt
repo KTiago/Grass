@@ -7,4 +7,4 @@ include_directories(src)
 
 add_executable(Grass
         src/client.cpp
-        src/server.cpp)
+        src/server.cpp src/parser.cpp src/parser.h)
