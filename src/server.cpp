@@ -1,6 +1,5 @@
 
 #include<iostream>
-
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,6 +12,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include <parser.h>
 
 // new include here (cpp related)
 #include <arpa/inet.h>
@@ -21,6 +21,11 @@ using namespace std;
 
 int main()
 {
+    // Start parser code
+    parser parser;
+    parser.initialize();
+    // End parser code
+
     int server_fd, new_socket, valread, sd, max_sd, activity, i;
     int max_clients = 3;
     int client_sockets[3];
@@ -141,10 +146,22 @@ int main()
                     printf("Message : %s\n", buffer);
                     // response to be sent
                     string message = "Command received";
+
+
                     /*
                         Yann/Delphine : insert code here to handle the command received and then
                         send the reponse to the client
                     */
+                    // FIXME should parser print or not?
+                    parser.parseCommand(buffer);
+                    parser.executeCommand();
+                    parser.resetCommand();
+
+                    /*
+                       End Parser code
+                    */
+
+
                     if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
                         perror("send");
                     }

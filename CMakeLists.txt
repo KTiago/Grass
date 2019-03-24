@@ -5,6 +5,10 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(src)
 
-add_executable(Grass
-        src/client.cpp
+add_executable(GrassClient
+        src/client.cpp)
+
+add_executable(GrassServer
         src/server.cpp src/parser.cpp src/parser.h)
+
+

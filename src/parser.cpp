@@ -17,14 +17,13 @@
 static std::map<std::string, command> string_to_command;
 
 
-void Initialize()
-{
+void parser::initialize() {
     string_to_command["login"] = login;
     string_to_command["pass"] = pass;
     string_to_command["ping"] = ping;
     string_to_command["ls"] = ls;
     string_to_command["cd"] = cd;
-    string_to_command["mkdir"] = mkdir;
+    string_to_command["mkdir"] = mkdir_;
     string_to_command["rm"] = rm;
     string_to_command["get"] = get;
     string_to_command["put"] = put;
@@ -38,25 +37,9 @@ void Initialize()
 
 // Constructor
 parser::parser(){
-    active = true;
+    initialize();
 }
 
-//------------------------------------------------------
-//This will be a loop that out and in puts to the screen
-//------------------------------------------------------
-void parser::update(){
-    while (command == ""){
-        getInput();
-    }
-    parseCommand(command);
-    executeCommand();
-    resetCommand();
-}
-
-
-void parser::getInput(){
-    std::getline(std::cin, command);
-}
 
 void parser::parseCommand(std::string command){
     char *myString = &command[0];
@@ -83,7 +66,6 @@ std::string parser::getFirstToken(){
 
 
 void parser::executeCommand(){
-
     try {
         enum command c = string_to_command[getFirstToken()];
 
@@ -94,12 +76,17 @@ void parser::executeCommand(){
                 authenticated = true;
                 break;
             case ping:
+                if (checkArgNumber(2)) {
+                    printl("PING");
+                } else {
+                    printl("Error");
+                }
                 break;
             case ls:
                 break;
             case cd:
                 break;
-            case mkdir:
+            case mkdir_:
                 break;
             case rm:
                 break;
@@ -112,6 +99,7 @@ void parser::executeCommand(){
             case date:
                 break;
             case whoami:
+                printl(isAuthenticated());
                 break;
             case w:
                 break;
@@ -139,12 +127,8 @@ void parser::resetCommand(){
     arg_n = 0;
 }
 
-void parser::exitConsole(){
-    this->active = false;
-}
-
-bool parser::isActive() const{
-    return this->active;
+bool parser::isAuthenticated() const{
+    return this->authenticated;
 }
 
 parser::~parser(){

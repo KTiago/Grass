@@ -22,7 +22,7 @@ enum command {
     ping,
     ls,
     cd,
-    mkdir,
+    mkdir_,
     rm,
     get,
     put,
@@ -36,30 +36,16 @@ enum command {
 
 const int MAX_ARGS = 256;
 
-// Intialization
-static void Initialize();
-
-
 class parser{
 public:
     parser();
     ~parser();
-
-    //this will update the parser application
-    void update();
-
-
-    //this will be used to take input from the screen
-    void getInput();
 
     //clears the value of command
     void resetCommand();
 
     //breaks the command into its tokens
     void parseCommand(std::string command);
-
-    //evaluates what it will do based on the command
-    int evaluate();
 
     void executeCommand();
 
@@ -68,31 +54,30 @@ public:
     //this will return the first token
     std::string getFirstToken();
 
-    //sets active to false
-    void exitConsole();
-
-    //if the parser is running or not
-    bool isActive() const;
-
+    // check if user is uthenticated or not
+    bool isAuthenticated() const;
 
     template<class T>
-    void parser::print(T value){
+    void print(T value){
         std::cout << value;
     }
 
     template<class T>
-    void parser::printl(T value){
+    void printl(T value){
         std::cout << value << std::endl;
     }
 
+    void initialize();
+
+
 
 private:
-    bool active;
     std::string command;
     std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
     int arg_n;
     int authenticated;
 };
+
 
 
 
