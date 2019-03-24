@@ -24,7 +24,7 @@ enum command {
     cd,
     mkdir_,
     rm,
-    get,
+    get_,
     put,
     grep,
     date,
