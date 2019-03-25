@@ -57,16 +57,6 @@ public:
     // check if user is uthenticated or not
     bool isAuthenticated() const;
 
-    template<class T>
-    void print(T value){
-        std::cout << value;
-    }
-
-    template<class T>
-    void printl(T value){
-        std::cout << value << std::endl;
-    }
-
     void initialize();
 
 

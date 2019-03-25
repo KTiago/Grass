@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-
+#include "user.h"
 // new include here (cpp related)
 #include <arpa/inet.h>
 
@@ -23,12 +23,11 @@
 
 using namespace std;
 
-// FIXME file << ... instead of printf
 int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
     if(argc != DEFAULT_MODE_ARGC and !automated_mode){
-        cerr << "Expected command: ./client server-ip server-port [infile outfile]\n";
+        cerr << "Expected command: ./user server-ip server-port [infile outfile]\n";
         return -1;
     };
 
@@ -62,8 +61,7 @@ int main( int argc, const char* argv[] )
         return 1;
     }
 
-    // FIXME '0' or 0 ?
-    memset(&serv_addr, '0', sizeof(serv_addr));
+    memset(&serv_addr, 0, sizeof(serv_addr));
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(serverPort);
@@ -115,4 +113,3 @@ int main( int argc, const char* argv[] )
 
     return 0;
 }
-
