@@ -87,9 +87,9 @@ void parser::executeCommand(){
                 break;
             case ping:
                 if (checkArgNumber(2)) {
-                    printl("PING");
+                    cout << "PING" << endl;
                 } else {
-                    printl("Error");
+                    cout << "Error" << endl;
                 }
                 break;
             case ls:{
@@ -99,7 +99,7 @@ void parser::executeCommand(){
                 } else if (checkArgNumber(1)){
                     res = ls_(tokens[1].c_str());
                 } else{
-                    printl("ls takes at most one argument");
+                    cout << "ls takes at most one argument" << endl;
                     break;
                 }
                 if(res != 0){
@@ -110,7 +110,7 @@ void parser::executeCommand(){
             }
             case cd:{
                 if(!checkArgNumber(1)){
-                    printl("cd takes exactly one argument");
+                    cout << "cd takes exactly one argument" << endl;
                     break;
                 }
                 int res = cd_(tokens[1].c_str());
@@ -122,7 +122,7 @@ void parser::executeCommand(){
             }
             case mkdir_:{
                 if(!checkArgNumber(1)) {
-                    printl("mkdir takes exactly one argument");
+                    cout << "mkdir takes exactly one argument" << endl;
                     break;
                 }
                 int res = mkdir(tokens[1].c_str());
@@ -142,7 +142,7 @@ void parser::executeCommand(){
             case date:
                 break;
             case whoami:
-                printl(isAuthenticated());
+                cout << isAuthenticated() << endl;
                 break;
             case w:
                 break;
@@ -150,13 +150,13 @@ void parser::executeCommand(){
                 authenticated = false;
                 break;
             case exit_:
-                printl("Goodbye");
+                cout << "Goodbye" << endl;
                 break;
             default:
-                printl("How did you get here ?!");
+                cout << "How did you get here ?!" << endl;
         }
     } catch (const invalid_argument e) {
-        print("Not a correct command ! ");
+        cout << "Not a correct command ! " << endl;
     }
 }
 
@@ -172,10 +172,10 @@ void parser::resetCommand(){
     arg_n = 0;
 }
 
+
 bool parser::isAuthenticated() const{
     return this->authenticated;
 }
-
 
 
 parser::~parser(){
