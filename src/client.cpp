@@ -12,7 +12,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "client.h"
+#include "user.h"
 // new include here (cpp related)
 #include <arpa/inet.h>
 
@@ -27,7 +27,7 @@ int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
     if(argc != DEFAULT_MODE_ARGC and !automated_mode){
-        cerr << "Expected command: ./client server-ip server-port [infile outfile]\n";
+        cerr << "Expected command: ./user server-ip server-port [infile outfile]\n";
         return -1;
     };
 
@@ -113,12 +113,3 @@ int main( int argc, const char* argv[] )
 
     return 0;
 }
-
-bool client::isAuthenticated() {return this->authenticated;}
-
-client::client(string ip, uint16_t port){
-    this->ip = ip;
-    this->port = port;
-    this->authenticated = false;
-}
-

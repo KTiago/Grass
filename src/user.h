@@ -6,10 +6,12 @@
 
 using namespace std;
 
-class client{
+class user{
 public:
-    client(string ip, uint16_t port);
+    user(string ip, uint16_t port);
     bool isAuthenticated();
+    bool operator<(const user &other) const;
+
 private:
     string ip;
     uint16_t port;

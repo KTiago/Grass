@@ -11,9 +11,12 @@ all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
 $(BINDIR)/client: $(SRCDIR)/client.cpp
 	$(CC) $(CFLAGS) $< -o $@
 
-$(BINDIR)/server: $(SRCDIR)/server.cpp parser.o
-	$(CC) $(CFLAGS) $< parser.o commands.o -o $@
+$(BINDIR)/server: $(SRCDIR)/server.cpp parser.o user.o
+	$(CC) $(CFLAGS) $< parser.o commands.o user.o -o $@
 	rm parser.o commands.o	
+	
+user.o: $(SRCDIR)/user.cpp $(SRCDIR)/user.h
+	$(CC) $(CFLAGS) -c $(SRCDIR)/user.cpp
 
 parser.o: $(SRCDIR)/parser.cpp $(SRCDIR)/parser.h commands.o
 	$(CC) $(CFLAGS) -c $(SRCDIR)/parser.cpp

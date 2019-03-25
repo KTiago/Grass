@@ -13,7 +13,7 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include "parser.h"
-#include "client.h"
+#include "user.h"
 
 // new include here (cpp related)
 #include <arpa/inet.h>
@@ -39,7 +39,7 @@ int main()
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
-    set<client> connected_client;
+    set<user> connected_user;
 
     for (i = 0; i < max_clients; i++)
     {
@@ -107,9 +107,9 @@ int main()
                 exit(1);
             }
 
-            // save new client
-            client newClient(inet_ntoa(address.sin_addr), ntohs (address.sin_port));
-            connected_client.insert(newClient);
+            // save new user
+            user newUser(inet_ntoa(address.sin_addr), ntohs (address.sin_port));
+            connected_user.insert(newUser);
 
             string message = "You are successfully connected young padawan";
             printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs (address.sin_port)); 
@@ -159,7 +159,7 @@ int main()
 
                     /*
                         Yann/Delphine : insert code here to handle the command received and then
-                        send the reponse to the client
+                        send the reponse to the user
                     */
                     // FIXME should parser print or not?
                     parser.parseCommand(buffer);
