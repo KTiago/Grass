@@ -19,24 +19,24 @@ int execute_cmd(const char* cmd_name, const char* arg){
     return system(cmd);
 }
 
-int mkdir(const char* dir){
+int mkdir_cmd(const char* dir){
     //TODO check authentication
     return execute_cmd("mkdir ", dir);
 }
 
 
-int cd_(const char* dir){
+int cd_cmd(const char* dir){
     //TODO check authentication
     return execute_cmd("cd ", dir);
 }
 
 
-int ls_(const char* dir){
+int ls_cmd(const char* dir){
     //TODO check authentication
     return execute_cmd("ls ", dir);
 }
 
-int ls_(){
+int ls_cmd(){
     //TODO check authentication
     return system("ls");
 }

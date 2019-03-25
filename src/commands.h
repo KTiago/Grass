@@ -8,9 +8,9 @@
 
 using namespace std;
 
-int mkdir(const char* dir);
-int cd_(const char* dir);
-int ls_(const char* dir);
-int ls_();
+int mkdir_cmd(const char* dir);
+int cd_cmd(const char* dir);
+int ls_cmd(const char* dir);
+int ls_cmd();
 
 #endif //GRASS_COMMANDS_H
