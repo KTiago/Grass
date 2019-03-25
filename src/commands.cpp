@@ -14,6 +14,8 @@ int execute_cmd(const char* cmd_name, const char* arg){
     char cmd[MAX_DIR_LEN + 6];
     strcpy(cmd, cmd_name);
     strncat(cmd, arg, MAX_DIR_LEN);
+    strcat(cmd, " > ");
+    strcat(cmd, OUTFILE_NAME);
     return system(cmd);
 }
 
