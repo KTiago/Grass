@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
-#include <vector>
+#include "user.h"
 
 /*
  * Largely inspired by:
@@ -47,7 +47,7 @@ public:
     //breaks the command into its tokens
     void parseCommand(std::string command);
 
-    void executeCommand();
+    void executeCommand(user usr);
 
     bool checkArgNumber(int);
 

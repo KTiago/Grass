@@ -108,8 +108,7 @@ int main()
             }
 
             // save new user
-            user newUser(inet_ntoa(address.sin_addr), ntohs (address.sin_port));
-            connected_user.insert(newUser);
+            connected_user.insert(user(new_socket));
 
             string message = "You are successfully connected young padawan";
             printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs (address.sin_port)); 
@@ -163,7 +162,10 @@ int main()
                     */
                     // FIXME should parser print or not?
                     parser.parseCommand(buffer);
-                    parser.executeCommand();
+
+
+                    user sender = findSender();
+                    parser.executeCommand(sender);
                     parser.resetCommand();
 
                     /*

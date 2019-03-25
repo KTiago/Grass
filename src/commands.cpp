@@ -1,7 +1,3 @@
-//
-// Created by delphine on 24/03/19.
-//
-
 #include "commands.h"
 #include <iostream>
 #include <fstream>
@@ -19,24 +15,42 @@ int execute_cmd(const char* cmd_name, const char* arg){
     return system(cmd);
 }
 
-int mkdir_cmd(const char* dir){
-    //TODO check authentication
+int checkAuthentication(string cmdName, bool authenticated){
+    if(!authenticated){
+        ofstream outfile;
+        outfile.open (OUTFILE_NAME);
+        outfile << cmdName << " may only be executed after a successful authentication\n";
+        return 1;
+    }
+    return 0;
+}
+
+int mkdir(const char* dir, bool authenticated){
+    if(checkAuthentication("mkdir", authenticated)){
+        return 1;
+    }
     return execute_cmd("mkdir ", dir);
 }
 
 
-int cd_cmd(const char* dir){
-    //TODO check authentication
+int cd_(const char* dir, bool authenticated){
+    if(checkAuthentication("cd", authenticated)){
+        return 1;
+    }
     return execute_cmd("cd ", dir);
 }
 
 
-int ls_cmd(const char* dir){
-    //TODO check authentication
+int ls_(const char* dir, bool authenticated){
+    if(checkAuthentication("ls", authenticated)){
+        return 1;
+    }
     return execute_cmd("ls ", dir);
 }
 
-int ls_cmd(){
-    //TODO check authentication
+int ls_(bool authenticated){
+    if(checkAuthentication("ls", authenticated)){
+        return 1;
+    }
     return system("ls");
 }
