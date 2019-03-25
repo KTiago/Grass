@@ -164,8 +164,9 @@ int main()
                     parser.parseCommand(buffer);
 
 
-                    user sender = findSender();
-                    parser.executeCommand(sender);
+                    //user sender = findSender();
+                    //TODO
+                    parser.executeCommand(user(0));
                     parser.resetCommand();
 
                     /*

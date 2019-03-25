@@ -96,9 +96,9 @@ void parser::executeCommand(user usr){
             case ls_:{
                 int res = 0;
                 if(checkArgNumber(0)){
-                    res = ls_(isAuthenticated());
+                    res = ls_cmd(isAuthenticated());
                 } else if (checkArgNumber(1)){
-                    res = ls_(tokens[1].c_str(), usr.isAuthenticated());
+                    res = ls_cmd(tokens[1].c_str(), usr.isAuthenticated());
                 } else{
                     cout << "ls takes at most one argument" << endl;
                     break;
@@ -114,7 +114,7 @@ void parser::executeCommand(user usr){
                     cout << "cd takes exactly one argument" << endl;
                     break;
                 }
-                int res = cd_(tokens[1].c_str(), usr.isAuthenticated());
+                int res = cd_cmd(tokens[1].c_str(), usr.isAuthenticated());
                 sendLog();
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
@@ -126,7 +126,7 @@ void parser::executeCommand(user usr){
                     cout << "mkdir takes exactly one argument" << endl;
                     break;
                 }
-                int res = mkdir(tokens[1].c_str(), usr.isAuthenticated());
+                int res = mkdir_cmd(tokens[1].c_str(), usr.isAuthenticated());
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
                 }

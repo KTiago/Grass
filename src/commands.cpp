@@ -25,7 +25,7 @@ int checkAuthentication(string cmdName, bool authenticated){
     return 0;
 }
 
-int mkdir(const char* dir, bool authenticated){
+int mkdir_cmd(const char* dir, bool authenticated){
     if(checkAuthentication("mkdir", authenticated)){
         return 1;
     }
@@ -33,7 +33,7 @@ int mkdir(const char* dir, bool authenticated){
 }
 
 
-int cd_(const char* dir, bool authenticated){
+int cd_cmd(const char* dir, bool authenticated){
     if(checkAuthentication("cd", authenticated)){
         return 1;
     }
@@ -41,14 +41,14 @@ int cd_(const char* dir, bool authenticated){
 }
 
 
-int ls_(const char* dir, bool authenticated){
+int ls_cmd(const char* dir, bool authenticated){
     if(checkAuthentication("ls", authenticated)){
         return 1;
     }
     return execute_cmd("ls ", dir);
 }
 
-int ls_(bool authenticated){
+int ls_cmd(bool authenticated){
     if(checkAuthentication("ls", authenticated)){
         return 1;
     }
