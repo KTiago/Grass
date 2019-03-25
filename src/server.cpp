@@ -13,9 +13,11 @@
 #include <stdbool.h>
 #include <sys/stat.h>
 #include "parser.h"
+#include "client.h"
 
 // new include here (cpp related)
 #include <arpa/inet.h>
+#include <set>
 
 using namespace std;
 
@@ -37,6 +39,7 @@ int main()
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
+    set<client> connected_client;
 
     for (i = 0; i < max_clients; i++)
     {
@@ -103,6 +106,10 @@ int main()
                 perror("accept");
                 exit(1);
             }
+
+            // save new client
+            client newClient(inet_ntoa(address.sin_addr), ntohs (address.sin_port));
+            connected_client.insert(newClient);
 
             string message = "You are successfully connected young padawan";
             printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs (address.sin_port)); 

@@ -19,6 +19,13 @@ using namespace std;
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
 
+int sendLog(){
+    // TODO
+    ifstream outfile(OUTFILE_NAME) ;
+    string log = { istreambuf_iterator<char>(outfile), istreambuf_iterator<char>() };
+    return 0;
+}
+
 
 void parser::initialize() {
     string_to_command["login"] = login;
@@ -98,7 +105,7 @@ void parser::executeCommand(){
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
                 }
-                // TODO send ls text output to client
+                sendLog();
                 break;
             }
             case cd:{
@@ -107,7 +114,7 @@ void parser::executeCommand(){
                     break;
                 }
                 int res = cd_(tokens[1].c_str());
-                // TODO send new location to client
+                sendLog();
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
                 }
