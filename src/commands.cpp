@@ -8,16 +8,28 @@
 
 using namespace std;
 
-int mkdir(const char* dir){
-    char cmd[MAX_DIR_LEN + 6] = "mkdir ";
-    strncat(cmd, dir, MAX_DIR_LEN);
+
+int execute_cmd(const char* cmd_name, const char* arg){
+    char cmd[MAX_DIR_LEN + 6];
+    strcpy(cmd, cmd_name);
+    strncat(cmd, arg, MAX_DIR_LEN);
     return system(cmd);
+}
+
+int mkdir(const char* dir){
+    return execute_cmd("mkdir ", dir);
 }
 
 
 int cd_(const char* dir){
-    char cmd[MAX_DIR_LEN + 6] = "cd ";
-    strncat(cmd, dir, MAX_DIR_LEN);
-    return system(cmd);
+    return execute_cmd("cd ", dir);
 }
 
+
+int ls_(const char* dir){
+    return execute_cmd("ls ", dir);
+}
+
+int ls_(){
+    return system("ls");
+}

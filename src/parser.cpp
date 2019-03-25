@@ -85,8 +85,22 @@ void parser::executeCommand(){
                     printl("Error");
                 }
                 break;
-            case ls:
+            case ls:{
+                int res = 0;
+                if(checkArgNumber(0)){
+                    res = ls_();
+                } else if (checkArgNumber(1)){
+                    res = ls_(tokens[1].c_str());
+                } else{
+                    printl("ls takes at most one argument");
+                    break;
+                }
+                if(res != 0){
+                    cerr << "Error code: " << res << "\n";
+                }
+                // TODO send ls text output to client
                 break;
+            }
             case cd:{
                 if(!checkArgNumber(1)){
                     printl("cd takes exactly one argument");
