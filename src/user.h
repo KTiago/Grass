@@ -10,6 +10,7 @@ class user{
 public:
     explicit user(int socket);
     bool isAuthenticated();
+    int getSocket() const;
     bool operator<(const user &other) const;
 
 private:

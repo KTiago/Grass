@@ -162,7 +162,6 @@ void parser::executeCommand(user usr){
 }
 
 bool parser::checkArgNumber(int arg_n_wanted) {
-    cout << parser::arg_n;
     // FIXME I added -1 so we check the actual nb of args, not the nb of args + 1 for cmd name
     return parser::arg_n - 1 == arg_n_wanted;
 }
