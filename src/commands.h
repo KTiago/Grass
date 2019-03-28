@@ -10,7 +10,6 @@ using namespace std;
 
 int mkdir_cmd(const char* dir, bool authenticated);
 int cd_cmd(const char* dir, bool authenticated);
-int ls_cmd(const char* dir, bool authenticated);
 int ls_cmd(bool authenticated);
 
 #endif //GRASS_COMMANDS_H

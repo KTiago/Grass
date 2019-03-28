@@ -97,14 +97,12 @@ void parser::executeCommand(user usr){
                 int res = 0;
                 if(checkArgNumber(0)){
                     res = ls_cmd(isAuthenticated());
-                } else if (checkArgNumber(1)){
-                    res = ls_cmd(tokens[1].c_str(), usr.isAuthenticated());
                 } else{
-                    cout << "ls takes at most one argument" << endl;
+                    cout << "ls takes no argument" << endl;
                     break;
                 }
                 if(res != 0){
-                    cerr << "Error code: " << res << "\n";
+                    cerr << "Error code: " << res << endl;
                 }
                 sendLog();
                 break;

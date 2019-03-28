@@ -15,7 +15,7 @@ int execute_cmd(const char* cmd_name, const char* arg){
     return system(cmd);
 }
 
-int checkAuthentication(string cmdName, bool authenticated){
+int checkAuthentication(const string &cmdName, bool authenticated){
     if(!authenticated){
         ofstream outfile;
         outfile.open (OUTFILE_NAME);
@@ -40,17 +40,18 @@ int cd_cmd(const char* dir, bool authenticated){
     return execute_cmd("cd ", dir);
 }
 
-
+/* We are not asked to implement ls with an argument
+ *
 int ls_cmd(const char* dir, bool authenticated){
     if(checkAuthentication("ls", authenticated)){
         return 1;
     }
     return execute_cmd("ls ", dir);
-}
+}*/
 
 int ls_cmd(bool authenticated){
     if(checkAuthentication("ls", authenticated)){
         return 1;
     }
-    return system("ls");
+    return execute_cmd("ls ", " -l ");
 }
