@@ -143,15 +143,14 @@ int main()
                         Yann/Delphine : insert code here to handle the command received and then
                         send the reponse to the user
                     */
-                    // FIXME should parser print or not?
                     parser.parseCommand(buffer);
                     parser.executeCommand(*it);
                     parser.resetCommand();
+                    message = parser.getOutput();
 
                     /*
                        End Parser code
                     */
-
 
                     if (send(sd, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
                         perror("send");

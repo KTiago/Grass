@@ -11,5 +11,8 @@ using namespace std;
 int mkdir_cmd(const char* dir, bool authenticated);
 int cd_cmd(const char* dir, bool authenticated);
 int ls_cmd(bool authenticated);
+string exec(const char* cmd);
+string ping_cmd(string host);
+
 
 #endif //GRASS_COMMANDS_H

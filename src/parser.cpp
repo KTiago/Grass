@@ -87,8 +87,11 @@ void parser::executeCommand(user usr){
                 authenticated = true;
                 break;
             case ping_:
-                if (checkArgNumber(2)) {
+                if (checkArgNumber(1)) {
+                    string s = ping_cmd(tokens[1]);
                     cout << "PING" << endl;
+                    cout << s << endl;
+                    output = s;
                 } else {
                     cout << "Error" << endl;
                 }
@@ -166,8 +169,12 @@ bool parser::checkArgNumber(int arg_n_wanted) {
 
 
 void parser::resetCommand(){
-    command = "";
     arg_n = 0;
+}
+
+
+string parser::getOutput(){
+    return output;
 }
 
 
