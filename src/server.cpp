@@ -18,6 +18,7 @@
 // new include here (cpp related)
 #include <arpa/inet.h>
 #include <set>
+#include <vector>
 
 using namespace std;
 
@@ -29,22 +30,14 @@ int main()
     parser.initialize();
     // End parser code
 
-    int server_fd, new_socket, sd, max_sd, activity, i;
+    int server_fd, new_socket, sd, max_sd, activity;
     ssize_t  valread;
-    int max_clients = 3;
-    int client_sockets[3];
     struct sockaddr_in address;
-    struct sockaddr_in client_address;
     uint16_t port = 8080;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
-    set<user> connected_user;
-
-    for (i = 0; i < max_clients; i++)
-    {
-        client_sockets[i] = 0;
-    }
+    set<user> connected_users;
 
     // Creating socket file descriptor
     // AF_INET: IPv4, SOCK_STREAM : TCP, 0 : IP
@@ -85,9 +78,8 @@ int main()
         FD_ZERO(&master_fd);
         FD_SET(server_fd, &master_fd);
         max_sd = server_fd;
-
-        for (i = 0; i < max_clients; i++) {
-            sd = client_sockets[i];
+        for (auto connected_user : connected_users) {
+            sd = connected_user.getSocket();
 
             if (sd > 0)
                 FD_SET(sd, &master_fd);
@@ -107,29 +99,19 @@ int main()
                 exit(1);
             }
 
-            // save new user
-            user newUser(inet_ntoa(address.sin_addr), ntohs (address.sin_port));
-            connected_user.insert(newUser);
-
             string message = "You are successfully connected young padawan";
-            printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs (address.sin_port)); 
+            printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
 
             if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
                 perror("send");
                 exit(1);
             }
 
-            for (i = 0; i < max_clients; i++) {
-                if (client_sockets[i] == 0) {
-                    client_sockets[i] = new_socket;
-                    break;
-                }
-            }
-
+            user newUsr = user(new_socket);
+            connected_users.insert(newUsr);
         }
-        for (i = 0; i < max_clients; i++)
-        {
-            sd = client_sockets[i];
+        for (auto it = connected_users.begin(); it != connected_users.end(); )
+        {   sd = (*it).getSocket();
             if (FD_ISSET(sd , &master_fd))
             {
                 //Check if it was for closing, and also read the
@@ -144,7 +126,7 @@ int main()
 
                     //Close the socket and mark as 0 in list for reuse
                     close(sd);
-                    client_sockets[i] = 0;
+                    connected_users.erase(it);
                 }
                 else
                 {
@@ -163,7 +145,7 @@ int main()
                     */
                     // FIXME should parser print or not?
                     parser.parseCommand(buffer);
-                    parser.executeCommand();
+                    parser.executeCommand(*it);
                     parser.resetCommand();
 
                     /*
@@ -171,11 +153,12 @@ int main()
                     */
 
 
-                    if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
+                    if (send(sd, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
                         perror("send");
                     }
                 }
             }
+            ++it;
         }
     }
 }

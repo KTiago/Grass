@@ -8,13 +8,13 @@ using namespace std;
 
 class user{
 public:
-    user(string ip, uint16_t port);
+    explicit user(int socket);
     bool isAuthenticated();
+    int getSocket() const;
     bool operator<(const user &other) const;
 
 private:
-    string ip;
-    uint16_t port;
+    int socket;
     bool authenticated;
 };
 

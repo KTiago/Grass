@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "commands.h"
+#include "user.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -28,20 +29,20 @@ int sendLog(){
 
 
 void parser::initialize() {
-    string_to_command["login"] = login;
-    string_to_command["pass"] = pass;
-    string_to_command["ping"] = ping;
-    string_to_command["ls"] = ls;
-    string_to_command["cd"] = cd;
+    string_to_command["login"] = login_;
+    string_to_command["pass"] = pass_;
+    string_to_command["ping"] = ping_;
+    string_to_command["ls"] = ls_;
+    string_to_command["cd"] = cd_;
     string_to_command["mkdir"] = mkdir_;
-    string_to_command["rm"] = rm;
+    string_to_command["rm"] = rm_;
     string_to_command["get"] = get_;
-    string_to_command["put"] = put;
-    string_to_command["grep"] = grep;
-    string_to_command["date"] = date;
-    string_to_command["whoami"] = whoami;
-    string_to_command["w"] = w;
-    string_to_command["logout"] = logout;
+    string_to_command["put"] = put_;
+    string_to_command["grep"] = grep_;
+    string_to_command["date"] = date_;
+    string_to_command["whoami"] = whoami_;
+    string_to_command["w"] = w_;
+    string_to_command["logout"] = logout_;
     string_to_command["exit"] = exit_;
 }
 
@@ -76,44 +77,42 @@ string parser::getFirstToken(){
 }
 
 
-void parser::executeCommand(){
+void parser::executeCommand(user usr){
     try {
         enum command c = string_to_command[getFirstToken()];
         switch (c) {
-            case login:
+            case login_:
                 break;
-            case pass:
+            case pass_:
                 authenticated = true;
                 break;
-            case ping:
+            case ping_:
                 if (checkArgNumber(2)) {
                     cout << "PING" << endl;
                 } else {
                     cout << "Error" << endl;
                 }
                 break;
-            case ls:{
+            case ls_:{
                 int res = 0;
                 if(checkArgNumber(0)){
-                    res = ls_();
-                } else if (checkArgNumber(1)){
-                    res = ls_(tokens[1].c_str());
+                    res = ls_cmd(isAuthenticated());
                 } else{
-                    cout << "ls takes at most one argument" << endl;
+                    cout << "ls takes no argument" << endl;
                     break;
                 }
                 if(res != 0){
-                    cerr << "Error code: " << res << "\n";
+                    cerr << "Error code: " << res << endl;
                 }
                 sendLog();
                 break;
             }
-            case cd:{
+            case cd_:{
                 if(!checkArgNumber(1)){
                     cout << "cd takes exactly one argument" << endl;
                     break;
                 }
-                int res = cd_(tokens[1].c_str());
+                int res = cd_cmd(tokens[1].c_str(), usr.isAuthenticated());
                 sendLog();
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
@@ -125,28 +124,28 @@ void parser::executeCommand(){
                     cout << "mkdir takes exactly one argument" << endl;
                     break;
                 }
-                int res = mkdir(tokens[1].c_str());
+                int res = mkdir_cmd(tokens[1].c_str(), usr.isAuthenticated());
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
                 }
                 break;
             }
-            case rm:
+            case rm_:
                 break;
             case get_:
                 break;
-            case put:
+            case put_:
                 break;
-            case grep:
+            case grep_:
                 break;
-            case date:
+            case date_:
                 break;
-            case whoami:
+            case whoami_:
                 cout << isAuthenticated() << endl;
                 break;
-            case w:
+            case w_:
                 break;
-            case logout:
+            case logout_:
                 authenticated = false;
                 break;
             case exit_:
@@ -161,7 +160,6 @@ void parser::executeCommand(){
 }
 
 bool parser::checkArgNumber(int arg_n_wanted) {
-    cout << parser::arg_n;
     // FIXME I added -1 so we check the actual nb of args, not the nb of args + 1 for cmd name
     return parser::arg_n - 1 == arg_n_wanted;
 }

@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
-#include <vector>
+#include "user.h"
 
 /*
  * Largely inspired by:
@@ -17,21 +17,21 @@
 
 // Idea for enum: https://stackoverflow.com/questions/650162/why-the-switch-statement-cannot-be-applied-on-strings
 enum command {
-    login,
-    pass,
-    ping,
-    ls,
-    cd,
+    login_,
+    pass_,
+    ping_,
+    ls_,
+    cd_,
     mkdir_,
-    rm,
+    rm_,
     get_,
-    put,
-    grep,
-    date,
-    whoami,
-    w,
-    logout,
-    exit_       // Why does exit exist already?
+    put_,
+    grep_,
+    date_,
+    whoami_,
+    w_,
+    logout_,
+    exit_
 };
 
 const int MAX_ARGS = 256;
@@ -47,7 +47,7 @@ public:
     //breaks the command into its tokens
     void parseCommand(std::string command);
 
-    void executeCommand();
+    void executeCommand(user usr);
 
     bool checkArgNumber(int);
 
