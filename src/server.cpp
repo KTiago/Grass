@@ -16,13 +16,32 @@
 #include "user.h"
 #include "networking.h"
 
+
+#define CONFIG_FILE "grass.conf"
 // new include here (cpp related)
 #include <arpa/inet.h>
 #include <set>
 #include <vector>
+#include <map>
 
 using namespace std;
+
 void runServer(uint16_t port, parser parser);
+
+size_t split(vector<string> &res, const string &line, char delim){
+    size_t pos = line.find(delim);
+    size_t initialPos = 0;
+    res.clear();
+    while( pos != string::npos){
+        res.push_back(line.substr(initialPos, pos-initialPos));
+        initialPos = pos + 1;
+        while ((pos = line.find(delim, initialPos)) == initialPos){
+            initialPos += 1;
+        }
+    }
+    res.push_back(line.substr(initialPos, min(pos, line.size() - initialPos + 1)));
+    return res.size();
+}
 // FIXME file << ... instead of printf
 int main()
 {
@@ -45,6 +64,37 @@ void runServer(uint16_t port, parser parser){
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
     set<user> connected_users;
+
+    string baseDir;
+    map<string, string> knownUsers;
+
+    cout << "parsing config file \n";
+    // Parsing config file
+    ifstream configFile(CONFIG_FILE);
+    string line; //FIXME we could add vulnerabilities in the config file
+    vector<string> splitLine;
+    if(configFile.is_open()){
+        while(getline(configFile, line)){
+            split(splitLine, line, ' ');
+            if(splitLine[0] == "base"){
+                baseDir = splitLine[1];
+            }
+            if(splitLine[0] == "port"){
+                port = stoi(splitLine[1]);
+            }
+            if(splitLine[0] == "user"){
+                knownUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
+            }
+
+        }
+    }
+
+    cout << "Running on port: " << port << " , " << "base directory: " << baseDir << "\n";
+    cout << "Known users : \n";
+    for (const auto &knownUser : knownUsers) {
+        std::cout << knownUser.first << " -> " << knownUser.second << "\n";
+    }
+
 
     // Creating socket file descriptor
     // AF_INET: IPv4, SOCK_STREAM : TCP, 0 : IP
@@ -150,10 +200,10 @@ void runServer(uint16_t port, parser parser){
                         Yann/Delphine : insert code here to handle the command received and then
                         send the repsonse to the user
                     */
-                    // FIXME should parser print or not?
                     parser.parseCommand(buffer);
                     parser.executeCommand(*it);
                     parser.resetCommand();
+                    message = parser.getOutput();
 
                     /*
                        End Parser code

@@ -59,10 +59,11 @@ public:
 
     void initialize();
 
-
+    string getOutput();
+    
 
 private:
-    std::string command;
+    std::string output;
     std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
     int arg_n;
     bool authenticated;

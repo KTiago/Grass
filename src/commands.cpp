@@ -3,8 +3,32 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <stdexcept>
+#include <stdio.h>
+
 
 using namespace std;
+
+/*
+ * Code snippet taken from:
+ * https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-output-of-command-within-c-using-posix
+ */
+string exec(const char* cmd) {
+    char buffer[128];
+    std::string result = "";
+    FILE* pipe = popen(cmd, "r");
+    if (!pipe) throw std::runtime_error("popen() failed!");
+    try {
+        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+            result += buffer;
+        }
+    } catch (...) {
+        pclose(pipe);
+        throw;
+    }
+    pclose(pipe);
+    return result;
+}
 
 int execute_cmd(const char* cmd_name, const char* arg){
     char cmd[MAX_DIR_LEN + 6];
@@ -55,3 +79,17 @@ int ls_cmd(bool authenticated){
     }
     return execute_cmd("ls ", " -l ");
 }
+
+/**
+ * The ping may always be executed even if the user is not authenticated.
+ * The ping command takes one parameter, the host of the machine that is about
+ * to be pinged (ping $HOST). The server will respond with the output of the Unix
+ * command ping $HOST -c 1.
+ * @param host
+ * @return string output of ping command
+ */
+string ping_cmd(string host){
+    string s = "ping " + host + " -c 1"; // FIXME security vulnerability ! One can change de command !
+    return exec(s.c_str());
+}
+
