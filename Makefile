@@ -8,11 +8,11 @@ DEPS = $(wildcard $(INCLUDES)/%.h)
 
 all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
 
-$(BINDIR)/client: $(SRCDIR)/client.cpp
-	$(CC) $(CFLAGS) $< -o $@
+$(BINDIR)/client: $(SRCDIR)/client.cpp networking.o
+	$(CC) $(CFLAGS) $< networking.o -o $@
 
-$(BINDIR)/server: $(SRCDIR)/server.cpp parser.o user.o
-	$(CC) $(CFLAGS) $< parser.o commands.o user.o -o $@
+$(BINDIR)/server: $(SRCDIR)/server.cpp parser.o user.o networking.o
+	$(CC) $(CFLAGS) $< parser.o commands.o user.o networking.o -o $@
 	rm parser.o commands.o	
 	
 user.o: $(SRCDIR)/user.cpp $(SRCDIR)/user.h
@@ -23,6 +23,9 @@ parser.o: $(SRCDIR)/parser.cpp $(SRCDIR)/parser.h commands.o
 	
 commands.o: $(SRCDIR)/commands.cpp $(SRCDIR)/commands.h
 	$(CC) $(CFLAGS) -c $(SRCDIR)/commands.cpp
+
+networking.o: $(SRCDIR)/networking.cpp $(SRCDIR)/networking.h
+	$(CC) $(CFLAGS) -c $(SRCDIR)/networking.cpp
 	
 .PHONY: clean
 clean:

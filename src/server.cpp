@@ -14,6 +14,7 @@
 #include <sys/stat.h>
 #include "parser.h"
 #include "user.h"
+#include "networking.h"
 
 // new include here (cpp related)
 #include <arpa/inet.h>
@@ -21,7 +22,7 @@
 #include <vector>
 
 using namespace std;
-
+void runServer(uint16_t port, parser parser);
 // FIXME file << ... instead of printf
 int main()
 {
@@ -30,10 +31,16 @@ int main()
     parser.initialize();
     // End parser code
 
+    //TODO get necessary info from conf file
+
+    // start the server
+    runServer(8080, parser);
+}
+
+void runServer(uint16_t port, parser parser){
     int server_fd, new_socket, sd, max_sd, activity;
     ssize_t  valread;
     struct sockaddr_in address;
-    uint16_t port = 8080;
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
@@ -118,7 +125,7 @@ int main()
                 //incoming message
                 if ((valread = read( sd , buffer, 1024)) == 0)
                 {
-                    //Host disconnectef disconnecte
+                    //Host disconnected
                     getpeername(sd , (struct sockaddr*)&address , \
                         (socklen_t*)&addrlen);
                     printf("Host disconnected , ip %s , port %d \n" ,
@@ -141,7 +148,7 @@ int main()
 
                     /*
                         Yann/Delphine : insert code here to handle the command received and then
-                        send the reponse to the user
+                        send the repsonse to the user
                     */
                     // FIXME should parser print or not?
                     parser.parseCommand(buffer);
@@ -152,10 +159,15 @@ int main()
                        End Parser code
                     */
 
-
                     if (send(sd, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
                         perror("send");
                     }
+
+                    FILE *fp1;
+                    fp1 = fopen("test.txt", "r");
+                    sendfile(sd, fp1);
+                    fclose(fp1);
+                    printf("Sent file\n");
                 }
             }
             ++it;
