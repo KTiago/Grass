@@ -88,10 +88,12 @@ void parser::executeCommand(user usr){
                 break;
             case ping_:
                 if (checkArgNumber(1)) {
-                    string s = ping_cmd(tokens[1]);
-                    cout << "PING" << endl;
-                    cout << s << endl;
-                    output = s;
+                    int e = ping_cmd(tokens[1], output);
+                    if (e == 0) {
+                        cout << output << endl;
+                    } else {
+                        cout << "Error" << endl;
+                    }
                 } else {
                     cout << "Error" << endl;
                 }
@@ -163,13 +165,13 @@ void parser::executeCommand(user usr){
 }
 
 bool parser::checkArgNumber(int arg_n_wanted) {
-    // FIXME I added -1 so we check the actual nb of args, not the nb of args + 1 for cmd name
     return parser::arg_n - 1 == arg_n_wanted;
 }
 
 
 void parser::resetCommand(){
     arg_n = 0;
+    output = "";
 }
 
 

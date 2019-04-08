@@ -13,7 +13,14 @@ using namespace std;
  * Code snippet taken from:
  * https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-output-of-command-within-c-using-posix
  */
-string exec(const char* cmd) {
+/**
+ * Executes given command on the server.
+ *
+ * @param cmd, command to be executed.
+ * @param out, stdout result of command
+ * @return 0 if successful, 1 otherwise
+ */
+int exec(const char* cmd, string &out) {
     char buffer[128];
     std::string result = "";
     FILE* pipe = popen(cmd, "r");
@@ -24,10 +31,11 @@ string exec(const char* cmd) {
         }
     } catch (...) {
         pclose(pipe);
-        throw;
+        return 1;
     }
     pclose(pipe);
-    return result;
+    out = result;
+    return 0;
 }
 
 int execute_cmd(const char* cmd_name, const char* arg){
@@ -88,8 +96,8 @@ int ls_cmd(bool authenticated){
  * @param host
  * @return string output of ping command
  */
-string ping_cmd(string host){
+int ping_cmd(string host, string &out){
     string s = "ping " + host + " -c 1"; // FIXME security vulnerability ! One can change de command !
-    return exec(s.c_str());
+    return exec(s.c_str(), out);
 }
 

@@ -196,8 +196,8 @@ int main()
                     */
                     parser.parseCommand(buffer);
                     parser.executeCommand(*it);
-                    parser.resetCommand();
                     message = parser.getOutput();
+                    parser.resetCommand();
 
                     /*
                        End Parser code
