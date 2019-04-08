@@ -45,23 +45,8 @@ size_t split(vector<string> &res, const string &line, char delim){
 int main()
 {
 
-    //TODO get necessary info from conf file
-
-    // start the server
-    runServer(8080, parser);
-}
-
-void runServer(uint16_t port, parser parser){
-    int server_fd, new_socket, sd, max_sd, activity;
-    ssize_t  valread;
-    struct sockaddr_in address;
-    int opt = 1;
-    int transferPort = 5000;
-    int addrlen = sizeof(address);
-    char buffer[1025] = {0};
-    set<user> connected_users;
-
-    string baseDir;
+    uint16_t port;
+    string baseDir; // TODO use base directory
     map<string, string> allowedUsers;
 
 
@@ -92,6 +77,22 @@ void runServer(uint16_t port, parser parser){
     }
 
     parser parser(allowedUsers);
+
+    // start the server
+    runServer(port, parser);
+}
+
+void runServer(uint16_t port, parser parser){
+    int server_fd, new_socket, sd, max_sd, activity;
+    ssize_t  valread;
+    struct sockaddr_in address;
+    int opt = 1;
+    int transferPort = 5000;
+    int addrlen = sizeof(address);
+    char buffer[1025] = {0};
+    set<user> connected_users;
+
+
 
 
     // Creating socket file descriptor
@@ -193,7 +194,6 @@ void runServer(uint16_t port, parser parser){
                     // buffer contains the received command
                     printf("Message : %s\n", buffer);
                     // response to be sent
-                    string message = "Command received";
 
 
                     /*
@@ -203,6 +203,7 @@ void runServer(uint16_t port, parser parser){
 
                     parser.parseCommand(buffer);
                     parser.executeCommand(const_cast<user &>(*it));
+                    string message = parser.getOutput();
                     parser.resetCommand();
 
 

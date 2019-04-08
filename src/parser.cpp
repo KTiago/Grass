@@ -83,7 +83,6 @@ void parser::executeCommand(user &usr){
         enum command c = string_to_command[getFirstToken()];
         switch (c) {
             case login_:
-                cout << "uname: " << usr.getUname() << "\n";
                 if (checkArgNumber(1)) {
                     int res = login_cmd(tokens[1], allowedUsers, usr, output);
                     if(res != 0){
@@ -94,10 +93,8 @@ void parser::executeCommand(user &usr){
                     output = "Error: login takes exactly one argument";
                     cout << output;
                 }
-                cout << "uname: " << usr.getUname() << "\n";
                 break;
             case pass_:
-                cout << "uname: " << usr.getUname() << "\n";
                 if (checkArgNumber(1)) {
                     int res = pass_cmd(tokens[1], allowedUsers, usr, output);
                     if(res != 0){
