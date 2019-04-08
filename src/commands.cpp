@@ -5,7 +5,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <stdio.h>
-
+#include <algorithm>
 
 using namespace std;
 
@@ -22,11 +22,11 @@ using namespace std;
  */
 int exec(const char* cmd, string &out) {
     char buffer[128];
-    std::string result = "";
+    std::string result;
     FILE* pipe = popen(cmd, "r");
     if (!pipe) throw std::runtime_error("popen() failed!");
     try {
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
+        while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
             result += buffer;
         }
     } catch (...) {
@@ -101,3 +101,38 @@ int ping_cmd(string host, string &out){
     return exec(s.c_str(), out);
 }
 
+
+int login_cmd(const string uname, map<string, string> allowedUsers, user &usr, string &res){
+    usr.setUname("");
+    if(usr.isAuthenticated()){
+        res = "Error: user already logged in";
+        return 1;
+    }
+    if (allowedUsers.find(uname) == allowedUsers.end()){
+        res = "Error: unknown user " + uname;
+        return 1;
+    }
+    usr.setUname(uname);
+    res = usr.getUname() + " OK"; //FIXME return empty string
+    return 0;
+}
+
+int pass_cmd(const string psw, map<string, string> allowedUsers, user usr, string &res){
+    if(usr.isAuthenticated()){
+        res = "Error: user already logged in";
+        return 1;
+    }
+    if(usr.getUname().empty()){
+        cout << usr.getUname();
+        res = "Error: login command required before pass";
+        return 1;
+    }
+    if(allowedUsers[usr.getUname()] != psw){
+        res = "Error: wrong password";
+        return 1;
+    }
+    usr.setAuthenticated(true);
+    res = usr.getUname() + " successfully logged in !";
+    return 0;
+
+}

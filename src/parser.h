@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
+#include <map>
 #include "user.h"
 
 /*
@@ -38,7 +39,7 @@ const int MAX_ARGS = 256;
 
 class parser{
 public:
-    parser();
+    parser(map<string, string> allowedUsers);
     ~parser();
 
     //clears the value of command
@@ -47,15 +48,12 @@ public:
     //breaks the command into its tokens
     void parseCommand(std::string command);
 
-    void executeCommand(user usr);
+    void executeCommand(user &usr);
 
     bool checkArgNumber(int);
 
     //this will return the first token
     std::string getFirstToken();
-
-    // check if user is uthenticated or not
-    bool isAuthenticated() const;
 
     void initialize();
 
@@ -66,7 +64,7 @@ private:
     std::string output;
     std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
     int arg_n;
-    bool authenticated;
+    map<string, string> allowedUsers;
 };
 
 

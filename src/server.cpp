@@ -1,4 +1,3 @@
-
 #include<iostream>
 #include <string.h>
 #include <sys/types.h>
@@ -16,13 +15,13 @@
 #include "user.h"
 #include "networking.h"
 
-
-#define CONFIG_FILE "grass.conf"
 // new include here (cpp related)
 #include <arpa/inet.h>
 #include <set>
 #include <vector>
 #include <map>
+
+#define CONFIG_FILE "grass.conf"
 
 using namespace std;
 
@@ -45,10 +44,6 @@ size_t split(vector<string> &res, const string &line, char delim){
 // FIXME file << ... instead of printf
 int main()
 {
-    // Start parser code
-    parser parser;
-    parser.initialize();
-    // End parser code
 
     //TODO get necessary info from conf file
 
@@ -67,9 +62,9 @@ void runServer(uint16_t port, parser parser){
     set<user> connected_users;
 
     string baseDir;
-    map<string, string> knownUsers;
+    map<string, string> allowedUsers;
 
-    cout << "parsing config file \n";
+
     // Parsing config file
     ifstream configFile(CONFIG_FILE);
     string line; //FIXME we could add vulnerabilities in the config file
@@ -84,17 +79,19 @@ void runServer(uint16_t port, parser parser){
                 port = stoi(splitLine[1]);
             }
             if(splitLine[0] == "user"){
-                knownUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
+                allowedUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
             }
 
         }
     }
 
     cout << "Running on port: " << port << " , " << "base directory: " << baseDir << "\n";
-    cout << "Known users : \n";
-    for (const auto &knownUser : knownUsers) {
+    cout << "Allowed users : \n";
+    for (const auto &knownUser : allowedUsers) {
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
     }
+
+    parser parser(allowedUsers);
 
 
     // Creating socket file descriptor
@@ -167,9 +164,11 @@ void runServer(uint16_t port, parser parser){
 
             user newUsr = user(new_socket);
             connected_users.insert(newUsr);
+
         }
         for (auto it = connected_users.begin(); it != connected_users.end(); )
-        {   sd = (*it).getSocket();
+        {
+            sd = (*it).getSocket();
             if (FD_ISSET(sd , &master_fd))
             {
                 //Check if it was for closing, and also read the
@@ -201,10 +200,11 @@ void runServer(uint16_t port, parser parser){
                         Yann/Delphine : insert code here to handle the command received and then
                         send the repsonse to the user
                     */
+
                     parser.parseCommand(buffer);
-                    parser.executeCommand(*it);
-                    message = parser.getOutput();
+                    parser.executeCommand(const_cast<user &>(*it));
                     parser.resetCommand();
+
 
                     /*
                        End Parser code
