@@ -115,10 +115,12 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         memset(buffer, 0, 1024);
         // outfile << cmd << "\n";
 
+        /*
         FILE *fp1;
         fp1 = fopen("received.txt", "w");
         readfile(sock, fp1);
         fclose(fp1);
+         */
     }
 
 

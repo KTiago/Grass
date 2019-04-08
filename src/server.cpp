@@ -61,6 +61,7 @@ void runServer(uint16_t port, parser parser){
     ssize_t  valread;
     struct sockaddr_in address;
     int opt = 1;
+    int transferPort = 5000;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
     set<user> connected_users;
@@ -213,11 +214,13 @@ void runServer(uint16_t port, parser parser){
                         perror("send");
                     }
 
+                    /*
                     FILE *fp1;
                     fp1 = fopen("test.txt", "r");
                     sendfile(sd, fp1);
                     fclose(fp1);
                     printf("Sent file\n");
+                     */
                 }
             }
             ++it;
