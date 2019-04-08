@@ -2,13 +2,28 @@
 // Created by tiago on 25.03.19.
 //
 
-#include <arpa/inet.h>
-#include "networking.h"
+
+#include<iostream>
+#include <string.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <sys/types.h>
-#include <cstdio>
-#include <algorithm>
+#include <netdb.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <sys/stat.h>
+#include "parser.h"
+#include "user.h"
+#include "networking.h"
+
+// new include here (cpp related)
+#include <arpa/inet.h>
+#include <set>
+#include <vector>
 
 #define SOCKET int
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))

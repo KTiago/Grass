@@ -4,7 +4,7 @@
 
 #ifndef GRASS_NETWORKING_H
 #define GRASS_NETWORKING_H
-#endif //GRASS_NETWORKING_H
+
 
 //
 // Created by tiago on 25.03.19.
@@ -38,3 +38,5 @@ bool readdata(SOCKET sock, void *buf, int buflen);
 bool readlong(SOCKET sock, long *value);
 
 bool readfile(SOCKET sock, FILE *f);
+
+#endif //GRASS_NETWORKING_H

@@ -1,5 +1,4 @@
-#include <iostream>
-#include <fstream>
+#include<iostream>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -12,9 +11,14 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
+#include "parser.h"
 #include "user.h"
+#include "networking.h"
+
 // new include here (cpp related)
 #include <arpa/inet.h>
+#include <set>
+#include <vector>
 
 
 #define DEFAULT_MODE_ARGC 3
@@ -22,6 +26,7 @@
 #define IP_SIZE 32
 
 using namespace std;
+int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode);
 
 int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
@@ -49,6 +54,13 @@ int main( int argc, const char* argv[] )
     // parsing input/output files
     istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
     ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
+
+    runClient(serverIp, serverPort, infile, outfile,  automated_mode);
+
+    return 0;
+}
+
+int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode){
 
     //Network setup
     int sock = 0;
@@ -102,6 +114,13 @@ int main( int argc, const char* argv[] )
         printf("%s\n",buffer);
         memset(buffer, 0, 1024);
         // outfile << cmd << "\n";
+
+        /*
+        FILE *fp1;
+        fp1 = fopen("received.txt", "w");
+        readfile(sock, fp1);
+        fclose(fp1);
+         */
     }
 
 
@@ -110,6 +129,4 @@ int main( int argc, const char* argv[] )
         delete(&infile);
         delete(&outfile);
     }
-
-    return 0;
 }
