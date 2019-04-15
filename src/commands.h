@@ -19,5 +19,6 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, stri
 int exec(const char* cmd, string &out);
 int ping_cmd(string host, string &out);
 int rm_cmd(string fileName, bool authenticated, string &out);
+int whoami_cmd(user usr, string &out);
 
 #endif //GRASS_COMMANDS_H

@@ -125,3 +125,12 @@ int rm_cmd(string fileName, bool authenticated, string &out){
     string cmd = "rm " + fileName;
     return exec(cmd.c_str(), out);
 }
+
+int whoami_cmd(user usr, string &out){
+    if(!usr.isAuthenticated()){
+        out = "Error: rm may only be executed after authentication";
+        return 1;
+    }
+    out = usr.getUname();
+    return 0;
+}
