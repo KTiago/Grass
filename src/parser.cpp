@@ -177,9 +177,17 @@ void parser::executeCommand(user &usr){
                 break;
             case date_:
                 break;
-            case whoami_:
-                cout << usr.isAuthenticated() << endl;
+            case whoami_:{
+                if (!checkArgNumber(0)) {
+                    cout << "whoami takes no argument" << endl;
+                    break;
+                }
+                int res = whoami_cmd(usr, output);
+                if (res != 0) {
+                    cerr << "Error code: " << res << "\n";
+                }
                 break;
+            }
             case w_:
                 break;
             case logout_:
