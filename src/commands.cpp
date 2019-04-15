@@ -38,54 +38,34 @@ int exec(const char* cmd, string &out) {
     return 0;
 }
 
-int execute_cmd(const char* cmd_name, const char* arg){
-    char cmd[MAX_DIR_LEN + 6];
-    strcpy(cmd, cmd_name);
-    strncat(cmd, arg, MAX_DIR_LEN);
-    strcat(cmd, " > ");
-    strcat(cmd, OUTFILE_NAME);
-    return system(cmd);
-}
 
-int checkAuthentication(const string &cmdName, bool authenticated){
+int mkdir_cmd(string dir, bool authenticated, string &out){
+    // TODO sanitize path (../../ ...)
     if(!authenticated){
-        ofstream outfile;
-        outfile.open (OUTFILE_NAME);
-        outfile << cmdName << " may only be executed after a successful authentication\n";
+        out = "Error: mkdir may only be executed after authentication";
         return 1;
     }
-    return 0;
-}
-
-int mkdir_cmd(const char* dir, bool authenticated){
-    if(checkAuthentication("mkdir", authenticated)){
-        return 1;
-    }
-    return execute_cmd("mkdir ", dir);
+    string cmd = "mkdir " + dir;
+    return exec(cmd.c_str(), out);
 }
 
 
-int cd_cmd(const char* dir, bool authenticated){
-    if(checkAuthentication("cd", authenticated)){
+int cd_cmd(string dir, bool authenticated, string &out){
+    // TODO sanitize path (../../ ...)
+    if(!authenticated){
+        out = "Error: cd may only be executed after authentication";
         return 1;
     }
-    return execute_cmd("cd ", dir);
+    string cmd = "cd " + dir;
+    return exec(cmd.c_str(), out);
 }
 
-/* We are not asked to implement ls with an argument
- *
-int ls_cmd(const char* dir, bool authenticated){
-    if(checkAuthentication("ls", authenticated)){
+int ls_cmd(bool authenticated, string &out){
+    if(!authenticated){
+        out = "Error: ls may only be executed after authentication";
         return 1;
     }
-    return execute_cmd("ls ", dir);
-}*/
-
-int ls_cmd(bool authenticated){
-    if(checkAuthentication("ls", authenticated)){
-        return 1;
-    }
-    return execute_cmd("ls ", " -l ");
+    return exec("ls -l ", out);
 }
 
 /**
@@ -102,37 +82,46 @@ int ping_cmd(string host, string &out){
 }
 
 
-int login_cmd(const string uname, map<string, string> allowedUsers, user &usr, string &res){
+int login_cmd(const string uname, map<string, string> allowedUsers, user &usr, string &out){
     usr.setUname("");
     if(usr.isAuthenticated()){
-        res = "Error: user already logged in";
+        out = "Error: user already logged in";
         return 1;
     }
     if (allowedUsers.find(uname) == allowedUsers.end()){
-        res = "Error: unknown user " + uname;
+        out = "Error: unknown user " + uname;
         return 1;
     }
     usr.setUname(uname);
-    res = usr.getUname() + " OK"; //FIXME return empty string
+    out = usr.getUname() + " OK"; //FIXME return empty string
     return 0;
 }
 
-int pass_cmd(const string psw, map<string, string> allowedUsers, user usr, string &res){
+int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, string &out){
     if(usr.isAuthenticated()){
-        res = "Error: user already logged in";
+        out = "Error: user already logged in";
         return 1;
     }
     if(usr.getUname().empty()){
         cout << usr.getUname();
-        res = "Error: login command required before pass";
+        out = "Error: login command required before pass";
         return 1;
     }
     if(allowedUsers[usr.getUname()] != psw){
-        res = "Error: wrong password";
+        out = "Error: wrong password";
         return 1;
     }
     usr.setAuthenticated(true);
-    res = usr.getUname() + " successfully logged in !";
+    out = usr.getUname() + " successfully logged in !";
     return 0;
 
+}
+
+int rm_cmd(string fileName, bool authenticated, string &out){
+    if(!authenticated){
+        out = "Error: rm may only be executed after authentication";
+        return 1;
+    }
+    string cmd = "rm " + fileName;
+    return exec(cmd.c_str(), out);
 }
