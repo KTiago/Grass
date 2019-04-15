@@ -204,6 +204,7 @@ void runServer(uint16_t port, parser parser){
                     parser.parseCommand(buffer);
                     parser.executeCommand(*it);
                     message = parser.getOutput();
+                    cout << message << endl;
                     parser.resetCommand();
 
                     /*

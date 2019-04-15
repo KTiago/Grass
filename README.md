@@ -14,7 +14,7 @@ This project is a develop, hack and patch challenge.
 
 ## Project structure
 
-```
+```python
 .
 ├── src                 # Source code directory
 │   ├── run.cpp         # 

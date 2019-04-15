@@ -92,9 +92,11 @@ void parser::executeCommand(user usr){
                     if (e == 0) {
                         cout << output << endl;
                     } else {
+                        output = "Error";
                         cout << "Error" << endl;
                     }
                 } else {
+                    output = "Error";
                     cout << "Error" << endl;
                 }
                 break;
