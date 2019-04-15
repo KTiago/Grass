@@ -11,11 +11,15 @@ public:
     explicit user(int socket);
     bool isAuthenticated();
     int getSocket() const;
+    string getUname();
+    void  setUname(string uname);
+    void  setAuthenticated(bool auth);
     bool operator<(const user &other) const;
 
 private:
     int socket;
     bool authenticated;
+    string uname;
 };
 
 #endif //GRASS_CLIENT_H

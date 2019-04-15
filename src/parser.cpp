@@ -47,7 +47,8 @@ void parser::initialize() {
 }
 
 // Constructor
-parser::parser(){
+parser::parser(map<string, string> allowedUsers){
+    this->allowedUsers = allowedUsers;
     initialize();
 }
 
@@ -77,14 +78,34 @@ string parser::getFirstToken(){
 }
 
 
-void parser::executeCommand(user usr){
+void parser::executeCommand(user &usr){
     try {
+        cout << usr.isAuthenticated() << "\n";
         enum command c = string_to_command[getFirstToken()];
         switch (c) {
             case login_:
+                if (checkArgNumber(1)) {
+                    int res = login_cmd(tokens[1], allowedUsers, usr, output);
+                    if(res != 0){
+                        cout << output;
+                    }
+
+                } else {
+                    output = "Error: login takes exactly one argument";
+                    cout << output;
+                }
                 break;
             case pass_:
-                authenticated = true;
+                if (checkArgNumber(1)) {
+                    int res = pass_cmd(tokens[1], allowedUsers, usr, output);
+                    if(res != 0){
+                        cout << output;
+                    }
+
+                } else {
+                    output = "Error: pass takes exactly one argument";
+                    cout << output;
+                }
                 break;
             case ping_:
                 if (checkArgNumber(1)) {
@@ -103,7 +124,7 @@ void parser::executeCommand(user usr){
             case ls_:{
                 int res = 0;
                 if(checkArgNumber(0)){
-                    res = ls_cmd(isAuthenticated());
+                    res = ls_cmd(usr.isAuthenticated(), output);
                 } else{
                     cout << "ls takes no argument" << endl;
                     break;
@@ -119,8 +140,8 @@ void parser::executeCommand(user usr){
                     cout << "cd takes exactly one argument" << endl;
                     break;
                 }
-                int res = cd_cmd(tokens[1].c_str(), usr.isAuthenticated());
-                sendLog();
+                int res = cd_cmd(tokens[1], usr.isAuthenticated(), output);
+                // TODO check base dir
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
                 }
@@ -131,14 +152,23 @@ void parser::executeCommand(user usr){
                     cout << "mkdir takes exactly one argument" << endl;
                     break;
                 }
-                int res = mkdir_cmd(tokens[1].c_str(), usr.isAuthenticated());
+                int res = mkdir_cmd(tokens[1], usr.isAuthenticated(), output);
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
                 }
                 break;
             }
-            case rm_:
+            case rm_: {
+                if (!checkArgNumber(1)) {
+                    cout << "rm takes exactly one argument" << endl;
+                    break;
+                }
+                int res = rm_cmd(tokens[1], usr.isAuthenticated(), output);
+                if (res != 0) {
+                    cerr << "Error code: " << res << "\n";
+                }
                 break;
+            }
             case get_:
                 break;
             case put_:
@@ -148,12 +178,11 @@ void parser::executeCommand(user usr){
             case date_:
                 break;
             case whoami_:
-                cout << isAuthenticated() << endl;
+                cout << usr.isAuthenticated() << endl;
                 break;
             case w_:
                 break;
             case logout_:
-                authenticated = false;
                 break;
             case exit_:
                 cout << "Goodbye" << endl;
@@ -182,10 +211,5 @@ string parser::getOutput(){
 }
 
 
-bool parser::isAuthenticated() const{
-    return this->authenticated;
-}
 
-
-parser::~parser(){
-}
+parser::~parser() = default;
