@@ -138,15 +138,25 @@ int login_cmd(const string uname, map<string, string> allowedUsers, user &usr, s
         out = "Error: user already logged in\n";
         return 1;
     }
-    usr.setUname("");
+    usr.resetUname();
     if (allowedUsers.find(uname) == allowedUsers.end()){
         out = "Error: unknown user " + uname + "\n";
         return 1;
     }
     usr.setUname(uname);
-    out = usr.getUname() + " OK\n"; //FIXME return empty string
     return 0;
 }
+
+int logout_cmd(user &usr, string &out){
+    if(!usr.isAuthenticated()){
+        out = "Error: login may only be executed after authentication\n";
+        return 1;
+    }
+    usr.resetUname();
+    usr.setAuthenticated(false);
+    return 0;
+}
+
 
 int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, string &out){
     if(usr.isAuthenticated()){

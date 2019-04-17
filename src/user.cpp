@@ -16,6 +16,10 @@ void  user::setUname(string uname){
     this->uname = uname;
 }
 
+void  user::resetUname(){
+    this->setUname("");
+}
+
 void  user::setLocation(string location){
     this->location = location;
 }

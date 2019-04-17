@@ -14,6 +14,7 @@ public:
     string getUname();
     string getLocation();
     void  setUname(string uname);
+    void  resetUname();
     void  setLocation(string location);
     void  setAuthenticated(bool auth);
     bool operator<(const user &other) const;
