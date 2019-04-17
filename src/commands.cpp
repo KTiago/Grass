@@ -140,7 +140,7 @@ int login_cmd(const string uname, map<string, string> allowedUsers, user &usr, s
     }
     usr.setUname("");
     if (allowedUsers.find(uname) == allowedUsers.end()){
-        out = "Error: unknown user " + uname;
+        out = "Error: unknown user " + uname + "\n";
         return 1;
     }
     usr.setUname(uname);
@@ -159,7 +159,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, stri
         return 1;
     }
     if(allowedUsers[usr.getUname()] != psw){
-        out = "Error: wrong password";
+        out = "Error: wrong password\n";
         return 1;
     }
     usr.setAuthenticated(true);
@@ -188,4 +188,12 @@ int whoami_cmd(user usr, string &out){
     }
     out = usr.getUname();
     return 0;
+}
+
+int date_cmd(bool authenticated, string &out){
+    if(!authenticated){
+        out = "Error: date may only be executed after authentication\n";
+        return 1;
+    }
+    return exec("date", out);
 }

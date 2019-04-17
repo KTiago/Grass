@@ -20,7 +20,6 @@ int exec(const char* cmd, string &out);
 int ping_cmd(string host, string &out);
 int rm_cmd(string fileName, user usr, string &out);
 int whoami_cmd(user usr, string &out);
+int date_cmd(bool authenticated, string &out);
 
-
-bool safePath(char* path);
 #endif //GRASS_COMMANDS_H
