@@ -91,7 +91,7 @@ void parser::executeCommand(user &usr){
                     }
 
                 } else {
-                    output = "Error: login takes exactly one argument";
+                    output = "Error: login takes exactly one argument\n";
                     cout << output;
                 }
                 break;
@@ -99,11 +99,11 @@ void parser::executeCommand(user &usr){
                 if (checkArgNumber(1)) {
                     int res = pass_cmd(tokens[1], allowedUsers, usr, output);
                     if(res != 0){
-                        cout << output;
+                        cout <<  output;
                     }
 
                 } else {
-                    output = "Error: pass takes exactly one argument";
+                    output = "Error: pass takes exactly one argument\n";
                     cout << output;
                 }
                 break;
@@ -124,9 +124,9 @@ void parser::executeCommand(user &usr){
             case ls_:{
                 int res = 0;
                 if(checkArgNumber(0)){
-                    res = ls_cmd(usr.isAuthenticated(), output);
+                    res = ls_cmd(usr.isAuthenticated(), output, usr.getLocation());
                 } else{
-                    cout << "ls takes no argument" << endl;
+                    output =  "Error: ls takes no argument\n";
                     break;
                 }
                 if(res != 0){
@@ -137,10 +137,11 @@ void parser::executeCommand(user &usr){
             }
             case cd_:{
                 if(!checkArgNumber(1)){
-                    cout << "cd takes exactly one argument" << endl;
+                    output =  "Error: cd takes exactly one argument";
                     break;
                 }
-                int res = cd_cmd(tokens[1], usr.isAuthenticated(), output);
+                int res = cd_cmd(tokens[1], usr, output);
+                cout << "res " << res << endl;
                 // TODO check base dir
                 if(res != 0){
                     cerr << "Error code: " << res << "\n";
@@ -149,23 +150,23 @@ void parser::executeCommand(user &usr){
             }
             case mkdir_:{
                 if(!checkArgNumber(1)) {
-                    cout << "mkdir takes exactly one argument" << endl;
+                    output =  "Error: mkdir takes exactly one argument\n";
                     break;
                 }
-                int res = mkdir_cmd(tokens[1], usr.isAuthenticated(), output);
+                int res = mkdir_cmd(tokens[1], usr, output);
                 if(res != 0){
-                    cerr << "Error code: " << res << "\n";
+                    cerr << "Error code: " << res << endl;
                 }
                 break;
             }
             case rm_: {
                 if (!checkArgNumber(1)) {
-                    cout << "rm takes exactly one argument" << endl;
+                    output =  "Error: rm takes exactly one argument\n";
                     break;
                 }
-                int res = rm_cmd(tokens[1], usr.isAuthenticated(), output);
+                int res = rm_cmd(tokens[1], usr, output);
                 if (res != 0) {
-                    cerr << "Error code: " << res << "\n";
+                    cerr << "Error code: " << res << endl;
                 }
                 break;
             }
@@ -179,12 +180,12 @@ void parser::executeCommand(user &usr){
                 break;
             case whoami_:{
                 if (!checkArgNumber(0)) {
-                    cout << "whoami takes no argument" << endl;
+                    output =  "Error: whoami takes no argument\n";
                     break;
                 }
                 int res = whoami_cmd(usr, output);
                 if (res != 0) {
-                    cerr << "Error code: " << res << "\n";
+                    cerr << "Error code: " << res << endl;
                 }
                 break;
             }

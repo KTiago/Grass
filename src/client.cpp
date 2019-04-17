@@ -111,7 +111,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
         // server response to the command sent
         valread = read(sock , buffer, 1024);
-        printf("%s\n",buffer);
+        printf("%s",buffer);
         memset(buffer, 0, 1024);
         // outfile << cmd << "\n";
 

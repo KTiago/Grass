@@ -20,13 +20,15 @@
 #include <set>
 #include <vector>
 #include <map>
+//#include <filesystem>
 
 #define CONFIG_FILE "grass.conf"
 
 using namespace std;
 
-void runServer(uint16_t port, parser parser);
+void runServer(uint16_t port, parser parser, string baseDir);
 
+// FIXME strtok
 size_t split(vector<string> &res, const string &line, char delim){
     size_t pos = line.find(delim);
     size_t initialPos = 0;
@@ -81,10 +83,10 @@ int main()
     parser parser(allowedUsers);
 
     // start the server
-    runServer(port, parser);
+    runServer(port, parser, baseDir);
 }
 
-void runServer(uint16_t port, parser parser){
+void runServer(uint16_t port, parser parser, string baseDir){
     int server_fd, new_socket, sd, max_sd, activity;
     ssize_t  valread;
     struct sockaddr_in address;
@@ -136,7 +138,7 @@ void runServer(uint16_t port, parser parser){
         FD_ZERO(&master_fd);
         FD_SET(server_fd, &master_fd);
         max_sd = server_fd;
-        for (auto connected_user : connected_users) {
+        for (const auto &connected_user : connected_users) {
             sd = connected_user.getSocket();
 
             if (sd > 0)
@@ -165,7 +167,7 @@ void runServer(uint16_t port, parser parser){
                 exit(1);
             }
 
-            user newUsr = user(new_socket);
+            user newUsr = user(new_socket, baseDir);
             connected_users.insert(newUsr);
 
         }
