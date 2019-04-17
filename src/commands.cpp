@@ -40,7 +40,8 @@ int exec(const char* cmd, string &out) {
     }
     pclose(pipe);
     out = result;
-    return 0;
+    // FIXME
+    return result.substr(0,3) == "sh:" ? 1: 0;
 }
 
 
