@@ -207,8 +207,7 @@ void runServer(uint16_t port, parser parser, string baseDir){
 
                     parser.parseCommand(buffer);
                     parser.executeCommand(const_cast<user &>(*it));
-                    string message = parser.getOutput();
-                    // cout << message << endl;
+                    string message = parser.getOutput().empty()? " ": parser.getOutput();
                     parser.resetCommand();
 
 
