@@ -182,8 +182,18 @@ void parser::executeCommand(user &usr){
             break;
         case grep_:
             break;
-        case date_:
+        case date_:{
+            cout << "hello date";
+            if (!checkArgNumber(0)) {
+                output =  "Error: date takes no argument\n";
+                break;
+            }
+            int res = date_cmd(usr.isAuthenticated(), output);
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
+            }
             break;
+        }
         case whoami_:{
             if (!checkArgNumber(0)) {
                 output =  "Error: whoami takes no argument\n";

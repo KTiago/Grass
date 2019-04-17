@@ -110,10 +110,13 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         send(sock , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
         // server response to the command sent
-        valread = read(sock , buffer, 1024);
-        printf("%s",buffer);
+        read(sock , buffer, 1024);
+        string bufString = string(buffer);
+        // trim string
+        bufString.erase(0, bufString.find_first_not_of(' '));
+        printf("%s", bufString.c_str());
+
         memset(buffer, 0, 1024);
-        // outfile << cmd << "\n";
 
         /*
         FILE *fp1;
@@ -129,4 +132,5 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         delete(&infile);
         delete(&outfile);
     }
+    return 0;
 }
