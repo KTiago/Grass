@@ -155,7 +155,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, stri
     }
     if(usr.getUname().empty()){
         cout << usr.getUname();
-        out = "Error: login command required before pass\n";
+        out = "Error: login command required directly before pass\n";
         return 1;
     }
     if(allowedUsers[usr.getUname()] != psw){

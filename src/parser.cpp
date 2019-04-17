@@ -79,128 +79,136 @@ string parser::getFirstToken(){
 
 
 void parser::executeCommand(user &usr){
-    try {
-        cout << usr.isAuthenticated() << "\n";
-        enum command c = string_to_command[getFirstToken()];
-        switch (c) {
-            case login_:
-                if (checkArgNumber(1)) {
-                    int res = login_cmd(tokens[1], allowedUsers, usr, output);
-                    if(res != 0){
-                        cout << output;
-                    }
+    // Check whether first token is a valid command.
+    if (string_to_command.count(getFirstToken()) == 0) {
+        cout << "Error: Not a correct command ! " << endl;
+        return;
+    }
 
-                } else {
-                    output = "Error: login takes exactly one argument\n";
+    // Get command and execute it accordingly
+    enum command c = string_to_command[getFirstToken()];
+
+    switch (c) {
+        case login_:
+            if (checkArgNumber(1)) {
+                int res = login_cmd(tokens[1], allowedUsers, usr, output);
+                if(res != 0){
                     cout << output;
                 }
-                break;
-            case pass_:
-                if (checkArgNumber(1)) {
-                    int res = pass_cmd(tokens[1], allowedUsers, usr, output);
-                    if(res != 0){
-                        cout <<  output;
-                    }
 
-                } else {
-                    output = "Error: pass takes exactly one argument\n";
-                    cout << output;
+            } else {
+                output = "Error: login takes exactly one argument\n";
+                cout << output;
+            }
+            break;
+        case pass_:
+            if (checkArgNumber(1)) {
+                int res = pass_cmd(tokens[1], allowedUsers, usr, output);
+                if(res != 0){
+                    cout <<  output;
                 }
-                break;
-            case ping_:
-                if (checkArgNumber(1)) {
-                    int e = ping_cmd(tokens[1], output);
-                    if (e == 0) {
-                        cout << output << endl;
-                    } else {
-                        output = "Error";
-                        cout << "Error" << endl;
-                    }
+
+            } else {
+                output = "Error: pass takes exactly one argument\n";
+                cout << output;
+            }
+            break;
+        case ping_:
+            if (checkArgNumber(1)) {
+                int e = ping_cmd(tokens[1], output);
+                if (e == 0) {
+                    cout << output << endl;
                 } else {
                     output = "Error";
                     cout << "Error" << endl;
                 }
-                break;
-            case ls_:{
-                int res = 0;
-                if(checkArgNumber(0)){
-                    res = ls_cmd(usr.isAuthenticated(), output, usr.getLocation());
-                } else{
-                    output =  "Error: ls takes no argument\n";
-                    break;
-                }
-                if(res != 0){
-                    cerr << "Error code: " << res << endl;
-                }
-                sendLog();
+            } else {
+                output = "Error";
+                cout << "Error" << endl;
+            }
+            break;
+        case ls_:{
+            int res = 0;
+            if(checkArgNumber(0)){
+                res = ls_cmd(usr.isAuthenticated(), output, usr.getLocation());
+            } else{
+                output =  "Error: ls takes no argument\n";
                 break;
             }
-            case cd_:{
-                if(!checkArgNumber(1)){
-                    output =  "Error: cd takes exactly one argument";
-                    break;
-                }
-                int res = cd_cmd(tokens[1], usr, output);
-                cout << "res " << res << endl;
-                // TODO check base dir
-                if(res != 0){
-                    cerr << "Error code: " << res << "\n";
-                }
-                break;
+            if(res != 0){
+                cerr << "Error code: " << res << endl;
             }
-            case mkdir_:{
-                if(!checkArgNumber(1)) {
-                    output =  "Error: mkdir takes exactly one argument\n";
-                    break;
-                }
-                int res = mkdir_cmd(tokens[1], usr, output);
-                if(res != 0){
-                    cerr << "Error code: " << res << endl;
-                }
-                break;
-            }
-            case rm_: {
-                if (!checkArgNumber(1)) {
-                    output =  "Error: rm takes exactly one argument\n";
-                    break;
-                }
-                int res = rm_cmd(tokens[1], usr, output);
-                if (res != 0) {
-                    cerr << "Error code: " << res << endl;
-                }
-                break;
-            }
-            case get_:
-                break;
-            case put_:
-                break;
-            case grep_:
-                break;
-            case date_:
-                break;
-            case whoami_:{
-                if (!checkArgNumber(0)) {
-                    output =  "Error: whoami takes no argument\n";
-                    break;
-                }
-                int res = whoami_cmd(usr, output);
-                if (res != 0) {
-                    cerr << "Error code: " << res << endl;
-                }
-                break;
-            }
-            case w_:
-                break;
-            case logout_:
-                break;
-            case exit_:
-                cout << "Goodbye" << endl;
-                break;
-            default:
-                cout << "How did you get here ?!" << endl;
+            sendLog();
+            break;
         }
-    } catch (const invalid_argument e) {
-        cout << "Not a correct command ! " << endl;
+        case cd_:{
+            if(!checkArgNumber(1)){
+                output =  "Error: cd takes exactly one argument";
+                break;
+            }
+            int res = cd_cmd(tokens[1], usr, output);
+            cout << "res " << res << endl;
+            // TODO check base dir
+            if(res != 0){
+                cerr << "Error code: " << res << "\n";
+            }
+            break;
+        }
+        case mkdir_:{
+            if(!checkArgNumber(1)) {
+                output =  "Error: mkdir takes exactly one argument\n";
+                break;
+            }
+            int res = mkdir_cmd(tokens[1], usr, output);
+            if(res != 0){
+                cerr << "Error code: " << res << endl;
+            }
+            break;
+        }
+        case rm_: {
+            if (!checkArgNumber(1)) {
+                output =  "Error: rm takes exactly one argument\n";
+                break;
+            }
+            int res = rm_cmd(tokens[1], usr, output);
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
+            }
+            break;
+        }
+        case get_:
+            break;
+        case put_:
+            break;
+        case grep_:
+            break;
+        case date_:
+            break;
+        case whoami_:{
+            if (!checkArgNumber(0)) {
+                output =  "Error: whoami takes no argument\n";
+                break;
+            }
+            int res = whoami_cmd(usr, output);
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
+            }
+            break;
+        }
+        case w_:
+            break;
+        case logout_:
+            break;
+        case exit_:
+            cout << "Goodbye" << endl;
+            break;
+        default:
+            cout << "How did you get here ?!" << endl;
+    }
+
+    // Pass has to follow the login command directly !
+    if (!usr.isAuthenticated() && c != pass_ && c!= login_) {
+        usr.setUname("");
     }
 }
 
