@@ -159,7 +159,7 @@ void runServer(uint16_t port, parser parser, string baseDir){
                 exit(1);
             }
 
-            string message = "You are successfully connected young padawan";
+            string message = "You are successfully connected young padawan\n";
             printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
 
             if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {

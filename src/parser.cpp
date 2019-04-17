@@ -207,8 +207,19 @@ void parser::executeCommand(user &usr){
         }
         case w_:
             break;
-        case logout_:
+        case logout_:{
+            if (checkArgNumber(0)) {
+                int res = logout_cmd(usr, output);
+                if(res != 0){
+                    cout << output;
+                }
+
+            } else {
+                output = "Error: login takes exactly one argument\n";
+                cout << output;
+            }
             break;
+        }
         case exit_:
             cout << "Goodbye" << endl;
             break;

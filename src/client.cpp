@@ -90,9 +90,13 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         return 1;
     }
 
-    valread = read(sock , buffer, 1024);
-    printf("%s\n", buffer);
+    read(sock , buffer, 1024);
+    string bufString = string(buffer);
+    // trim string
+    bufString.erase(0, bufString.find_first_not_of(' '));
+    printf("%s", bufString.c_str());
     memset(buffer, 0, 1024);
+
     string cmd;
 
     while(true){
