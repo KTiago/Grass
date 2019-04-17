@@ -69,6 +69,8 @@ int main()
 
         }
     }
+    // FIXME works even without config file?
+
 
     cout << "Running on port: " << port << " , " << "base directory: " << baseDir << "\n";
     cout << "Allowed users : \n";
