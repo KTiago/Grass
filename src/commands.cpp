@@ -220,3 +220,12 @@ int date_cmd(bool authenticated, string &out){
     }
     return exec("date", out);
 }
+
+int grep_cmd(string pattern, User usr, string &out){
+    if(!usr.isAuthenticated()){
+        out = "Error: grep may only be executed after authentication\n";
+        return 1;
+    }
+    string cmd = "grep -l -r \"" + pattern + "\" " + usr.getLocation();
+    return exec(cmd.c_str(), out);
+}
