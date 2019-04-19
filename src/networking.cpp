@@ -36,7 +36,81 @@
 
 using namespace std;
 
-bool senddata(SOCKET sock, void *buf, int buflen)
+void* openFileServer(void* ptr){
+    struct thread_args *args = (struct thread_args *)ptr;
+    FILE *f = fopen(args->fileName, "r");
+    int port = args->port;
+
+    struct sockaddr_in address;
+    int newSocket, mainSocket;
+    int opt = 1;
+    int addressLength = sizeof(address);
+    if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0){return (void*)1;}
+
+    if(setsockopt(mainSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
+                   sizeof(opt)) < 0 ){return (void*)1;}
+
+    // Binds
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(mainSocket, (struct sockaddr *)&address,
+             sizeof(address))<0){return (void*)1;}
+
+
+    if (listen(mainSocket, 1) < 0){return (void*)1;}
+
+
+    if ((newSocket = accept(mainSocket, (struct sockaddr *)&address,
+                             (socklen_t*)&addressLength))<0){return (void*)1;}
+
+
+    if(!sendFile(newSocket, f)){return (void*)1;}
+
+    fclose(f);
+    close(newSocket);
+    close(mainSocket);
+    return (void*)0;
+}
+
+void* openFileClient(void *ptr){
+    struct thread_args *args = (struct thread_args *)ptr;
+    FILE *f = fopen(args->fileName, "w");
+    char* serverIp = args->serverIp;
+    int port = args->port;
+    long fileSize = args->fileSize;
+
+    int  main_socket;
+
+    sockaddr_in address;
+    if ((main_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0){return (void*)1;}
+
+    memset(&address, 0, sizeof(address));
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+
+    if(inet_pton(AF_INET, serverIp, &address.sin_addr)<=0)
+    {
+        printf("Address error");
+        return (void*)1;
+    }
+
+    if (connect(main_socket, (struct sockaddr *)&address, sizeof(address)) < 0){
+        printf("Connect error\n");
+        fflush(stdout);
+        return (void*)1;
+    }
+
+    // Reads whole file from server
+    readFile(main_socket, f, fileSize);
+
+    fclose(f);
+    close(main_socket);
+    return (void*)0;
+}
+
+bool sendData(SOCKET sock, void *buf, int buflen)
 {
     unsigned char *pbuf = (unsigned char *) buf;
 
@@ -55,20 +129,12 @@ bool senddata(SOCKET sock, void *buf, int buflen)
     return true;
 }
 
-bool sendlong(SOCKET sock, long value)
-{
-    value = htonl(value);
-    return senddata(sock, &value, sizeof(value));
-}
-
-bool sendfile(SOCKET sock, FILE *f)
+bool sendFile(SOCKET sock, FILE *f)
 {
     fseek(f, 0, SEEK_END);
     long filesize = ftell(f);
     rewind(f);
     if (filesize == EOF)
-        return false;
-    if (!sendlong(sock, filesize))
         return false;
     if (filesize > 0)
     {
@@ -79,7 +145,7 @@ bool sendfile(SOCKET sock, FILE *f)
             num = fread(buffer, 1, num, f);
             if (num < 1)
                 return false;
-            if (!senddata(sock, buffer, num))
+            if (!sendData(sock, buffer, num))
                 return false;
             filesize -= num;
         }
@@ -88,7 +154,7 @@ bool sendfile(SOCKET sock, FILE *f)
     return true;
 }
 
-bool readdata(SOCKET sock, void *buf, int buflen)
+bool readData(SOCKET sock, void *buf, int buflen)
 {
     unsigned char *pbuf = (unsigned char *) buf;
 
@@ -109,26 +175,15 @@ bool readdata(SOCKET sock, void *buf, int buflen)
     return true;
 }
 
-bool readlong(SOCKET sock, long *value)
+bool readFile(SOCKET sock, FILE *f, long filesize)
 {
-    if (!readdata(sock, value, sizeof(value)))
-        return false;
-    *value = ntohl(*value);
-    return true;
-}
-
-bool readfile(SOCKET sock, FILE *f)
-{
-    long filesize;
-    if (!readlong(sock, &filesize))
-        return false;
     if (filesize > 0)
     {
         char buffer[1024];
         do
         {
             int num = MIN(filesize, sizeof(buffer));
-            if (!readdata(sock, buffer, num))
+            if (!readData(sock, buffer, num))
                 return false;
             int offset = 0;
             do

@@ -12,6 +12,7 @@ public:
     bool isAuthenticated();
     int getSocket() const;
     bool operator<(const user &other) const;
+    pthread_t thread;
 
 private:
     int socket;

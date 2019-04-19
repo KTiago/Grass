@@ -24,19 +24,21 @@
  * https://stackoverflow.com/questions/25634483/send-binary-file-over-tcp-ip-connection
  * https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
  */
+struct thread_args
+{
+    int port;
+    //FIXME should serverIp be const char * ?
+    char* serverIp;
+    char fileName[1024];
+    long fileSize;
+};
 
 using namespace std;
-
-bool senddata(SOCKET sock, void *buf, int buflen);
-
-bool sendlong(SOCKET sock, long value);
-
-bool sendfile(SOCKET sock, FILE *f);
-
-bool readdata(SOCKET sock, void *buf, int buflen);
-
-bool readlong(SOCKET sock, long *value);
-
-bool readfile(SOCKET sock, FILE *f);
+void* openFileServer(void* ptr);
+void* openFileClient(void *ptr);
+bool sendData(SOCKET sock, void *buf, int buflen);
+bool sendFile(SOCKET sock, FILE *f);
+bool readData(SOCKET sock, void *buf, int buflen);
+bool readFile(SOCKET sock, FILE *f, long filesize);
 
 #endif //GRASS_NETWORKING_H

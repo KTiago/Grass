@@ -37,9 +37,11 @@ enum command {
 const int MAX_ARGS = 256;
 
 class parser{
+private:
+    int getPort = 2000;
+    int putPort = 4000;
 public:
     parser();
-    ~parser();
 
     //clears the value of command
     void resetCommand();

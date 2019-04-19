@@ -146,6 +146,7 @@ void runServer(uint16_t port, parser parser){
                 max_sd = sd;
         }
 
+        // waits for one of the socket to receive some activity
         activity = select(max_sd + 1, &master_fd, nullptr, nullptr, nullptr);
 
         // A new TCP connection has been opened
@@ -192,15 +193,11 @@ void runServer(uint16_t port, parser parser){
                     //of the data read
                     buffer[valread] = '\0';
                     // buffer contains the received command
-                    printf("Message : %s\n", buffer);
+                    printf("%s\n", buffer);
                     // response to be sent
-                    string message = "Command received";
+                    string message;
 
 
-                    /*
-                        Yann/Delphine : insert code here to handle the command received and then
-                        send the repsonse to the user
-                    */
                     parser.parseCommand(buffer);
                     parser.executeCommand(*it);
                     parser.resetCommand();
@@ -213,14 +210,6 @@ void runServer(uint16_t port, parser parser){
                     if (send(sd, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
                         perror("send");
                     }
-
-                    /*
-                    FILE *fp1;
-                    fp1 = fopen("test.txt", "r");
-                    sendfile(sd, fp1);
-                    fclose(fp1);
-                    printf("Sent file\n");
-                     */
                 }
             }
             ++it;

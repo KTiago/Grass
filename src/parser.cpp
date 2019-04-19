@@ -9,7 +9,9 @@
 #include <sstream>
 #include <vector>
 #include <map>
-
+#include <pthread.h>
+#include "networking.h"
+#include "pthread.h"
 
 using namespace std;
 
@@ -19,6 +21,7 @@ using namespace std;
  */
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
+
 
 int sendLog(){
     // TODO
@@ -136,8 +139,31 @@ void parser::executeCommand(user usr){
             case rm_:
                 break;
             case get_:
+                if (checkArgNumber(1)) {
+                    long file_size = get_cmd(tokens[1].c_str(), isAuthenticated());
+                    if (file_size == -1){
+                        cout << "Error" << endl;
+                    }else{
+                        output = "get port: "+to_string(getPort)+" size: " + to_string(file_size);
+                        struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
+                        memset(args->fileName, 1024, 0);
+                        tokens[1].copy(args->fileName, 1024);
+                        args->fileName[tokens[1].length()] = '\0';
+                        args->port = getPort;
+                        pthread_cancel(usr.thread);
+                        printf("filename is %s\n", args->fileName);
+                        int rc = pthread_create(&usr.thread, NULL, openFileServer, (void*) args);
+                        if(rc != 0){
+                            cerr << "Error" << endl;
+                        }
+                        getPort++;
+                    }
+                } else {
+                    cout << "Error" << endl;
+                }
                 break;
             case put_:
+                putPort++;
                 break;
             case grep_:
                 break;
@@ -180,8 +206,4 @@ string parser::getOutput(){
 
 bool parser::isAuthenticated() const{
     return this->authenticated;
-}
-
-
-parser::~parser(){
 }

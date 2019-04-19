@@ -64,6 +64,20 @@ int cd_cmd(const char* dir, bool authenticated){
     return execute_cmd("cd ", dir);
 }
 
+long get_cmd(const char* file_name, bool authenticated){
+    //if(checkAuthentication("get", authenticated)){//FIXME
+    //    return -1;
+    //}
+    FILE *fp;
+    fp = fopen(file_name, "r");
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    if (file_size == EOF)
+        return -1;
+    fclose(fp);
+    return file_size;
+}
+
 /* We are not asked to implement ls with an argument
  *
 int ls_cmd(const char* dir, bool authenticated){
