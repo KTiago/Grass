@@ -48,12 +48,9 @@ int exec(const char* cmd, string &out) {
 /**
  * Sanitize a given path with respect to ".." and "."
  *
- * @param targetPath
- *      path to be sanitized
- * @param out
- *      stores error messages
- * @return
- *      error code
+ * @param targetPath path to be sanitized
+ * @param out stores error messages
+ * @return error code
  */
 int sanitizePath(string &targetPath,  string &out){
     const char *delim = "/";
