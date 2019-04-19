@@ -104,8 +104,9 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             cout << ">> ";
         }
         getline(infile, cmd);
-        if(infile.eof()){
-            outfile << "\n[EOF reached]\n";
+        // Check if end of file reached, or exit command sent
+        if(infile.eof() || cmd == "exit"){
+            outfile << "\n[EOF reached]\n"; // FIXME probably need to delete this as not in specifications
             // closing connection
             close(sock);
             break;
