@@ -45,9 +45,17 @@ int exec(const char* cmd, string &out) {
     return result.substr(0,3) == "sh:" ? 1: 0;
 }
 
-
-bool sanitizePath(string &targetPath,  string &out){
-    cout << targetPath << endl;
+/**
+ * Sanitize a given path with respect to ".." and "."
+ *
+ * @param targetPath
+ *      path to be sanitized
+ * @param out
+ *      stores error messages
+ * @return
+ *      error code
+ */
+int sanitizePath(string &targetPath,  string &out){
     const char *delim = "/";
     char* targetPathCopy = strdup(targetPath.c_str());
     char* token = strtok(targetPathCopy, delim);
@@ -59,7 +67,7 @@ bool sanitizePath(string &targetPath,  string &out){
             cnt--;
             if (cnt < 0){
                 out = "Error: access denied\n";
-                return false;
+                return 1;
             }
 
             sanitizedPath.pop_back();
@@ -78,11 +86,24 @@ bool sanitizePath(string &targetPath,  string &out){
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
 
-    return cnt >= 0;
+    return 0;
 
 }
 
-int pseudoAbsolutePath(string relativePath, const string &usrLocation, string &absPath, string &out){
+/**
+ * Construct path relative to the base directory
+ * @param relativePath
+ *          command path relative to user location
+ * @param usrLocation
+ *          user location relative to base directory
+ * @param absPath
+ *          path built according to relativePath and usrLocation, relative to base directory (i.e., absolute in the client's point of view)
+ * @param out
+ *          stores error messages
+ * @return
+ *          error code
+ */
+int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out){
     if(relativePath.at(0) == '/'){
         // the path is absolute from the client's point of view but is actually relative to the server's base directory
         absPath = relativePath.substr(1);
@@ -94,7 +115,8 @@ int pseudoAbsolutePath(string relativePath, const string &usrLocation, string &a
     else{
         absPath = usrLocation + "/" + relativePath; // FIXME one can execute an other command in "relativePath"
     }
-    return 0;
+    int res = sanitizePath(absPath, out);
+    return res;
 }
 
 int mkdir_cmd(string dirPath, User usr, string &out){
@@ -103,7 +125,7 @@ int mkdir_cmd(string dirPath, User usr, string &out){
         return 1;
     }
     string absPath;
-    if(pseudoAbsolutePath(dirPath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
+    if(constructPath(dirPath, usr.getLocation(), absPath, out)){
         return 1;
     }
     string cmd = "mkdir " + absPath;
@@ -118,7 +140,7 @@ int cd_cmd(string dirPath, User &usr, string &out){
         return 1;
     }
     string absPath;
-    if(pseudoAbsolutePath(dirPath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
+    if(constructPath(dirPath, usr.getLocation(), absPath, out)){
         return 1;
     }
     string cmd = "cd " + absPath;
@@ -206,7 +228,7 @@ int rm_cmd(string filePath, User usr, string &out){
         return 1;
     }
     string absPath;
-    if(pseudoAbsolutePath(filePath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
+    if(constructPath(filePath, usr.getLocation(), absPath, out)){
         return 1;
     }
     string cmd = "rm " + absPath;
@@ -228,7 +250,7 @@ int w_cmd(User usr, string &out){
         return 1;
     }
     // Print all connected users
-    for (set<User>::iterator it=connected_users.begin(); it!=connected_users.end(); ++it) {
+    for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
         out += (*it).getUname() + "\n";
     }
     return 0;
