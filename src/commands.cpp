@@ -128,13 +128,12 @@ int mkdir_cmd(string dirPath, User usr, string &out){
     if(constructPath(dirPath, usr.getLocation(), absPath, out)){
         return 1;
     }
-    string cmd = "mkdir " + absPath;
+    string cmd = "mkdir \"" + absPath + "\"";
     return exec(cmd.c_str(), out);
 }
 
 
 int cd_cmd(string dirPath, User &usr, string &out){
-    cout << "cd start: "<< usr.getLocation() << endl;
     if (!usr.isAuthenticated()) {
         out = "Error: cd may only be executed after authentication\n";
         return 1;
@@ -143,13 +142,11 @@ int cd_cmd(string dirPath, User &usr, string &out){
     if(constructPath(dirPath, usr.getLocation(), absPath, out)){
         return 1;
     }
-    string cmd = "cd " + absPath;
+    string cmd = "cd \"" + absPath + "\"";
     int res = exec(cmd.c_str(), out);
     if(!res){
         usr.setLocation(absPath);
-        cout << "abs : " << absPath << endl;
     }
-    cout << "cd end: " <<    usr.getLocation() << endl;
     return res;
 
 }
@@ -172,7 +169,7 @@ int ls_cmd(bool authenticated, string &out, string usrLocation){
  * @return string output of ping command
  */
 int ping_cmd(string host, string &out){
-    string s = "ping " + host + " -c 1"; // FIXME security vulnerability ! One can change de command !
+    string s = "ping \"" + host + "\" -c 1"; // FIXME security vulnerability ! One can change de command !
     return exec(s.c_str(), out);
 }
 
@@ -231,7 +228,7 @@ int rm_cmd(string filePath, User usr, string &out){
     if(constructPath(filePath, usr.getLocation(), absPath, out)){
         return 1;
     }
-    string cmd = "rm " + absPath;
+    string cmd = "rm \"" + absPath + "\"";
     return exec(cmd.c_str(), out);
 }
 
