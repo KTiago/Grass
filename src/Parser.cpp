@@ -231,8 +231,10 @@ void Parser::executeCommand(User &usr){
             break;
         }
         case exit_:
+            // FIXME this should never be executed ?
             cout << "Goodbye" << endl;
             break;
+
         default:
             cout << "How did you get here ?!" << endl;
     }
