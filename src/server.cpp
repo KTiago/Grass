@@ -164,14 +164,6 @@ void runServer(uint16_t port, Parser parser){
                 exit(1);
             }
 
-            string message = "You are successfully connected young padawan\n";
-            printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-
-            if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
-                perror("send");
-                exit(1);
-            }
-
             User newUsr = User(new_socket, ".");
             connected_users.insert(newUsr);
 
@@ -188,8 +180,6 @@ void runServer(uint16_t port, Parser parser){
                     //Host disconnected
                     getpeername(sd , (struct sockaddr*)&address , \
                         (socklen_t*)&addrlen);
-                    printf("Host disconnected , ip %s , port %d \n" ,
-                           inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
 
                     //Close the socket and mark as 0 in list for reuse
                     close(sd);
@@ -206,7 +196,7 @@ void runServer(uint16_t port, Parser parser){
 
                     /*
                         Yann/Delphine : insert code here to handle the command received and then
-                        send the repsonse to the User
+                        send the response to the User
                     */
 
                     parser.parseCommand(buffer);

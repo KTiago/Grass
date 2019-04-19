@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "networking.h"
 #include <fstream>
 #include <string>
 #include <cstring>
@@ -7,6 +8,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
+
 
 using namespace std;
 
@@ -132,18 +134,32 @@ int mkdir_cmd(string dirPath, User usr, string &out){
     return exec(cmd.c_str(), out);
 }
 
-long get_cmd(const char* file_name, bool authenticated){
-    //if(checkAuthentication("get", authenticated)){//FIXME
-    //    return -1;
-    //}
+int get_cmd(string fileName, int getPort, User &usr, string &out){
+    if (!usr.isAuthenticated()) {
+        out = "Error: get may only be executed after authentication\n";
+        return 1;
+    }
     FILE *fp;
-    fp = fopen(file_name, "r");
+    fp = fopen(fileName.c_str(), "r");
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
-    if (file_size == EOF)
-        return -1;
     fclose(fp);
-    return file_size;
+    if (file_size == EOF){
+        return 1;
+    }else {
+        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size)+"\n";
+        struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
+        memset(args->fileName, 1024, 0);
+        fileName.copy(args->fileName, 1024);
+        args->fileName[fileName.length()] = '\0';
+        args->port = getPort;
+        pthread_cancel(usr.thread);
+        int rc = pthread_create(&usr.thread, NULL, openFileServer, (void *) args);
+        if (rc != 0) {
+            cerr << "Error" << endl;
+        }
+    }
+    return 0;
 }
 
 int cd_cmd(string dirPath, User &usr, string &out){

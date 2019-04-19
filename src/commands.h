@@ -16,7 +16,7 @@ using namespace std;
 int mkdir_cmd(string dir, User usr, string &out);
 int cd_cmd(string dir, User &usr, string &out);
 int ls_cmd(bool authenticated, string &out, string usrLocation);
-long get_cmd(const char* fileName, bool authenticated);
+int get_cmd(string fileName, int getPort, User &usr, string &out);
 int login_cmd(string uname, map<string, string> allowedUsers, User &usr, string &out);
 int logout_cmd(User &usr, string &out);
 int pass_cmd(string psw, map<string, string> allowedUsers, User &usr, string &out);
