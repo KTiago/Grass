@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
-#include "user.h"
+#include <map>
+#include "User.h"
 
 /*
  * Largely inspired by:
@@ -36,12 +37,14 @@ enum command {
 
 const int MAX_ARGS = 256;
 
-class parser{
+
+class Parser{
 private:
     int getPort = 2000;
     int putPort = 4000;
 public:
-    parser();
+    Parser(map<string, string> allowedUsers);
+    ~Parser();
 
     //clears the value of command
     void resetCommand();
@@ -49,15 +52,12 @@ public:
     //breaks the command into its tokens
     void parseCommand(std::string command);
 
-    void executeCommand(user usr);
+    void executeCommand(User &usr);
 
     bool checkArgNumber(int);
 
     //this will return the first token
     std::string getFirstToken();
-
-    // check if user is uthenticated or not
-    bool isAuthenticated() const;
 
     void initialize();
 
@@ -68,7 +68,7 @@ private:
     std::string output;
     std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
     int arg_n;
-    bool authenticated;
+    map<string, string> allowedUsers;
 };
 
 

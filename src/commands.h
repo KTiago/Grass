@@ -5,16 +5,27 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <vector>
+#include <map>
+#include "User.h"
+#include "grass.hpp"
 
 using namespace std;
 
-int mkdir_cmd(const char* dir, bool authenticated);
-int cd_cmd(const char* dir, bool authenticated);
-int ls_cmd(bool authenticated);
+
+int mkdir_cmd(string dir, User usr, string &out);
+int cd_cmd(string dir, User &usr, string &out);
+int ls_cmd(bool authenticated, string &out, string usrLocation);
 long get_cmd(const char* fileName, bool authenticated);
-
-string exec(const char* cmd);
-string ping_cmd(string host);
-
+int login_cmd(string uname, map<string, string> allowedUsers, User &usr, string &out);
+int logout_cmd(User &usr, string &out);
+int pass_cmd(string psw, map<string, string> allowedUsers, User &usr, string &out);
+int exec(const char* cmd, string &out);
+int ping_cmd(string host, string &out);
+int rm_cmd(string fileName, User usr, string &out);
+int whoami_cmd(User usr, string &out);
+int w_cmd(User usr, string &out);
+int date_cmd(bool authenticated, string &out);
+int grep_cmd(string pattern, User usr, string &out);
 
 #endif //GRASS_COMMANDS_H

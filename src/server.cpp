@@ -1,4 +1,3 @@
-
 #include<iostream>
 #include <string.h>
 #include <sys/types.h>
@@ -12,22 +11,31 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "parser.h"
-#include "user.h"
+#include "Parser.h"
+#include "User.h"
 #include "networking.h"
 
-
-#define CONFIG_FILE "grass.conf"
 // new include here (cpp related)
 #include <arpa/inet.h>
 #include <set>
 #include <vector>
 #include <map>
+//#include <filesystem>
+#include "grass.hpp"
+
+#define CONFIG_FILE "grass.conf"
 
 using namespace std;
 
-void runServer(uint16_t port, parser parser);
 
+// Global variables
+set<User> connected_users;
+string baseDirectory;
+
+
+void runServer(uint16_t port, Parser parser);
+
+// FIXME strtok
 size_t split(vector<string> &res, const string &line, char delim){
     size_t pos = line.find(delim);
     size_t initialPos = 0;
@@ -45,31 +53,11 @@ size_t split(vector<string> &res, const string &line, char delim){
 // FIXME file << ... instead of printf
 int main()
 {
-    // Start parser code
-    parser parser;
-    parser.initialize();
-    // End parser code
 
-    //TODO get necessary info from conf file
+    uint16_t port;
+    map<string, string> allowedUsers;
 
-    // start the server
-    runServer(8080, parser);
-}
 
-void runServer(uint16_t port, parser parser){
-    int server_fd, new_socket, sd, max_sd, activity;
-    ssize_t  valread;
-    struct sockaddr_in address;
-    int opt = 1;
-    int transferPort = 5000;
-    int addrlen = sizeof(address);
-    char buffer[1025] = {0};
-    set<user> connected_users;
-
-    string baseDir;
-    map<string, string> knownUsers;
-
-    cout << "parsing config file \n";
     // Parsing config file
     ifstream configFile(CONFIG_FILE);
     string line; //FIXME we could add vulnerabilities in the config file
@@ -78,23 +66,41 @@ void runServer(uint16_t port, parser parser){
         while(getline(configFile, line)){
             split(splitLine, line, ' ');
             if(splitLine[0] == "base"){
-                baseDir = splitLine[1];
+                baseDirectory = splitLine[1];
             }
             if(splitLine[0] == "port"){
                 port = stoi(splitLine[1]);
             }
             if(splitLine[0] == "user"){
-                knownUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
+                allowedUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
             }
 
         }
     }
+    // FIXME works even without config file?
 
-    cout << "Running on port: " << port << " , " << "base directory: " << baseDir << "\n";
-    cout << "Known users : \n";
-    for (const auto &knownUser : knownUsers) {
+
+    cout << "Running on port: " << port << " , " << "base directory: " << baseDirectory << "\n";
+    cout << "Allowed users : \n";
+    for (const auto &knownUser : allowedUsers) {
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
     }
+
+    Parser parser(allowedUsers);
+
+    // start the server
+    runServer(port, parser);
+}
+
+void runServer(uint16_t port, Parser parser){
+    int server_fd, new_socket, sd, max_sd, activity;
+    ssize_t  valread;
+    struct sockaddr_in address;
+    int opt = 1;
+    int transferPort = 5000;
+    int addrlen = sizeof(address);
+    char buffer[1025] = {0};
+
 
 
     // Creating socket file descriptor
@@ -136,7 +142,7 @@ void runServer(uint16_t port, parser parser){
         FD_ZERO(&master_fd);
         FD_SET(server_fd, &master_fd);
         max_sd = server_fd;
-        for (auto connected_user : connected_users) {
+        for (const auto &connected_user : connected_users) {
             sd = connected_user.getSocket();
 
             if (sd > 0)
@@ -158,7 +164,7 @@ void runServer(uint16_t port, parser parser){
                 exit(1);
             }
 
-            string message = "You are successfully connected young padawan";
+            string message = "You are successfully connected young padawan\n";
             printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
 
             if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
@@ -166,11 +172,13 @@ void runServer(uint16_t port, parser parser){
                 exit(1);
             }
 
-            user newUsr = user(new_socket);
+            User newUsr = User(new_socket, ".");
             connected_users.insert(newUsr);
+
         }
         for (auto it = connected_users.begin(); it != connected_users.end(); )
-        {   sd = (*it).getSocket();
+        {
+            sd = (*it).getSocket();
             if (FD_ISSET(sd , &master_fd))
             {
                 //Check if it was for closing, and also read the
@@ -195,13 +203,17 @@ void runServer(uint16_t port, parser parser){
                     // buffer contains the received command
                     printf("%s\n", buffer);
                     // response to be sent
-                    string message;
 
+                    /*
+                        Yann/Delphine : insert code here to handle the command received and then
+                        send the repsonse to the User
+                    */
 
                     parser.parseCommand(buffer);
-                    parser.executeCommand(*it);
+                    parser.executeCommand(const_cast<User &>(*it));
+                    string message = parser.getOutput().empty()? " ": parser.getOutput();
                     parser.resetCommand();
-                    message = parser.getOutput();
+
 
                     /*
                        End Parser code

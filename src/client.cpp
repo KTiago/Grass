@@ -11,8 +11,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "parser.h"
-#include "user.h"
+#include "Parser.h"
+#include "User.h"
 #include "networking.h"
 
 // new include here (cpp related)
@@ -32,7 +32,7 @@ int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
     if(argc != DEFAULT_MODE_ARGC and !automated_mode){
-        cerr << "Expected command: ./user server-ip server-port [infile outfile]\n";
+        cerr << "Expected command: ./User server-ip server-port [infile outfile]\n";
         return -1;
     };
 
@@ -103,8 +103,12 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         return 1;
     }
 
+
     read(mainSocket, buffer, 1024);
-    printf("%s\n", buffer);
+    string bufString = string(buffer);
+    // trim string
+    bufString.erase(0, bufString.find_first_not_of(' '));
+    printf("%s", bufString.c_str());
     memset(buffer, 0, 1024);
 
 
@@ -113,10 +117,18 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             cout << ">> ";
         }
         getline(infile, cmd);
-        if(infile.eof()){
-            outfile << "\n[EOF reached]\n";
+
+        // Check if end of file reached, or exit command sent
+        if(infile.eof() || cmd == "exit"){
+            outfile << "\n[EOF reached]\n"; // FIXME probably need to delete this as not in specifications
+            // closing connection
             close(mainSocket);
             break;
+        }
+
+        // This line avoids sending an empty line and waiting indefinitely
+        if(cmd.empty()) {
+            continue;
         }
 
         // Extract filename from get/put command if applicable
@@ -127,12 +139,19 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             strncpy(fileName, strtok(NULL, " "), 1024);
         }
 
-        // Sends command to the server
+        // sends command to the server
         send(mainSocket , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
         // server response to the command sent
         read(mainSocket , buffer, 1024);
         strncpy(copiedBuffer, buffer, 1024);
+
+        string bufString = string(buffer);
+        // trim string
+        bufString.erase(0, bufString.find_first_not_of(' '));
+        printf("%s", bufString.c_str());
+
+        memset(buffer, 0, 1024);
         token = strtok(copiedBuffer, " ");
 
         /*
@@ -165,4 +184,5 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         delete(&infile);
         delete(&outfile);
     }
+    return 0;
 }
