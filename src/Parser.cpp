@@ -81,7 +81,9 @@ string Parser::getFirstToken(){
 void Parser::executeCommand(User &usr){
     // Check whether first token is a valid command.
     if (string_to_command.count(getFirstToken()) == 0) {
-        cout << "Error: Not a correct command ! " << endl;
+        string errorMsg = "Error: Not a correct command !\n";
+        output = errorMsg;
+        cout << errorMsg << endl;
         return;
     }
 

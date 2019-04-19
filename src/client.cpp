@@ -110,6 +110,12 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             close(sock);
             break;
         }
+
+        // This line avoids sending an empty line and waiting indefinitely
+        if(cmd.empty()) {
+            continue;
+        }
+
         // sends command to the server
         send(sock , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
