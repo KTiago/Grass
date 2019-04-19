@@ -53,7 +53,8 @@ bool sanitizePath(string &targetPath,  string &out){
     int cnt = 0;
     vector<string> sanitizedPath;
     while (token != nullptr)
-    {   if(!strcmp(token, "..")){
+    {
+        if(!strcmp(token, "..")){
             cnt--;
             if (cnt < 0){
                 out = "Error: access denied\n";
@@ -65,13 +66,14 @@ bool sanitizePath(string &targetPath,  string &out){
             cnt++;
             sanitizedPath.emplace_back(token);
         }
-
         token = strtok(nullptr, "/");
     }
     free(targetPathCopy);
     stringstream s;
     copy(sanitizedPath.begin(), sanitizedPath.end(), ostream_iterator<string>(s, delim));
     targetPath = s.str();
+    // copy adds a trailing delimiter, which is removed here
+    targetPath.pop_back();
     return cnt >= 0;
 
 }
@@ -116,7 +118,7 @@ int cd_cmd(string dirPath, User &usr, string &out){
     }
     string cmd = "cd " + absPath;
     int res = exec(cmd.c_str(), out);
-    if(!res){ // FIXME
+    if(!res){
         usr.setLocation(absPath);
     }
     return res;
@@ -198,9 +200,13 @@ int rm_cmd(string filePath, User usr, string &out){
     }
     string absPath;
     if(pseudoAbsolutePath(filePath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
+        cout << "oops";
         return 1;
     }
+    cout << "building cmd...";
     string cmd = "rm " + absPath;
+    cout << cmd;
+    cout << "exec";
     return exec(cmd.c_str(), out);
 }
 
