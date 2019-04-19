@@ -139,15 +139,26 @@ int ls_cmd(bool authenticated, string &out, string usrLocation){
  * The ping command takes one parameter, the host of the machine that is about
  * to be pinged (ping $HOST). The server will respond with the output of the Unix
  * command ping $HOST -c 1.
- * @param host
- * @return string output of ping command
+ *
+ * @param host argument to ping command
+ * @param out output string
+ * @return 0 if successful
  */
 int ping_cmd(string host, string &out){
     string s = "ping " + host + " -c 1"; // FIXME security vulnerability ! One can change de command !
     return exec(s.c_str(), out);
 }
 
-
+/**
+ * The login command starts authentication. The format is login $USERNAME,
+ * followed by a newline. The username must be one of the allowed usernames in the configuration file.
+ *
+ * @param uname credential user wants to log in as
+ * @param allowedUsers map of allowed users
+ * @param usr object of user attempting login
+ * @param out output string
+ * @return 0 if successful
+ */
 int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out){
     if(usr.isAuthenticated()){
         out = "Error: User already logged in\n";
@@ -162,17 +173,18 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
     return 0;
 }
 
-int logout_cmd(User &usr, string &out){
-    if(!usr.isAuthenticated()){
-        out = "Error: login may only be executed after authentication\n";
-        return 1;
-    }
-    usr.resetUname();
-    usr.setAuthenticated(false);
-    return 0;
-}
 
-
+/**
+ * The pass command must directly follow the login command.
+ * The format is pass $PASSWORD, followed by a newline. The password must match the
+ * password for the earlier specified user. If the password matches, the user is successfully authenticated.
+ *
+ * @param psw password that user sent
+ * @param allowedUsers map of allowed user credential
+ * @param usr object of user attempting login
+ * @param out output string
+ * @return 0 if successful
+ */
 int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, string &out){
     if(usr.isAuthenticated()){
         out = "Error: User already logged in\n";
@@ -193,6 +205,34 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
 
 }
 
+/**
+ * The logout command may only be executed after a successful authentication.
+ * The logout command takes no parameters and logs the user out of her session.
+ *
+ * @param usr object of user wanting to log out
+ * @param out output string
+ * @return 0 is successful
+ */
+int logout_cmd(User &usr, string &out){
+    if(!usr.isAuthenticated()){
+        out = "Error: login may only be executed after authentication\n";
+        return 1;
+    }
+    usr.resetUname();
+    usr.setAuthenticated(false);
+    return 0;
+}
+
+/**
+ * The rm command may only be executed after a successful authentication.
+ * The rm command takes exactly one parameter (rm $NAME) and deletes the file
+ * or directory with the specified name in the current working directory.
+ *
+ * @param filePath path/name of file/directory to be deleted
+ * @param usr object of user wanting to rm file
+ * @param out output string
+ * @return 0 if successful
+ */
 int rm_cmd(string filePath, User usr, string &out){
     if(!usr.isAuthenticated()){
         out = "Error: rm may only be executed after authentication\n";
@@ -204,7 +244,7 @@ int rm_cmd(string filePath, User usr, string &out){
         return 1;
     }
     cout << "building cmd...";
-    string cmd = "rm " + absPath;
+    string cmd = "rm -r" + absPath;
     cout << cmd;
     cout << "exec";
     return exec(cmd.c_str(), out);
