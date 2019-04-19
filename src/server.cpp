@@ -30,9 +30,10 @@ using namespace std;
 
 // Global variables
 set<User> connected_users;
+string baseDirectory;
 
 
-void runServer(uint16_t port, Parser parser, string baseDir);
+void runServer(uint16_t port, Parser parser);
 
 // FIXME strtok
 size_t split(vector<string> &res, const string &line, char delim){
@@ -54,7 +55,6 @@ int main()
 {
 
     uint16_t port;
-    string baseDir; // TODO use base directory
     map<string, string> allowedUsers;
 
 
@@ -66,7 +66,7 @@ int main()
         while(getline(configFile, line)){
             split(splitLine, line, ' ');
             if(splitLine[0] == "base"){
-                baseDir = splitLine[1];
+                baseDirectory = splitLine[1];
             }
             if(splitLine[0] == "port"){
                 port = stoi(splitLine[1]);
@@ -80,7 +80,7 @@ int main()
     // FIXME works even without config file?
 
 
-    cout << "Running on port: " << port << " , " << "base directory: " << baseDir << "\n";
+    cout << "Running on port: " << port << " , " << "base directory: " << baseDirectory << "\n";
     cout << "Allowed users : \n";
     for (const auto &knownUser : allowedUsers) {
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
@@ -89,10 +89,10 @@ int main()
     Parser parser(allowedUsers);
 
     // start the server
-    runServer(port, parser, baseDir);
+    runServer(port, parser);
 }
 
-void runServer(uint16_t port, Parser parser, string baseDir){
+void runServer(uint16_t port, Parser parser){
     int server_fd, new_socket, sd, max_sd, activity;
     ssize_t  valread;
     struct sockaddr_in address;
@@ -171,7 +171,7 @@ void runServer(uint16_t port, Parser parser, string baseDir){
                 exit(1);
             }
 
-            User newUsr = User(new_socket, baseDir);
+            User newUsr = User(new_socket, ".");
             connected_users.insert(newUsr);
 
         }

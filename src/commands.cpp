@@ -47,6 +47,7 @@ int exec(const char* cmd, string &out) {
 
 
 bool sanitizePath(string &targetPath,  string &out){
+    cout << targetPath << endl;
     const char *delim = "/";
     char* targetPathCopy = strdup(targetPath.c_str());
     char* token = strtok(targetPathCopy, delim);
@@ -60,20 +61,23 @@ bool sanitizePath(string &targetPath,  string &out){
                 out = "Error: access denied\n";
                 return false;
             }
+
             sanitizedPath.pop_back();
         }
         else if(strcmp(token, ".")){
             cnt++;
             sanitizedPath.emplace_back(token);
         }
+
         token = strtok(nullptr, "/");
     }
     free(targetPathCopy);
     stringstream s;
     copy(sanitizedPath.begin(), sanitizedPath.end(), ostream_iterator<string>(s, delim));
-    targetPath = s.str();
+    targetPath = baseDirectory + "/" + s.str();
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
+
     return cnt >= 0;
 
 }
@@ -108,6 +112,7 @@ int mkdir_cmd(string dirPath, User usr, string &out){
 
 
 int cd_cmd(string dirPath, User &usr, string &out){
+    cout << "cd start: "<< usr.getLocation() << endl;
     if (!usr.isAuthenticated()) {
         out = "Error: cd may only be executed after authentication\n";
         return 1;
@@ -120,7 +125,9 @@ int cd_cmd(string dirPath, User &usr, string &out){
     int res = exec(cmd.c_str(), out);
     if(!res){
         usr.setLocation(absPath);
+        cout << "abs : " << absPath << endl;
     }
+    cout << "cd end: " <<    usr.getLocation() << endl;
     return res;
 
 }
@@ -200,13 +207,9 @@ int rm_cmd(string filePath, User usr, string &out){
     }
     string absPath;
     if(pseudoAbsolutePath(filePath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
-        cout << "oops";
         return 1;
     }
-    cout << "building cmd...";
     string cmd = "rm " + absPath;
-    cout << cmd;
-    cout << "exec";
     return exec(cmd.c_str(), out);
 }
 
