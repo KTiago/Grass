@@ -11,8 +11,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "parser.h"
-#include "user.h"
+#include "Parser.h"
+#include "User.h"
 #include "networking.h"
 
 // new include here (cpp related)
@@ -32,7 +32,7 @@ int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
     if(argc != DEFAULT_MODE_ARGC and !automated_mode){
-        cerr << "Expected command: ./user server-ip server-port [infile outfile]\n";
+        cerr << "Expected command: ./User server-ip server-port [infile outfile]\n";
         return -1;
     };
 

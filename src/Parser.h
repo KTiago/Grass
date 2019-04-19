@@ -9,7 +9,7 @@
 #include <string.h>
 #include <sstream>
 #include <map>
-#include "user.h"
+#include "User.h"
 
 /*
  * Largely inspired by:
@@ -37,10 +37,10 @@ enum command {
 
 const int MAX_ARGS = 256;
 
-class parser{
+class Parser{
 public:
-    parser(map<string, string> allowedUsers);
-    ~parser();
+    Parser(map<string, string> allowedUsers);
+    ~Parser();
 
     //clears the value of command
     void resetCommand();
@@ -48,7 +48,7 @@ public:
     //breaks the command into its tokens
     void parseCommand(std::string command);
 
-    void executeCommand(user &usr);
+    void executeCommand(User &usr);
 
     bool checkArgNumber(int);
 

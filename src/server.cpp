@@ -11,8 +11,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "parser.h"
-#include "user.h"
+#include "Parser.h"
+#include "User.h"
 #include "networking.h"
 
 // new include here (cpp related)
@@ -26,7 +26,7 @@
 
 using namespace std;
 
-void runServer(uint16_t port, parser parser, string baseDir);
+void runServer(uint16_t port, Parser parser, string baseDir);
 
 // FIXME strtok
 size_t split(vector<string> &res, const string &line, char delim){
@@ -65,7 +65,7 @@ int main()
             if(splitLine[0] == "port"){
                 port = stoi(splitLine[1]);
             }
-            if(splitLine[0] == "user"){
+            if(splitLine[0] == "User"){
                 allowedUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
             }
 
@@ -80,13 +80,13 @@ int main()
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
     }
 
-    parser parser(allowedUsers);
+    Parser parser(allowedUsers);
 
     // start the server
     runServer(port, parser, baseDir);
 }
 
-void runServer(uint16_t port, parser parser, string baseDir){
+void runServer(uint16_t port, Parser parser, string baseDir){
     int server_fd, new_socket, sd, max_sd, activity;
     ssize_t  valread;
     struct sockaddr_in address;
@@ -94,7 +94,7 @@ void runServer(uint16_t port, parser parser, string baseDir){
     int transferPort = 5000;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
-    set<user> connected_users;
+    set<User> connected_users;
 
 
 
@@ -167,7 +167,7 @@ void runServer(uint16_t port, parser parser, string baseDir){
                 exit(1);
             }
 
-            user newUsr = user(new_socket, baseDir);
+            User newUsr = User(new_socket, baseDir);
             connected_users.insert(newUsr);
 
         }
@@ -202,11 +202,11 @@ void runServer(uint16_t port, parser parser, string baseDir){
 
                     /*
                         Yann/Delphine : insert code here to handle the command received and then
-                        send the repsonse to the user
+                        send the repsonse to the User
                     */
 
                     parser.parseCommand(buffer);
-                    parser.executeCommand(const_cast<user &>(*it));
+                    parser.executeCommand(const_cast<User &>(*it));
                     string message = parser.getOutput().empty()? " ": parser.getOutput();
                     parser.resetCommand();
 

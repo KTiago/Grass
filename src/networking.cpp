@@ -16,8 +16,8 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <sys/stat.h>
-#include "parser.h"
-#include "user.h"
+#include "Parser.h"
+#include "User.h"
 #include "networking.h"
 
 // new include here (cpp related)

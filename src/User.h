@@ -6,9 +6,9 @@
 
 using namespace std;
 
-class user{
+class User{
 public:
-    explicit user(int socket, string base);
+    explicit User(int socket, string base);
     bool isAuthenticated();
     int getSocket() const;
     string getUname();
@@ -17,7 +17,7 @@ public:
     void  resetUname();
     void  setLocation(string location);
     void  setAuthenticated(bool auth);
-    bool operator<(const user &other) const;
+    bool operator<(const User &other) const;
 
 private:
     int socket;

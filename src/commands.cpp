@@ -78,7 +78,7 @@ int pseudoAbsolutePath(string relativePath, const string &usrLocation, string &a
     return 0;
 }
 
-int mkdir_cmd(string dirPath, user usr, string &out){
+int mkdir_cmd(string dirPath, User usr, string &out){
     if(!usr.isAuthenticated()){
         out = "Error: mkdir may only be executed after authentication";
         return 1;
@@ -92,7 +92,7 @@ int mkdir_cmd(string dirPath, user usr, string &out){
 }
 
 
-int cd_cmd(string dirPath, user &usr, string &out){
+int cd_cmd(string dirPath, User &usr, string &out){
     if (!usr.isAuthenticated()) {
         out = "Error: cd may only be executed after authentication\n";
         return 1;
@@ -133,21 +133,21 @@ int ping_cmd(string host, string &out){
 }
 
 
-int login_cmd(const string uname, map<string, string> allowedUsers, user &usr, string &out){
+int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out){
     if(usr.isAuthenticated()){
-        out = "Error: user already logged in\n";
+        out = "Error: User already logged in\n";
         return 1;
     }
     usr.resetUname();
     if (allowedUsers.find(uname) == allowedUsers.end()){
-        out = "Error: unknown user " + uname + "\n";
+        out = "Error: unknown User " + uname + "\n";
         return 1;
     }
     usr.setUname(uname);
     return 0;
 }
 
-int logout_cmd(user &usr, string &out){
+int logout_cmd(User &usr, string &out){
     if(!usr.isAuthenticated()){
         out = "Error: login may only be executed after authentication\n";
         return 1;
@@ -158,9 +158,9 @@ int logout_cmd(user &usr, string &out){
 }
 
 
-int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, string &out){
+int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, string &out){
     if(usr.isAuthenticated()){
-        out = "Error: user already logged in\n";
+        out = "Error: User already logged in\n";
         return 1;
     }
     if(usr.getUname().empty()){
@@ -178,7 +178,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, user &usr, stri
 
 }
 
-int rm_cmd(string filePath, user usr, string &out){
+int rm_cmd(string filePath, User usr, string &out){
     if(!usr.isAuthenticated()){
         out = "Error: rm may only be executed after authentication\n";
         return 1;
@@ -191,7 +191,7 @@ int rm_cmd(string filePath, user usr, string &out){
     return exec(cmd.c_str(), out);
 }
 
-int whoami_cmd(user usr, string &out){
+int whoami_cmd(User usr, string &out){
     if(!usr.isAuthenticated()){
         out = "Error: rm may only be executed after authentication\n";
         return 1;

@@ -1,6 +1,6 @@
-#include "parser.h"
+#include "Parser.h"
 #include "commands.h"
-#include "user.h"
+#include "User.h"
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -28,7 +28,7 @@ int sendLog(){
 }
 
 
-void parser::initialize() {
+void Parser::initialize() {
     string_to_command["login"] = login_;
     string_to_command["pass"] = pass_;
     string_to_command["ping"] = ping_;
@@ -47,13 +47,13 @@ void parser::initialize() {
 }
 
 // Constructor
-parser::parser(map<string, string> allowedUsers){
+Parser::Parser(map<string, string> allowedUsers){
     this->allowedUsers = allowedUsers;
     initialize();
 }
 
 
-void parser::parseCommand(string command){
+void Parser::parseCommand(string command){
     char *myString = &command[0];
     char *p = strtok(myString, " ");
     int i = 0;
@@ -73,12 +73,12 @@ void parser::parseCommand(string command){
     }
 }
 
-string parser::getFirstToken(){
+string Parser::getFirstToken(){
     return tokens[0];
 }
 
 
-void parser::executeCommand(user &usr){
+void Parser::executeCommand(User &usr){
     // Check whether first token is a valid command.
     if (string_to_command.count(getFirstToken()) == 0) {
         cout << "Error: Not a correct command ! " << endl;
@@ -233,21 +233,21 @@ void parser::executeCommand(user &usr){
     }
 }
 
-bool parser::checkArgNumber(int arg_n_wanted) {
-    return parser::arg_n - 1 == arg_n_wanted;
+bool Parser::checkArgNumber(int arg_n_wanted) {
+    return Parser::arg_n - 1 == arg_n_wanted;
 }
 
 
-void parser::resetCommand(){
+void Parser::resetCommand(){
     arg_n = 0;
     output = "";
 }
 
 
-string parser::getOutput(){
+string Parser::getOutput(){
     return output;
 }
 
 
 
-parser::~parser() = default;
+Parser::~Parser() = default;

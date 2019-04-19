@@ -11,15 +11,15 @@ all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
 $(BINDIR)/client: $(SRCDIR)/client.cpp networking.o
 	$(CC) $(CFLAGS) $< networking.o -o $@
 
-$(BINDIR)/server: $(SRCDIR)/server.cpp parser.o user.o networking.o
-	$(CC) $(CFLAGS) $< parser.o commands.o user.o networking.o -o $@
-	rm parser.o commands.o	
+$(BINDIR)/server: $(SRCDIR)/server.cpp Parser.o User.o networking.o
+	$(CC) $(CFLAGS) $< Parser.o commands.o User.o networking.o -o $@
+	rm Parser.o commands.o
 	
-user.o: $(SRCDIR)/user.cpp $(SRCDIR)/user.h
-	$(CC) $(CFLAGS) -c $(SRCDIR)/user.cpp
+User.o: $(SRCDIR)/User.cpp $(SRCDIR)/User.h
+	$(CC) $(CFLAGS) -c $(SRCDIR)/User.cpp
 
-parser.o: $(SRCDIR)/parser.cpp $(SRCDIR)/parser.h commands.o
-	$(CC) $(CFLAGS) -c $(SRCDIR)/parser.cpp
+Parser.o: $(SRCDIR)/Parser.cpp $(SRCDIR)/Parser.h commands.o
+	$(CC) $(CFLAGS) -c $(SRCDIR)/Parser.cpp
 	
 commands.o: $(SRCDIR)/commands.cpp $(SRCDIR)/commands.h
 	$(CC) $(CFLAGS) -c $(SRCDIR)/commands.cpp
@@ -29,4 +29,4 @@ networking.o: $(SRCDIR)/networking.cpp $(SRCDIR)/networking.h
 	
 .PHONY: clean
 clean:
-	rm -f $(BINDIR)/client $(BINDIR)/server parser.o commands.o
+	rm -f $(BINDIR)/client $(BINDIR)/server Parser.o commands.o
