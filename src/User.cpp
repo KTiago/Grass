@@ -12,7 +12,7 @@ int User::getSocket() const{
     return this->socket;
 }
 
-void  User::setUname(string uname){
+void  User::setUname(const string& uname){
     this->uname = uname;
 }
 
@@ -20,7 +20,7 @@ void  User::resetUname(){
     this->setUname("");
 }
 
-void  User::setLocation(string location){
+void  User::setLocation(const string& location){
     this->location = location;
 }
 
@@ -28,7 +28,7 @@ void  User::setAuthenticated(bool auth){
     this->authenticated = auth;
 }
 
-string User::getUname(){
+string User::getUname() const {
     return this->uname;
 }
 

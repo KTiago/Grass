@@ -11,11 +11,11 @@ public:
     explicit User(int socket, string base);
     bool isAuthenticated();
     int getSocket() const;
-    string getUname();
+    string getUname() const;
     string getLocation();
-    void  setUname(string uname);
+    void  setUname(const string& uname);
     void  resetUname();
-    void  setLocation(string location);
+    void  setLocation(const string& location);
     void  setAuthenticated(bool auth);
     bool operator<(const User &other) const;
 
