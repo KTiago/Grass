@@ -24,5 +24,6 @@ int rm_cmd(string fileName, User usr, string &out);
 int whoami_cmd(User usr, string &out);
 int w_cmd(User usr, string &out);
 int date_cmd(bool authenticated, string &out);
+int grep_cmd(string pattern, User usr, string &out);
 
 #endif //GRASS_COMMANDS_H
