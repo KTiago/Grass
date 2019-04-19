@@ -212,10 +212,22 @@ int rm_cmd(string filePath, User usr, string &out){
 
 int whoami_cmd(User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: rm may only be executed after authentication\n";
+        out = "Error: whoami may only be executed after authentication\n";
         return 1;
     }
     out = usr.getUname() + "\n";
+    return 0;
+}
+
+int w_cmd(User usr, string &out){
+    if(!usr.isAuthenticated()){
+        out = "Error: w may only be executed after authentication\n";
+        return 1;
+    }
+    // Print all connected users
+    for (set<User>::iterator it=connected_users.begin(); it!=connected_users.end(); ++it) {
+        out += (*it).getUname() + "\n";
+    }
     return 0;
 }
 

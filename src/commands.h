@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include "User.h"
+#include "grass.hpp"
 
 using namespace std;
 
@@ -21,6 +22,7 @@ int exec(const char* cmd, string &out);
 int ping_cmd(string host, string &out);
 int rm_cmd(string fileName, User usr, string &out);
 int whoami_cmd(User usr, string &out);
+int w_cmd(User usr, string &out);
 int date_cmd(bool authenticated, string &out);
 int grep_cmd(string pattern, User usr, string &out);
 

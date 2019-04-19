@@ -83,7 +83,7 @@ void Parser::executeCommand(User &usr){
     if (string_to_command.count(getFirstToken()) == 0) {
         string errorMsg = "Error: Not a correct command !\n";
         output = errorMsg;
-        cout << errorMsg << endl;
+        cout << errorMsg;
         return;
     }
 
@@ -215,8 +215,17 @@ void Parser::executeCommand(User &usr){
             }
             break;
         }
-        case w_:
+        case w_:{
+            if (!checkArgNumber(0)) {
+                output =  "Error: w takes no argument\n";
+                break;
+            }
+            int res = w_cmd(usr, output);
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
+            }
             break;
+        }
         case logout_:{
             if (checkArgNumber(0)) {
                 int res = logout_cmd(usr, output);
@@ -231,7 +240,8 @@ void Parser::executeCommand(User &usr){
             break;
         }
         case exit_:
-            // FIXME this should never be executed ?
+            // FIXME this should never be executed, as exit is handled in client !
+            // TODO remove exit from map !
             cout << "Goodbye" << endl;
             break;
 

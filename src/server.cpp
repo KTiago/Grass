@@ -21,10 +21,16 @@
 #include <vector>
 #include <map>
 //#include <filesystem>
+#include "grass.hpp"
 
 #define CONFIG_FILE "grass.conf"
 
 using namespace std;
+
+
+// Global variables
+set<User> connected_users;
+
 
 void runServer(uint16_t port, Parser parser, string baseDir);
 
@@ -94,8 +100,6 @@ void runServer(uint16_t port, Parser parser, string baseDir){
     int transferPort = 5000;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
-    set<User> connected_users;
-
 
 
 
