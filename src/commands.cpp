@@ -129,6 +129,19 @@ int mkdir_cmd(string dirPath, User usr, string &out){
     return exec(cmd.c_str(), out);
 }
 
+long get_cmd(const char* file_name, bool authenticated){
+    //if(checkAuthentication("get", authenticated)){//FIXME
+    //    return -1;
+    //}
+    FILE *fp;
+    fp = fopen(file_name, "r");
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    if (file_size == EOF)
+        return -1;
+    fclose(fp);
+    return file_size;
+}
 
 int cd_cmd(string dirPath, User &usr, string &out){
     if (!usr.isAuthenticated()) {

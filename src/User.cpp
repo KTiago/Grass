@@ -7,6 +7,7 @@ User::User(int socket, string base){
     this->authenticated = false;
     this->uname = "";
     this->location = base;
+    this->thread = NULL;
 }
 int User::getSocket() const{
     return this->socket;

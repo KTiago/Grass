@@ -18,12 +18,13 @@ public:
     void  setLocation(const string& location);
     void  setAuthenticated(bool auth);
     bool operator<(const User &other) const;
-
+    pthread_t thread;
 private:
     int socket;
     bool authenticated;
     string uname;
     string location;
+
 };
 
 #endif //GRASS_CLIENT_H

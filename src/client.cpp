@@ -19,7 +19,7 @@
 #include <arpa/inet.h>
 #include <set>
 #include <vector>
-
+#include <regex>
 
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
@@ -62,53 +62,67 @@ int main( int argc, const char* argv[] )
 
 int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode){
 
-    //Network setup
-    int sock = 0;
-    ssize_t valread;
-    struct sockaddr_in serv_addr;
+    //Local variables setup
+    int mainSocket = 0;
+    struct sockaddr_in serverAddress;
+
     char buffer[1024] = {0};
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    char copiedBuffer[1024] = {0};
+    char cmdCopy[1024];
+    char *token;
+    string cmd;
+
+    pthread_t thread;
+
+    char fileName[1024];
+    long fileSize = 0;
+    int port = 0;
+
+
+    // Network setup
+    if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("Socket creation error");
         return 1;
     }
 
-    memset(&serv_addr, 0, sizeof(serv_addr));
+    memset(&serverAddress, 0, sizeof(serverAddress));
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(serverPort);
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(serverPort);
 
-    if(inet_pton(AF_INET, serverIp, &serv_addr.sin_addr)<=0)
+    if(inet_pton(AF_INET, serverIp, &serverAddress.sin_addr)<=0)
     {
         printf("Address error");
         return 1;
     }
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    if (connect(mainSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
     {
         printf("Connection error\n");
         return 1;
     }
 
-    read(sock , buffer, 1024);
+
+    read(mainSocket, buffer, 1024);
     string bufString = string(buffer);
     // trim string
     bufString.erase(0, bufString.find_first_not_of(' '));
     printf("%s", bufString.c_str());
     memset(buffer, 0, 1024);
 
-    string cmd;
 
     while(true){
         if(!automated_mode) {
             cout << ">> ";
         }
         getline(infile, cmd);
+
         // Check if end of file reached, or exit command sent
         if(infile.eof() || cmd == "exit"){
             outfile << "\n[EOF reached]\n"; // FIXME probably need to delete this as not in specifications
             // closing connection
-            close(sock);
+            close(mainSocket);
             break;
         }
 
@@ -117,24 +131,51 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             continue;
         }
 
+        // Extract filename from get/put command if applicable
+        strncpy(cmdCopy, cmd.c_str(), 1024);
+        token = strtok(cmdCopy, " ");
+        if(strcmp(token, "get") == 0){
+            memset(fileName, 1024, 0);
+            strncpy(fileName, strtok(NULL, " "), 1024);
+        }
+
         // sends command to the server
-        send(sock , cmd.c_str(), strlen(cmd.c_str()) , 0);
+        send(mainSocket , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
         // server response to the command sent
-        read(sock , buffer, 1024);
+        read(mainSocket , buffer, 1024);
+        strncpy(copiedBuffer, buffer, 1024);
+
         string bufString = string(buffer);
         // trim string
         bufString.erase(0, bufString.find_first_not_of(' '));
         printf("%s", bufString.c_str());
 
         memset(buffer, 0, 1024);
+        token = strtok(copiedBuffer, " ");
 
         /*
-        FILE *fp1;
-        fp1 = fopen("received.txt", "w");
-        readfile(sock, fp1);
-        fclose(fp1);
+         * When the message received by the server corresponds to a get command response, a thread
+         * is created to receive the requested file in parallel
          */
+        if(strcmp(token, "get") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+            port = atoi(strtok(NULL, " "));
+            strtok(NULL, " ");
+            fileSize = stol(strtok(NULL, " "));
+            struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
+            strncpy(args->fileName, fileName, 1024);
+            args->port = port;
+            args->fileSize = fileSize;
+            args->serverIp = serverIp;
+            pthread_cancel(thread);
+            int rc = pthread_create(&thread, NULL, openFileClient, (void*) args);
+            if(rc != 0){
+                cerr << "Error" << endl;
+            }
+        }else{
+            printf("%s\n",buffer);
+            memset(buffer, 0, 1024);
+        }
     }
 
 

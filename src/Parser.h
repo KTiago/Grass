@@ -37,7 +37,11 @@ enum command {
 
 const int MAX_ARGS = 256;
 
+
 class Parser{
+private:
+    int getPort = 2000;
+    int putPort = 4000;
 public:
     Parser(map<string, string> allowedUsers);
     ~Parser();
