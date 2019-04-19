@@ -158,7 +158,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
          * When the message received by the server corresponds to a get command response, a thread
          * is created to receive the requested file in parallel
          */
-        if(strcmp(token, "get") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+        if(token and strcmp(token, "get") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
             port = atoi(strtok(NULL, " "));
             strtok(NULL, " ");
             fileSize = stol(strtok(NULL, " "));
@@ -172,10 +172,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             if(rc != 0){
                 cerr << "Error" << endl;
             }
-        }else{
-            printf("%s\n",buffer);
-            memset(buffer, 0, 1024);
-        }
+        }   
     }
 
 
