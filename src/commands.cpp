@@ -1,11 +1,12 @@
 #include "commands.h"
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <cstring>
 #include <stdexcept>
 #include <stdio.h>
 #include <algorithm>
+#include <sstream>
+#include <iterator>
 
 using namespace std;
 
@@ -45,20 +46,32 @@ int exec(const char* cmd, string &out) {
 }
 
 
-bool safePath(const char* targetPath, string &out){
-    char* copy = strdup(targetPath);
-    char* token = strtok(copy, "/");
+bool sanitizePath(string &targetPath,  string &out){
+    const char *delim = "/";
+    char* targetPathCopy = strdup(targetPath.c_str());
+    char* token = strtok(targetPathCopy, delim);
     int cnt = 0;
+    vector<string> sanitizedPath;
     while (token != nullptr)
-    {
-        cnt = !strcmp(token, "..")? cnt - 1 : strcmp(token, ".")? cnt + 1: cnt;
-        if (cnt < 0){
-            out = "Error: access denied\n";
-            return false;
+    {   if(!strcmp(token, "..")){
+            cnt--;
+            if (cnt < 0){
+                out = "Error: access denied\n";
+                return false;
+            }
+            sanitizedPath.pop_back();
         }
+        else if(strcmp(token, ".")){
+            cnt++;
+            sanitizedPath.emplace_back(token);
+        }
+
         token = strtok(nullptr, "/");
     }
-    free(copy);
+    free(targetPathCopy);
+    stringstream s;
+    copy(sanitizedPath.begin(), sanitizedPath.end(), ostream_iterator<string>(s, delim));
+    targetPath = s.str();
     return cnt >= 0;
 
 }
@@ -68,7 +81,7 @@ int pseudoAbsolutePath(string relativePath, const string &usrLocation, string &a
         // the path is absolute from the client's point of view but is actually relative to the server's base directory
         absPath = relativePath.substr(1);
     }
-    else if(!isalnum(relativePath.at(0)) and relativePath.at(0) != '.'){
+    else if(!isalnum(relativePath.at(0)) and relativePath.at(0) != '.'){ //FIXME
         out = "Error: directory path not allowed\n";
         return 1;
     }
@@ -84,7 +97,7 @@ int mkdir_cmd(string dirPath, User usr, string &out){
         return 1;
     }
     string absPath;
-    if(pseudoAbsolutePath(dirPath, usr.getLocation(), absPath, out) or !safePath(absPath.c_str(), out)){
+    if(pseudoAbsolutePath(dirPath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
         return 1;
     }
     string cmd = "mkdir " + absPath;
@@ -98,7 +111,7 @@ int cd_cmd(string dirPath, User &usr, string &out){
         return 1;
     }
     string absPath;
-    if(pseudoAbsolutePath(dirPath, usr.getLocation(), absPath, out) or !safePath(absPath.c_str(), out)){
+    if(pseudoAbsolutePath(dirPath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
         return 1;
     }
     string cmd = "cd " + absPath;
@@ -184,7 +197,7 @@ int rm_cmd(string filePath, User usr, string &out){
         return 1;
     }
     string absPath;
-    if(pseudoAbsolutePath(filePath, usr.getLocation(), absPath, out) or !safePath(absPath.c_str(), out)){
+    if(pseudoAbsolutePath(filePath, usr.getLocation(), absPath, out) or !sanitizePath(absPath, out)){
         return 1;
     }
     string cmd = "rm " + absPath;
@@ -196,7 +209,7 @@ int whoami_cmd(User usr, string &out){
         out = "Error: rm may only be executed after authentication\n";
         return 1;
     }
-    out = usr.getUname();
+    out = usr.getUname() + "\n";
     return 0;
 }
 
@@ -206,4 +219,13 @@ int date_cmd(bool authenticated, string &out){
         return 1;
     }
     return exec("date", out);
+}
+
+int grep_cmd(string pattern, User usr, string &out){
+    if(!usr.isAuthenticated()){
+        out = "Error: grep may only be executed after authentication\n";
+        return 1;
+    }
+    string cmd = "grep -l -r \"" + pattern + "\" " + usr.getLocation();
+    return exec(cmd.c_str(), out);
 }

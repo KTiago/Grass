@@ -65,7 +65,7 @@ int main()
             if(splitLine[0] == "port"){
                 port = stoi(splitLine[1]);
             }
-            if(splitLine[0] == "User"){
+            if(splitLine[0] == "user"){
                 allowedUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
             }
 

@@ -183,9 +183,17 @@ void Parser::executeCommand(User &usr){
         case put_:
             break;
         case grep_:
+        {if (!checkArgNumber(1)) {
+                output =  "Error: grep takes exactly one argument\n";
+                break;
+            }
+            int res = grep_cmd(tokens[1], usr, output);
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
+            }
             break;
+        }
         case date_:{
-            cout << "hello date";
             if (!checkArgNumber(0)) {
                 output =  "Error: date takes no argument\n";
                 break;
