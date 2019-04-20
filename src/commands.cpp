@@ -149,7 +149,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
     }else {
         out = "get port: " + to_string(getPort) + " size: " + to_string(file_size)+"\n";
         struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-        memset(args->fileName, 1024, 0);
+        memset(args->fileName, 0, 1024);
         fileName.copy(args->fileName, 1024);
         args->fileName[fileName.length()] = '\0';
         args->port = getPort;

@@ -123,7 +123,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         strncpy(cmdCopy, cmd.c_str(), 1024);
         token = strtok(cmdCopy, " ");
         if(strcmp(token, "get") == 0){
-            memset(fileName, 1024, 0);
+            memset(fileName, 0, 1024);
             strncpy(fileName, strtok(NULL, " "), 1024);
         }
 

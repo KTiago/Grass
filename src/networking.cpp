@@ -141,7 +141,7 @@ bool sendFile(SOCKET sock, FILE *f)
         char buffer[1024];
         do
         {
-            size_t num = MIN(filesize, sizeof(buffer));
+            size_t num;
             num = fread(buffer, 1, num, f);
             if (num < 1)
                 return false;
@@ -182,7 +182,7 @@ bool readFile(SOCKET sock, FILE *f, long filesize)
         char buffer[1024];
         do
         {
-            int num = MIN(filesize, sizeof(buffer));
+            int num = MIN((int)filesize, (int)sizeof(buffer));
             if (!readData(sock, buffer, num))
                 return false;
             int offset = 0;
