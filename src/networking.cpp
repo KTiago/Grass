@@ -92,13 +92,12 @@ void* openFileClient(void *ptr){
 
     if(inet_pton(AF_INET, serverIp, &address.sin_addr)<=0)
     {
-        printf("Address error");
+        printf("Address error\n");
         return (void*)1;
     }
 
     if (connect(main_socket, (struct sockaddr *)&address, sizeof(address)) < 0){
         printf("Connect error\n");
-        fflush(stdout);
         return (void*)1;
     }
 
@@ -141,7 +140,7 @@ bool sendFile(SOCKET sock, FILE *f)
         char buffer[1024];
         do
         {
-            size_t num;
+            size_t num = MIN(filesize, sizeof(buffer));
             num = fread(buffer, 1, num, f);
             if (num < 1)
                 return false;
@@ -182,7 +181,7 @@ bool readFile(SOCKET sock, FILE *f, long filesize)
         char buffer[1024];
         do
         {
-            int num = MIN((int)filesize, (int)sizeof(buffer));
+            int num = MIN(filesize, sizeof(buffer));
             if (!readData(sock, buffer, num))
                 return false;
             int offset = 0;
