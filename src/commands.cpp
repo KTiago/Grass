@@ -12,12 +12,11 @@
 
 using namespace std;
 
-/*
- * Code snippet taken from:
- * https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-output-of-command-within-c-using-posix
- */
 /**
  * Executes given command on the server.
+ *
+ * Code snippet taken from:
+ * https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-output-of-command-within-c-using-posix
  *
  * @param cmd, command to be executed.
  * @param out, stdout result of command
@@ -41,9 +40,13 @@ int exec(const char* cmd, string &out) {
         pclose(pipe);
         return 1;
     }
-    pclose(pipe);
+    int exitStatus = pclose(pipe);
     out = result;
-    // FIXME
+
+    // FIXME adrien
+    cout << "exec result";
+    cout << exitStatus << endl;
+
     return result.substr(0,3) == "sh:" ? 1: 0;
 }
 

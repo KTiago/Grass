@@ -21,13 +21,6 @@ using namespace std;
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
 
-int sendLog(){
-    // TODO
-    ifstream outfile(OUTFILE_NAME) ;
-    string log = { istreambuf_iterator<char>(outfile), istreambuf_iterator<char>() };
-    return 0;
-}
-
 
 void Parser::initialize() {
     string_to_command["login"] = login_;
@@ -118,16 +111,12 @@ void Parser::executeCommand(User &usr){
             break;
         case ping_:
             if (checkArgNumber(1)) {
-                int e = ping_cmd(tokens[1], output);
-                if (e == 0) {
-                    cout << output << endl;
-                } else {
-                    output = "Error";
-                    cout << "Error" << endl;
+                int res = ping_cmd(tokens[1], output);
+                if (res != 0) {
+                    cerr << "Error code: " << res << endl;
                 }
             } else {
-                output = "Error";
-                cout << "Error" << endl;
+                output = "Error: ping takes exactly one argument\n";
             }
             break;
         case ls_:{
@@ -141,7 +130,6 @@ void Parser::executeCommand(User &usr){
             if(res != 0){
                 cerr << "Error code: " << res << endl;
             }
-            sendLog();
             break;
         }
         case cd_:{

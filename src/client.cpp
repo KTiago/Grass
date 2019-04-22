@@ -104,6 +104,11 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
     }
     
     while(true){
+        // FIXME added again temporarily for readability
+        if(!automated_mode) {
+            cout << ">> ";
+        }
+
         getline(infile, cmd);
 
         // Check if end of file reached, or exit command sent
