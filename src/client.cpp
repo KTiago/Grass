@@ -102,20 +102,8 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         printf("Connection error\n");
         return 1;
     }
-
-
-    read(mainSocket, buffer, 1024);
-    string bufString = string(buffer);
-    // trim string
-    bufString.erase(0, bufString.find_first_not_of(' '));
-    printf("%s", bufString.c_str());
-    memset(buffer, 0, 1024);
-
-
+    
     while(true){
-        if(!automated_mode) {
-            cout << ">> ";
-        }
         getline(infile, cmd);
 
         // Check if end of file reached, or exit command sent
@@ -135,7 +123,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         strncpy(cmdCopy, cmd.c_str(), 1024);
         token = strtok(cmdCopy, " ");
         if(strcmp(token, "get") == 0){
-            memset(fileName, 1024, 0);
+            memset(fileName, 0, 1024);
             strncpy(fileName, strtok(NULL, " "), 1024);
         }
 
@@ -159,15 +147,22 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
          * is created to receive the requested file in parallel
          */
         if(token and strcmp(token, "get") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+            // Extract port and fileSize from received command string
             port = atoi(strtok(NULL, " "));
             strtok(NULL, " ");
             fileSize = stol(strtok(NULL, " "));
+
+            // Prepare struct for argument to function in parallel thread
             struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);
             args->port = port;
             args->fileSize = fileSize;
             args->serverIp = serverIp;
+
+            // Kill stale thread
             pthread_cancel(thread);
+
+            // Create new thread
             int rc = pthread_create(&thread, NULL, openFileClient, (void*) args);
             if(rc != 0){
                 cerr << "Error" << endl;

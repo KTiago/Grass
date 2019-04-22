@@ -80,11 +80,13 @@ int main()
     // FIXME works even without config file?
 
 
+    /*
     cout << "Running on port: " << port << " , " << "base directory: " << baseDirectory << "\n";
     cout << "Allowed users : \n";
     for (const auto &knownUser : allowedUsers) {
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
     }
+     */
 
     Parser parser(allowedUsers);
 
@@ -93,11 +95,10 @@ int main()
 }
 
 void runServer(uint16_t port, Parser parser){
-    int server_fd, new_socket, sd, max_sd, activity;
+    int server_fd, new_socket, sd, max_sd;
     ssize_t  valread;
     struct sockaddr_in address;
     int opt = 1;
-    int transferPort = 5000;
     int addrlen = sizeof(address);
     char buffer[1025] = {0};
 
@@ -153,7 +154,7 @@ void runServer(uint16_t port, Parser parser){
         }
 
         // waits for one of the socket to receive some activity
-        activity = select(max_sd + 1, &master_fd, nullptr, nullptr, nullptr);
+        select(max_sd + 1, &master_fd, nullptr, nullptr, nullptr);
 
         // A new TCP connection has been opened
         if (FD_ISSET(server_fd, &master_fd)) {
@@ -161,14 +162,6 @@ void runServer(uint16_t port, Parser parser){
             if ((new_socket = accept(server_fd,
                                      (struct sockaddr *) &address, (socklen_t * ) & addrlen)) < 0) {
                 perror("accept");
-                exit(1);
-            }
-
-            string message = "You are successfully connected young padawan\n";
-            printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , new_socket , inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-
-            if (send(new_socket, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
-                perror("send");
                 exit(1);
             }
 
@@ -188,12 +181,15 @@ void runServer(uint16_t port, Parser parser){
                     //Host disconnected
                     getpeername(sd , (struct sockaddr*)&address , \
                         (socklen_t*)&addrlen);
+
+                    /*
                     printf("Host disconnected , ip %s , port %d \n" ,
                            inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
+                    */
 
                     //Close the socket and mark as 0 in list for reuse
                     close(sd);
-                    connected_users.erase(it);
+                    it = connected_users.erase(it);
                 }
                 else
                 {
@@ -206,7 +202,7 @@ void runServer(uint16_t port, Parser parser){
 
                     /*
                         Yann/Delphine : insert code here to handle the command received and then
-                        send the repsonse to the User
+                        send the response to the User
                     */
 
                     parser.parseCommand(buffer);
@@ -219,12 +215,14 @@ void runServer(uint16_t port, Parser parser){
                        End Parser code
                     */
 
-                    if (send(sd, message.c_str(), strlen(message.c_str()), 0) != strlen(message.c_str())) {
+                    if ((int)send(sd, message.c_str(), strlen(message.c_str()), 0) != (int)strlen(message.c_str())) {
                         perror("send");
                     }
+                    ++it;
                 }
+            }else{
+                ++it;
             }
-            ++it;
         }
     }
 }

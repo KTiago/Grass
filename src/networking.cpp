@@ -92,13 +92,12 @@ void* openFileClient(void *ptr){
 
     if(inet_pton(AF_INET, serverIp, &address.sin_addr)<=0)
     {
-        printf("Address error");
+        printf("Address error\n");
         return (void*)1;
     }
 
     if (connect(main_socket, (struct sockaddr *)&address, sizeof(address)) < 0){
         printf("Connect error\n");
-        fflush(stdout);
         return (void*)1;
     }
 
