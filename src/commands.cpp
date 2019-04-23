@@ -141,7 +141,7 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
     }
     usr.resetUname();
     if (allowedUsers.find(uname) == allowedUsers.end()){
-        out = "Error: unknown User " + uname + "\n";
+        out = "Error: unknown user " + uname + "\n";
         return 1;
     }
     usr.setUname(uname);
