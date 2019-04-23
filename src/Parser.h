@@ -35,7 +35,7 @@ enum command {
     exit_
 };
 
-const int MAX_ARGS = 256;
+const int MAX_ARGS = 5;
 
 
 class Parser{
