@@ -18,8 +18,7 @@ using namespace std;
  */
 const string ACCESS_ERROR = "Error: access denied!";
 const string FILENAME_ERROR = "Error: the path is too long.";
-const string TRANFER_ERROR = "Error: file transfer failed.";
-const int MAXIMAL_PATH_LEN = 128;
+const string TRANSFER_ERROR = "Error: file transfer failed.";
 
 
 /**
@@ -61,6 +60,14 @@ int exec(const char* cmd, string &out) {
 }
 
 
+int checkPathLength(const string &path, string &out){
+    if(path.size() > MAX_PATH_LEN + 1){
+        out = FILENAME_ERROR + "\n";
+        return 1;
+    }
+    return 0;
+}
+
 /**
  * Sanitize a given path with respect to ".." and "."
  *
@@ -87,9 +94,8 @@ int sanitizePath(string &targetPath,  string &out){
             }
             sanitizedPath.pop_back();
         }
-
         // Increment counter whenever the token is not .
-        else if(strcmp(token, ".")){
+        else if(strcmp(token, ".") != 0) {
             cnt++;
             sanitizedPath.emplace_back(token);
         }
@@ -103,13 +109,8 @@ int sanitizePath(string &targetPath,  string &out){
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
 
-    // Check whether target path is smaller than 128 characters
-    if (targetPath.size() > MAXIMAL_PATH_LEN) {
-        out = FILENAME_ERROR + "\n";
-        return 1;
-    }
-
-    return 0;
+    // Finally check path length and return error code
+    return checkPathLength(targetPath, out);
 }
 
 
@@ -163,7 +164,7 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
     }
     usr.resetUname();
     if (allowedUsers.find(uname) == allowedUsers.end()){
-        out = "Error: unknown User " + uname + "\n";
+        out = "Error: unknown user " + uname + "\n";
         return 1;
     }
     usr.setUname(uname);

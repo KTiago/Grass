@@ -35,22 +35,7 @@ string baseDirectory;
 
 void runServer(uint16_t port, Parser parser);
 
-// FIXME strtok
-size_t split(vector<string> &res, const string &line, char delim){
-    size_t pos = line.find(delim);
-    size_t initialPos = 0;
-    res.clear();
-    while( pos != string::npos){
-        res.push_back(line.substr(initialPos, pos-initialPos));
-        initialPos = pos + 1;
-        while ((pos = line.find(delim, initialPos)) == initialPos){
-            initialPos += 1;
-        }
-    }
-    res.push_back(line.substr(initialPos, min(pos, line.size() - initialPos + 1)));
-    return res.size();
-}
-// FIXME file << ... instead of printf
+size_t split(vector<string> &res, const string &line, const char* delim);
 int main()
 {
 
@@ -64,12 +49,12 @@ int main()
     vector<string> splitLine;
     if(configFile.is_open()){
         while(getline(configFile, line)){
-            split(splitLine, line, ' ');
+            split(splitLine, line, " ");
             if(splitLine[0] == "base"){
                 baseDirectory = splitLine[1];
             }
             if(splitLine[0] == "port"){
-                port = stoi(splitLine[1]);
+                port = static_cast<uint16_t>(stoi(splitLine[1]));
             }
             if(splitLine[0] == "user"){
                 allowedUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
@@ -85,8 +70,8 @@ int main()
     cout << "Allowed users : \n";
     for (const auto &knownUser : allowedUsers) {
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
-    }
-     */
+    }*/
+
 
     Parser parser(allowedUsers);
 
@@ -100,7 +85,7 @@ void runServer(uint16_t port, Parser parser){
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1025] = {0};
+    char buffer[1025];
 
 
 
@@ -225,4 +210,15 @@ void runServer(uint16_t port, Parser parser){
             }
         }
     }
+}
+
+size_t split(vector<string> &res, const string &line, const char* delim){
+    res.clear();
+    char* token = strtok(strdup(line.c_str()), delim);
+    while (token != nullptr)
+    { res.emplace_back(token);
+        token = strtok(nullptr, delim);
+
+    }
+    return res.size();
 }
