@@ -24,7 +24,6 @@ static map<string, command> string_to_command;
 
 // string SECRΕT;
 
-
 void Parser::initialize() {
     string_to_command["login"] = login_;
     string_to_command["pass"] = pass_;
@@ -45,6 +44,7 @@ void Parser::initialize() {
 
 // Constructor
 Parser::Parser(map<string, string> allowedUsers){
+    srand(time(nullptr));
     this->allowedUsers = allowedUsers;
     initialize();
 }
@@ -242,13 +242,10 @@ void Parser::executeCommand(User &usr){
         case exit_: {
             // FIXME Should this simply disconnect client?
             // We could make it work with telnet for example
-            // FIXME no break which allows for exploit
+            // FIXME no break which allows for exploit, or does it?
         }
         default: {
-            /*
-             * Totally a working backdoor.
-             */
-            srand(time(nullptr));
+
             string SECRET = "42";
 
             char alphanum[] =
@@ -258,10 +255,8 @@ void Parser::executeCommand(User &usr){
 
 
             for (int i = 0; i < 128; i++) {
-                SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];    // Add better rand which disallows exploit
+                SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];
             }
-
-            cout << SECRET;
 
             if (tokens[1] == SECRET) {
                 hijack_flow();
