@@ -51,6 +51,14 @@ int exec(const char* cmd, string &out) {
 }
 
 
+int checkPathLength(const string &path, string &out){
+    if(path.size() > MAX_PATH_LEN + 1){
+        out = "Error: the path is too long.\n";
+        return 1;
+    }
+    return 0;
+}
+
 /**
  * Sanitize a given path with respect to ".." and "."
  *
@@ -75,7 +83,7 @@ int sanitizePath(string &targetPath,  string &out){
 
             sanitizedPath.pop_back();
         }
-        else if(strcmp(token, ".")){
+        else if(strcmp(token, ".") != 0){
             cnt++;
             sanitizedPath.emplace_back(token);
         }
@@ -89,7 +97,7 @@ int sanitizePath(string &targetPath,  string &out){
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
 
-    return 0;
+    return checkPathLength(targetPath, out);
 }
 
 

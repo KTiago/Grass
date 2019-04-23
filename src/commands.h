@@ -1,6 +1,7 @@
 #ifndef GRASS_COMMANDS_H
 #define GRASS_COMMANDS_H
 #define MAX_DIR_LEN 50
+#define MAX_PATH_LEN 128
 #define OUTFILE_NAME "log.txt"
 
 #include <cstdlib>

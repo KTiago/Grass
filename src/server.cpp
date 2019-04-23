@@ -65,12 +65,12 @@ int main()
     // FIXME works even without config file?
 
 
-
+    /*
     cout << "Running on port: " << port << " , " << "base directory: " << baseDirectory << "\n";
     cout << "Allowed users : \n";
     for (const auto &knownUser : allowedUsers) {
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
-    }
+    }*/
 
 
     Parser parser(allowedUsers);
@@ -85,7 +85,7 @@ void runServer(uint16_t port, Parser parser){
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1025] = {0};
+    char buffer[1025];
 
 
 
