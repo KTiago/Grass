@@ -135,12 +135,13 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         // sends command to the server
         send(mainSocket , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
-        // server response to the command sent
+        // wait for server to respond to the command sent
         read(mainSocket , buffer, 1024);
         strncpy(copiedBuffer, buffer, 1024);
 
         string bufString = string(buffer);
-        // trim string
+
+        // trim string, since we send empty spaces when command returns nothing. FIXME
         bufString.erase(0, bufString.find_first_not_of(' '));
         printf("%s", bufString.c_str());
 

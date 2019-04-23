@@ -1,7 +1,5 @@
 #ifndef GRASS_COMMANDS_H
 #define GRASS_COMMANDS_H
-#define MAX_DIR_LEN 50
-#define OUTFILE_NAME "log.txt"
 
 #include <cstdlib>
 #include <iostream>
@@ -11,6 +9,11 @@
 #include "grass.hpp"
 
 using namespace std;
+
+extern const string ACCESS_ERROR;
+extern const string FILENAME_ERROR;
+extern const string TRANFER_ERROR;
+extern const int MAXIMAL_PATH_LEN;
 
 
 int mkdir_cmd(string dir, User usr, string &out);
