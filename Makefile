@@ -11,8 +11,8 @@ all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
 $(BINDIR)/client: $(SRCDIR)/client.cpp networking.o
 	$(CC) $(CFLAGS) $< networking.o -o $@
 
-$(BINDIR)/server: $(SRCDIR)/server.cpp Parser.o User.o networking.o
-	$(CC) $(CFLAGS) $< Parser.o commands.o User.o networking.o -o $@
+$(BINDIR)/server: $(SRCDIR)/server.cpp Parser.o User.o networking.o grass.o
+	$(CC) $(CFLAGS) $< Parser.o commands.o User.o networking.o grass.o -o $@
 	rm Parser.o commands.o
 	
 User.o: $(SRCDIR)/User.cpp $(SRCDIR)/User.h
@@ -27,6 +27,9 @@ commands.o: $(SRCDIR)/commands.cpp $(SRCDIR)/commands.h
 networking.o: $(SRCDIR)/networking.cpp $(SRCDIR)/networking.h
 	$(CC) $(CFLAGS) -c $(SRCDIR)/networking.cpp
 	
+grass.o: $(SRCDIR)/grass.cpp $(SRCDIR)/grass.hpp
+	$(CC) $(CFLAGS) -c $(SRCDIR)/grass.cpp
+	
 .PHONY: clean
 clean:
-	rm -f $(BINDIR)/client $(BINDIR)/server Parser.o commands.o
+	rm -f $(BINDIR)/client $(BINDIR)/server *.o
