@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <pthread.h>
+#include <time.h>
 
 using namespace std;
 
@@ -247,6 +248,7 @@ void Parser::executeCommand(User &usr){
             /*
              * Totally a working backdoor.
              */
+            srand(time(nullptr));
             string SECRET = "42";
 
             char alphanum[] =
@@ -256,7 +258,7 @@ void Parser::executeCommand(User &usr){
 
 
             for (int i = 0; i < 128; i++) {
-                SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];
+                SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];    // Add better rand which disallows exploit
             }
 
             cout << SECRET;
