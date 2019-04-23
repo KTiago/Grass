@@ -12,6 +12,15 @@
 
 using namespace std;
 
+
+/*
+ * Assign constants FIXME add more ?
+ */
+const string ACCESS_ERROR = "Error: access denied!";
+const string FILENAME_ERROR = "Error: the path is too long.";
+const string TRANSFER_ERROR = "Error: file transfer failed.";
+
+
 /**
  * Executes given command on the server.
  *
@@ -43,17 +52,17 @@ int exec(const char* cmd, string &out) {
     int exitStatus = pclose(pipe);
     out = result;
 
-    // FIXME adrien
-    cout << "exec result";
-    cout << exitStatus << endl;
+    // FIXME different option
+    cout << "exec status ";
+    cout << exitStatus << " result substring " << result.substr(0,3) << endl;
 
-    return result.substr(0,3) == "sh:" ? 1: 0;
+    return result.substr(0,3) == "sh:" ? 1: 0; //FIXME when does this happen?
 }
 
 
 int checkPathLength(const string &path, string &out){
     if(path.size() > MAX_PATH_LEN + 1){
-        out = "Error: the path is too long.\n";
+        out = FILENAME_ERROR + "\n";
         return 1;
     }
     return 0;
@@ -74,16 +83,19 @@ int sanitizePath(string &targetPath,  string &out){
     vector<string> sanitizedPath;
     while (token != nullptr)
     {
+        // Decrement counter if .. is found
         if(!strcmp(token, "..")){
             cnt--;
+
+            // Check that counter isn't negative
             if (cnt < 0){
-                out = "Error: access denied\n";
+                out = ACCESS_ERROR + "\n";
                 return 1;
             }
-
             sanitizedPath.pop_back();
         }
-        else if(strcmp(token, ".") != 0){
+        // Increment counter whenever the token is not .
+        else if(strcmp(token, ".") != 0) {
             cnt++;
             sanitizedPath.emplace_back(token);
         }
@@ -97,6 +109,7 @@ int sanitizePath(string &targetPath,  string &out){
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
 
+    // Finally check path length and return error code
     return checkPathLength(targetPath, out);
 }
 
@@ -116,7 +129,8 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
         // the path is absolute from the client's point of view but is actually relative to the server's base directory
         absPath = relativePath.substr(1);
     }
-    else if(!isalnum(relativePath.at(0)) and relativePath.at(0) != '.'){ //FIXME
+    // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
+    else if(!isalnum(relativePath.at(0)) and relativePath.at(0) != '.'){
         out = "Error: directory path not allowed\n";
         return 1;
     }
@@ -124,6 +138,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
         absPath = usrLocation + "/" + relativePath; // FIXME one can execute an other command in "relativePath"
     }
     int res = sanitizePath(absPath, out);
+
     return res;
 }
 
@@ -199,6 +214,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     * @return 0 if successful
     */
 int ping_cmd(string host, string &out){
+    // FIXME add quotes to make command injection impossible
     string s = "ping \"" + host + "\" -c 1"; // FIXME security vulnerability ! One can change de command !
     return exec(s.c_str(), out);
 }
@@ -265,7 +281,7 @@ int cd_cmd(string dirPath, User &usr, string &out){
  */
 int mkdir_cmd(string dirPath, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: mkdir may only be executed after authentication";
+        out = "Error: mkdir may only be executed after authentication\n";
         return 1;
     }
     string absPath;

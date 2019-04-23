@@ -47,7 +47,7 @@ Parser::Parser(map<string, string> allowedUsers){
 }
 
 
-void Parser::parseCommand(string command){
+void Parser::parseCommand(string command){  // FIXME add max 128 char input
     char *myString = &command[0];
     char *p = strtok(myString, " ");
     int i = 0;
