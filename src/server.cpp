@@ -42,7 +42,6 @@ int main()
     uint16_t port;
     map<string, string> allowedUsers;
 
-
     // Parsing config file
     ifstream configFile(CONFIG_FILE);
     string line; //FIXME we could add vulnerabilities in the config file
@@ -86,7 +85,6 @@ void runServer(uint16_t port, Parser parser){
     int opt = 1;
     int addrlen = sizeof(address);
     char buffer[1025];
-
 
 
     // Creating socket file descriptor

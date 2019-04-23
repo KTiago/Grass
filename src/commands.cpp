@@ -469,10 +469,12 @@ int w_cmd(User usr, string &out){
  */
 int logout_cmd(User &usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: login may only be executed after authentication\n";
+        out = "Error: logout may only be executed after authentication\n";
         return 1;
     }
     usr.resetUname();
     usr.setAuthenticated(false);
     return 0;
 }
+
+
