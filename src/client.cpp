@@ -32,7 +32,7 @@ int main( int argc, const char* argv[] )
 {    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
     if(argc != DEFAULT_MODE_ARGC and !automated_mode){
-        cerr << "Expected command: ./User server-ip server-port [infile outfile]\n";
+        cerr << "Expected command: ./client server-ip server-port [infile outfile]\n";
         return -1;
     };
 

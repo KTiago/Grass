@@ -32,14 +32,13 @@ const string TRANSFER_ERROR = "Error: file transfer failed.";
  * @return 0 if successful, 1 otherwise
  */
 int exec(const char* cmd, string &out) {
-    char buffer[128];
-    std::string result;
+    char buffer[150];
     char cmdRediction [150];
+
     strcpy(cmdRediction,cmd);
-    strcat(cmdRediction, " 2>&1");
 
-
-    FILE* pipe = popen(cmdRediction, "r");
+    FILE* pipe = popen((string(cmdRediction) + " 2>&1").c_str(), "r");
+    std::string result;
     if (!pipe) throw std::runtime_error("popen() failed!");
     try {
         while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
@@ -215,7 +214,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     */
 int ping_cmd(string host, string &out){
     // FIXME add quotes to make command injection impossible
-    string s = "ping \"" + host + "\" -c 1"; // FIXME security vulnerability ! One can change de command !
+    string s = "ping -c 1 " + host; // + "\" -c 1"; // FIXME security vulnerability ! One can change de command !
     return exec(s.c_str(), out);
 }
 

@@ -193,7 +193,7 @@ void runServer(uint16_t port, Parser parser){
                     string message = parser.getOutput().empty()? " ": parser.getOutput();
                     parser.resetCommand();
 
-                    cout << message;
+                    //cout << message;
                     /*
                        End Parser code
                     */
