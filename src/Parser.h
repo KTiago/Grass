@@ -35,7 +35,11 @@ enum command {
     exit_
 };
 
+/*
+ * Constants
+ */
 const int MAX_ARGS = 5;
+extern const char DELIMITER;
 
 
 class Parser{
@@ -65,8 +69,8 @@ public:
     
 
 private:
-    std::string output;
-    std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
+    string output;
+    string tokens[MAX_ARGS]; // FIXME OVERFLOW POSSIBLE ! To secure change to vector !
     int arg_n;
     map<string, string> allowedUsers;
 };

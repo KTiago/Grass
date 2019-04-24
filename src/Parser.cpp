@@ -12,8 +12,15 @@
 #include <map>
 #include <pthread.h>
 #include <time.h>
+#include <iterator>
 
 using namespace std;
+
+/*
+ * Assign constants
+ */
+const char DELIMITER = ' ';
+
 
 /*
  * Largely inspired by:
@@ -22,7 +29,7 @@ using namespace std;
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
 
-// string SECRΕT;
+// string SECRΕT; non ascii-version of E
 
 void Parser::initialize() {
     string_to_command["login"] = login_;
@@ -49,24 +56,14 @@ Parser::Parser(map<string, string> allowedUsers){
     initialize();
 }
 
-
+// TODO found better way to tokenize, use this elsewhere too !
 void Parser::parseCommand(string command){
-    char *myString = &command[0];
-    char *p = strtok(myString, " ");
-    int i = 0;
-    arg_n = 0;
-    stringstream ss;
-    while (p and arg_n < MAX_ARGS) {
-        //gets the current token and adds it to the string stream
-        ss << p;
-        //the string stream then converts it into a std::string and adds it to the token array
-        ss >> tokens[i];
-        //it then clears the stream, resetting it
-        ss.clear();
-        //removes the token from p
-        p = strtok(nullptr, " ");
-        i++;
+    stringstream commandStream(command);
+
+    string s;
+    while (std::getline(commandStream, s, DELIMITER)) {
         arg_n++;
+        tokens[arg_n] = s;
     }
 }
 
@@ -241,18 +238,13 @@ void Parser::executeCommand(User &usr){
         }
         case exit_: {
             // FIXME Should this simply disconnect client?
-            // We could make it work with telnet for example
+            // We could make it work with telnet for example, but then would need to remove user here.
             // FIXME no break which allows for exploit, or does it?
         }
         default: {
+            string SECRET;
 
-            string SECRET = "42";
-
-            char alphanum[] =
-                    "0123456789"
-                    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                    "abcdefghijklmnopqrstuvwxyz";
-
+            char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
             for (int i = 0; i < 128; i++) {
                 SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];
@@ -279,13 +271,13 @@ bool Parser::checkArgNumber(int arg_n_wanted) {
 void Parser::resetCommand(){
     arg_n = 0;
     output = "";
+    // tokens.clear(); FIXME to secure tokens overflow
 }
 
 
 string Parser::getOutput(){
     return output;
 }
-
 
 
 Parser::~Parser() = default;

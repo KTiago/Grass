@@ -71,10 +71,10 @@ int main()
         std::cout << knownUser.first << " -> " << knownUser.second << "\n";
     }*/
 
-
+    // Create parser object
     Parser parser(allowedUsers);
 
-    // start the server
+    // Start the server
     runServer(port, parser);
 }
 
@@ -159,11 +159,10 @@ void runServer(uint16_t port, Parser parser){
             {
                 //Check if it was for closing, and also read the
                 //incoming message
-                if ((valread = read( sd , buffer, 1024)) == 0)
+                if ((valread = read(sd, buffer, 1024)) == 0)
                 {
                     //Host disconnected
-                    getpeername(sd , (struct sockaddr*)&address , \
-                        (socklen_t*)&addrlen);
+                    getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addrlen);
 
                     /*
                     printf("Host disconnected , ip %s , port %d \n" ,
@@ -179,7 +178,8 @@ void runServer(uint16_t port, Parser parser){
                     //set the string terminating NULL byte on the end
                     //of the data read
                     buffer[valread] = '\0';
-                    // buffer contains the received command
+
+                    // buffer contains the received command trimmed to 1024 characters
                     printf("%s\n", buffer);
                     // response to be sent
 

@@ -14,7 +14,7 @@ using namespace std;
 
 
 /*
- * Assign constants FIXME add more ?
+ * Assign constants
  */
 const string ACCESS_ERROR = "Error: access denied!";
 const string FILENAME_ERROR = "Error: the path is too long.";
@@ -37,7 +37,6 @@ int exec(const char* cmd, string &out) {
     char cmdRediction [150];
     strcpy(cmdRediction,cmd);
     strcat(cmdRediction, " 2>&1");
-
 
     FILE* pipe = popen(cmdRediction, "r");
     if (!pipe) throw std::runtime_error("popen() failed!");
