@@ -64,6 +64,7 @@ void Parser::parseCommand(string command){
     stringstream commandStream(command);
 
     string s;
+    arg_n = 0;
     while (getline(commandStream, s, DELIMITER)) {
         tokens.push_back(s);
         arg_n++;
@@ -120,6 +121,7 @@ void Parser::executeCommand(User &usr){
                 }
             } else {
                 output = "Error: ping takes exactly one argument\n";
+
             }
             break;
         case ls_: {
