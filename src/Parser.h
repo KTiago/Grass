@@ -10,6 +10,8 @@
 #include <sstream>
 #include <map>
 #include "User.h"
+#include <vector>
+
 
 /*
  * Largely inspired by:
@@ -35,7 +37,10 @@ enum command {
     exit_
 };
 
-const int MAX_ARGS = 5;
+/*
+ * Constants
+ */
+extern const char DELIMITER;
 
 
 class Parser{
@@ -65,13 +70,11 @@ public:
     
 
 private:
-    std::string output;
-    std::string tokens[MAX_ARGS]; // OVERFLOW POSSIBLE !
+    string output;
+    vector<string> tokens;
     int arg_n;
     map<string, string> allowedUsers;
 };
-
-
 
 
 #endif //GRASS_PARSER_H

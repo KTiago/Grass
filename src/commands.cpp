@@ -14,7 +14,7 @@ using namespace std;
 
 
 /*
- * Assign constants FIXME add more ?
+ * Assign constants
  */
 const string ACCESS_ERROR = "Error: access denied!";
 const string FILENAME_ERROR = "Error: the path is too long.";
