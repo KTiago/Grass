@@ -10,6 +10,8 @@
 #include <sstream>
 #include <map>
 #include "User.h"
+#include <vector>
+
 
 /*
  * Largely inspired by:
@@ -38,7 +40,6 @@ enum command {
 /*
  * Constants
  */
-const int MAX_ARGS = 5;
 extern const char DELIMITER;
 
 
@@ -70,12 +71,10 @@ public:
 
 private:
     string output;
-    string tokens[MAX_ARGS]; // FIXME OVERFLOW POSSIBLE ! To secure change to vector !
+    vector<string> tokens;
     int arg_n;
     map<string, string> allowedUsers;
 };
-
-
 
 
 #endif //GRASS_PARSER_H

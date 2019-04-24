@@ -57,13 +57,16 @@ Parser::Parser(map<string, string> allowedUsers){
 }
 
 // TODO found better way to tokenize, use this elsewhere too !
+/*
+ * https://www.techiedelight.com/split-string-cpp-using-delimiter/
+ */
 void Parser::parseCommand(string command){
     stringstream commandStream(command);
 
     string s;
-    while (std::getline(commandStream, s, DELIMITER)) {
+    while (getline(commandStream, s, DELIMITER)) {
+        tokens.push_back(s);
         arg_n++;
-        tokens[arg_n] = s;
     }
 }
 
@@ -271,7 +274,7 @@ bool Parser::checkArgNumber(int arg_n_wanted) {
 void Parser::resetCommand(){
     arg_n = 0;
     output = "";
-    // tokens.clear(); FIXME to secure tokens overflow
+    tokens.clear();
 }
 
 
