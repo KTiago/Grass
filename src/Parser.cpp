@@ -184,8 +184,18 @@ void Parser::executeCommand(User &usr){
             }
             break;
         }
-        case put_:
+        case put_: {
+            if (!checkArgNumber(2)) {
+                output = "Error: put takes exactly two argument\n";
+                break;
+            }
+            int res = put_cmd(tokens[1], stol(tokens[2]), putPort, usr, output);
+            putPort++;
+            if (res != 0) {
+                cerr << "Error code: " << res << endl;
+            }
             break;
+        }
         case grep_: {
             if (!checkArgNumber(1)) {
                 output = "Error: grep takes exactly one argument\n";

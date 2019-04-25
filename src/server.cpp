@@ -148,7 +148,7 @@ void runServer(uint16_t port, Parser parser){
                 exit(1);
             }
 
-            User newUsr = User(new_socket, ".");
+            User newUsr = User(new_socket, string(inet_ntoa(address.sin_addr)),".");
             connected_users.insert(newUsr);
 
         }

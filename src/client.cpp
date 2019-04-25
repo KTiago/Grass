@@ -20,7 +20,7 @@
 #include <set>
 #include <vector>
 #include <regex>
-
+#include <unistd.h>
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
 #define IP_SIZE 32
@@ -78,31 +78,36 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
     long fileSize = 0;
     int port = 0;
 
+    int attempts = 0;
+    bool connected = false;
+    while(attempts < 10 and !connected) {
+        // Network setup
+        if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+            printf("Socket creation error");
+            return 1;
+        }
 
-    // Network setup
-    if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        printf("Socket creation error");
+        memset(&serverAddress, 0, sizeof(serverAddress));
+
+        serverAddress.sin_family = AF_INET;
+        serverAddress.sin_port = htons(serverPort);
+
+        if (inet_pton(AF_INET, serverIp, &serverAddress.sin_addr) <= 0) {
+            printf("Address error");
+            return 1;
+        }
+
+        if (connect(mainSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) == 0) {
+            connected = true;
+        }else {
+            sleep(1);
+        }
+    }
+
+    if(!connected){
         return 1;
     }
 
-    memset(&serverAddress, 0, sizeof(serverAddress));
-
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(serverPort);
-
-    if(inet_pton(AF_INET, serverIp, &serverAddress.sin_addr)<=0)
-    {
-        printf("Address error");
-        return 1;
-    }
-
-    if (connect(mainSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
-    {
-        printf("Connection error\n");
-        return 1;
-    }
-    
     while(true){
         // FIXME added again temporarily for readability
         if(!automated_mode) {
@@ -130,6 +135,11 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         if(strcmp(token, "get") == 0){
             memset(fileName, 0, 1024);
             strncpy(fileName, strtok(NULL, " "), 1024);
+        }else if(strcmp(token, "put") == 0){
+            memset(fileName, 0, 1024);
+            strncpy(fileName, strtok(NULL, " "), 1024);
+            //FIXME SEGFAULT WHEN NULL
+            fileSize = stol(strtok(NULL, " "));
         }
 
         // sends command to the server
@@ -163,7 +173,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             strncpy(args->fileName, fileName, 1024);
             args->port = port;
             args->fileSize = fileSize;
-            args->serverIp = serverIp;
+            strncpy(args->ip, serverIp, 1024);
 
             // Kill stale thread
             pthread_cancel(thread);
@@ -173,7 +183,23 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             if(rc != 0){
                 cerr << "Error" << endl;
             }
-        }   
+        }else if(token and strcmp(token, "put") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+            // Extract port and fileSize from received command string
+            port = atoi(strtok(NULL, " "));
+            // Prepare struct for argument to function in parallel thread
+            struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
+            strncpy(args->fileName, fileName, 1024);
+            args->port = port;
+            args->fileSize = fileSize;
+
+            // Kill stale thread
+            pthread_cancel(thread);
+            // Create new thread
+            int rc = pthread_create(&thread, NULL, openFileServer, (void*) args);
+            if(rc != 0){
+                cerr << "Error" << endl;
+            }
+        }
     }
 
 
