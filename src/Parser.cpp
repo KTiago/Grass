@@ -90,7 +90,7 @@ void Parser::executeCommand(User &usr){
     switch (c) {
         case login_:
             if (checkArgNumber(1)) {
-                int res = login_cmd(tokens[1], allowedUsers, usr, output);
+                login_cmd(tokens[1], allowedUsers, usr, output);
 
             } else {
                 output = "Error: login takes exactly one argument\n";
@@ -98,23 +98,22 @@ void Parser::executeCommand(User &usr){
             break;
         case pass_:
             if (checkArgNumber(1)) {
-                int res = pass_cmd(tokens[1], allowedUsers, usr, output);
+                pass_cmd(tokens[1], allowedUsers, usr, output);
             } else {
                 output = "Error: pass takes exactly one argument\n";
             }
             break;
         case ping_:
             if (checkArgNumber(1)) {
-                int res = ping_cmd(tokens[1], output);
+                ping_cmd(tokens[1], output);
             } else {
                 output = "Error: ping takes exactly one argument\n";
 
             }
             break;
         case ls_: {
-            int res = 0;
             if (checkArgNumber(0)) {
-                res = ls_cmd(usr.isAuthenticated(), output, usr.getLocation());
+                ls_cmd(usr.isAuthenticated(), output, usr);
             } else {
                 output = "Error: ls takes no argument\n";
             }
@@ -125,7 +124,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: cd takes exactly one argument";
                 break;
             }
-            int res = cd_cmd(tokens[1], usr, output);
+            cd_cmd(tokens[1], usr, output);
             break;
         }
         case mkdir_: {
@@ -133,7 +132,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: mkdir takes exactly one argument\n";
                 break;
             }
-            int res = mkdir_cmd(tokens[1], usr, output);
+            mkdir_cmd(tokens[1], usr, output);
             break;
         }
         case rm_: {
@@ -141,7 +140,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: rm takes exactly one argument\n";
                 break;
             }
-            int res = rm_cmd(tokens[1], usr, output);
+            rm_cmd(tokens[1], usr, output);
             break;
         }
         case get_: {
@@ -149,7 +148,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: get takes exactly one argument\n";
                 break;
             }
-            int res = get_cmd(tokens[1], getPort, usr, output);
+            get_cmd(tokens[1], getPort, usr, output);
             getPort++;
             break;
         }
@@ -158,11 +157,8 @@ void Parser::executeCommand(User &usr){
                 output = "Error: put takes exactly two argument\n";
                 break;
             }
-            int res = put_cmd(tokens[1], stol(tokens[2]), putPort, usr, output);
+            put_cmd(tokens[1], stol(tokens[2]), putPort, usr, output);
             putPort++;
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case grep_: {
@@ -170,7 +166,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: grep takes exactly one argument\n";
                 break;
             }
-            int res = grep_cmd(tokens[1], usr, output);
+            grep_cmd(tokens[1], usr, output);
             break;
         }
         case date_: {
@@ -178,7 +174,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: date takes no argument\n";
                 break;
             }
-            int res = date_cmd(usr.isAuthenticated(), output);
+            date_cmd(usr.isAuthenticated(), output);
             break;
         }
         case whoami_: {
@@ -186,7 +182,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: whoami takes no argument\n";
                 break;
             }
-            int res = whoami_cmd(usr, output);
+            whoami_cmd(usr, output);
             break;
         }
         case w_: {
@@ -194,7 +190,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: w takes no argument\n";
                 break;
             }
-            int res = w_cmd(usr, output);
+            w_cmd(usr, output);
             break;
         }
         case logout_: {
@@ -202,7 +198,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: logout takes no argument\n";
                 break;
             }
-            int res = logout_cmd(usr, output);
+            logout_cmd(usr, output);
             break;
         }
         case exit_: {

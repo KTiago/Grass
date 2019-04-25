@@ -14,6 +14,7 @@
 #include "Parser.h"
 #include "User.h"
 #include "networking.h"
+#include "commands.h"
 
 // new include here (cpp related)
 #include <arpa/inet.h>
@@ -36,7 +37,6 @@ string baseDirectory;
 void runServer(uint16_t port, Parser parser);
 void cleanBaseDir();
 
-size_t split(vector<string> &res, const string &line, const char* delim);
 int main()
 {
     uint16_t port;
@@ -70,13 +70,6 @@ int main()
 
     // FIXME works even without config file?
     configFile.close();
-
-    /*
-    cout << "Running on port: " << port << " , " << "base directory: " << baseDirectory << "\n";
-    cout << "Allowed users : \n";
-    for (const auto &knownUser : allowedUsers) {
-        std::cout << knownUser.first << " -> " << knownUser.second << "\n";
-    }*/
 
     // Create parser object
     Parser parser(allowedUsers);
@@ -221,19 +214,6 @@ void runServer(uint16_t port, Parser parser){
     }
 }
 
-size_t split(vector<string> &res, const string &line, const char* delim){
-    res.clear();
-    char* token = strtok(strdup(line.c_str()), delim);
-    while (token != nullptr)
-    { res.emplace_back(token);
-        token = strtok(nullptr, delim);
-
-    }
-    if (res.empty()){
-        res.emplace_back("");
-    }
-    return res.size();
-}
 
 void cleanBaseDir(){
     if(!baseDirectory.empty()){
