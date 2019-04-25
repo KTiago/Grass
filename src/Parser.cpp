@@ -81,7 +81,6 @@ void Parser::executeCommand(User &usr){
     if (string_to_command.count(getFirstToken()) == 0) {
         string errorMsg = "Error: Not a correct command !\n";
         output = errorMsg;
-        cout << errorMsg;
         return;
     }
 
@@ -92,33 +91,21 @@ void Parser::executeCommand(User &usr){
         case login_:
             if (checkArgNumber(1)) {
                 int res = login_cmd(tokens[1], allowedUsers, usr, output);
-                if (res != 0) {
-                    cout << output;
-                }
 
             } else {
                 output = "Error: login takes exactly one argument\n";
-                cout << output;
             }
             break;
         case pass_:
             if (checkArgNumber(1)) {
                 int res = pass_cmd(tokens[1], allowedUsers, usr, output);
-                if (res != 0) {
-                    cout << output;
-                }
-
             } else {
                 output = "Error: pass takes exactly one argument\n";
-                cout << output;
             }
             break;
         case ping_:
             if (checkArgNumber(1)) {
                 int res = ping_cmd(tokens[1], output);
-                if (res != 0) {
-                    cerr << "Error code: " << res << endl;
-                }
             } else {
                 output = "Error: ping takes exactly one argument\n";
 
@@ -130,10 +117,6 @@ void Parser::executeCommand(User &usr){
                 res = ls_cmd(usr.isAuthenticated(), output, usr.getLocation());
             } else {
                 output = "Error: ls takes no argument\n";
-                break;
-            }
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
             }
             break;
         }
@@ -143,11 +126,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = cd_cmd(tokens[1], usr, output);
-            cout << "res " << res << endl;
-            // TODO check base dir
-            if (res != 0) {
-                cerr << "Error code: " << res << "\n";
-            }
             break;
         }
         case mkdir_: {
@@ -156,9 +134,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = mkdir_cmd(tokens[1], usr, output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case rm_: {
@@ -167,9 +142,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = rm_cmd(tokens[1], usr, output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case get_: {
@@ -179,9 +151,6 @@ void Parser::executeCommand(User &usr){
             }
             int res = get_cmd(tokens[1], port, usr, output);
             port++;
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case put_: {
@@ -202,9 +171,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = grep_cmd(tokens[1], usr, output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case date_: {
@@ -213,9 +179,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = date_cmd(usr.isAuthenticated(), output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case whoami_: {
@@ -224,9 +187,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = whoami_cmd(usr, output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case w_: {
@@ -235,9 +195,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = w_cmd(usr, output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case logout_: {
@@ -246,9 +203,6 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             int res = logout_cmd(usr, output);
-            if (res != 0) {
-                cerr << "Error code: " << res << endl;
-            }
             break;
         }
         case exit_: {
