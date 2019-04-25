@@ -21,7 +21,17 @@ const string ACCESS_ERROR = "Error: access denied!\n";
 const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
-
+const set<char> allowedCharacters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+                                     'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+                                     'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                                     'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '/'};
+string escape(string cmd){
+    string escaped;
+    for(size_t i = 0; i < cmd.size(); ++i) {
+        if (allowedCharacters.find(cmd[i]) != allowedCharacters.end()) escaped += cmd[i];
+    }
+    return "\"" + escaped + "\"";
+}
 
 /**
  * Executes given command on the server.
@@ -216,7 +226,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     */
 int ping_cmd(string host, string &out) {
     // FIXME add quotes to make command injection impossible
-    string s = "ping -c 1 \"" + host + "\"";  // FIXME security vulnerability ! One can change de command !
+    string s = "ping -c 1 " + escape(host);  // FIXME security vulnerability ! One can change de command !
     int res = exec(s.c_str(), out);
     return res;
 }
