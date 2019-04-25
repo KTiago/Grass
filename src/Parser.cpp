@@ -148,7 +148,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: get takes exactly one argument\n";
                 break;
             }
-            get_cmd(tokens[1], getPort, usr, output);
+            get_cmd(tokens[1], port, usr, output);
             port++;
             break;
         }
@@ -157,7 +157,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: put takes exactly two argument\n";
                 break;
             }
-            put_cmd(tokens[1], stol(tokens[2]), putPort, usr, output);
+            put_cmd(tokens[1], stol(tokens[2]), port, usr, output);
             port++;
             break;
         }
