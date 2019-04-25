@@ -2,13 +2,16 @@ cmake_minimum_required(VERSION 3.13)
 project(Grass)
 
 set(CMAKE_CXX_STANDARD 14)
+find_package (Threads)
 
 include_directories(src)
 
 add_executable(GrassClient
-        src/User.cpp)
+        src/client.cpp src/User.cpp src/User.h src/networking.h src/networking.cpp src/grass.cpp src/grass.hpp)
 
 add_executable(GrassServer
-        src/server.cpp src/Parser.cpp src/Parser.h src/commands.cpp src/commands.h src/User.h src/client.cpp)
+        src/server.cpp src/Parser.cpp src/Parser.h src/commands.h src/commands.cpp src/User.cpp src/User.h src/networking.h src/networking.cpp src/grass.cpp src/grass.hpp )
 
 
+target_link_libraries (GrassServer ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (GrassClient ${CMAKE_THREAD_LIBS_INIT})
