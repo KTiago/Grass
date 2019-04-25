@@ -17,9 +17,10 @@ using namespace std;
 /*
  * Assign constants
  */
-const string ACCESS_ERROR = "Error: access denied!";
-const string FILENAME_ERROR = "Error: the path is too long.";
-const string TRANSFER_ERROR = "Error: file transfer failed.";
+const string ACCESS_ERROR = "Error: access denied!\n";
+const string FILENAME_ERROR = "Error: the path is too long.\n";
+const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
+const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
 
 /**
@@ -66,7 +67,7 @@ int exec(const char* cmd, string &out) {
 
 int checkPathLength(const string &path, string &out){
     if(path.size() > MAX_PATH_LEN + 1){
-        out = FILENAME_ERROR + "\n";
+        out = FILENAME_ERROR ;
         return 1;
     }
     return 0;
@@ -93,7 +94,7 @@ int sanitizePath(string &targetPath,  string &out){
 
             // Check that counter isn't negative
             if (cnt < 0){
-                out = ACCESS_ERROR + "\n";
+                out = ACCESS_ERROR;
                 return 1;
             }
             sanitizedPath.pop_back();
@@ -163,8 +164,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
 int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out){
 
     if(usr.isAuthenticated()){
-        out = "Error: User already logged in\n";
-        return 1;
+        usr.setAuthenticated(false);
     }
     usr.resetUname();
     if (allowedUsers.find(uname) == allowedUsers.end()){
@@ -189,20 +189,18 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
  */
 int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, string &out){
     if(usr.isAuthenticated()){
-        out = "Error: User already logged in\n";
+        out = "Error: user already logged in\n";
         return 1;
     }
     if(usr.getUname().empty()){
-        cout << usr.getUname();
-        out = "Error: login command required directly before pass\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     if(allowedUsers[usr.getUname()] != psw){
-        out = "Error: wrong password\n";
-        return 1;
+        out = AUTHENTICATION_FAIL;
+        return 0;
     }
     usr.setAuthenticated(true);
-    out = usr.getUname() + " successfully logged in !\n";
     return 0;
 }
 
@@ -237,7 +235,7 @@ int ping_cmd(string host, string &out){
  */
 int ls_cmd(bool authenticated, string &out, string usrLocation){
     if(!authenticated){
-        out = "Error: ls may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string cmd = "ls -l " + usrLocation;
@@ -257,7 +255,7 @@ int ls_cmd(bool authenticated, string &out, string usrLocation){
  */
 int cd_cmd(string dirPath, User &usr, string &out){
     if (!usr.isAuthenticated()) {
-        out = "Error: cd may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
@@ -286,7 +284,7 @@ int cd_cmd(string dirPath, User &usr, string &out){
  */
 int mkdir_cmd(string dirPath, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: mkdir may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
@@ -310,7 +308,7 @@ int mkdir_cmd(string dirPath, User usr, string &out){
  */
 int rm_cmd(string filePath, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: rm may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
@@ -342,7 +340,7 @@ int rm_cmd(string filePath, User usr, string &out){
  */
 int get_cmd(string fileName, int getPort, User &usr, string &out){
     if (!usr.isAuthenticated()) {
-        out = "Error: get may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
 
@@ -414,7 +412,7 @@ int put_cmd(){
  */
 int grep_cmd(string pattern, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: grep may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string cmd = "grep -l -r \"" + pattern + "\" " + usr.getLocation();
@@ -432,7 +430,7 @@ int grep_cmd(string pattern, User usr, string &out){
  */
 int date_cmd(bool authenticated, string &out){
     if(!authenticated){
-        out = "Error: date may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     return exec("date", out);
@@ -449,7 +447,7 @@ int date_cmd(bool authenticated, string &out){
  */
 int whoami_cmd(User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: whoami may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     out = usr.getUname() + "\n";
@@ -467,13 +465,15 @@ int whoami_cmd(User usr, string &out){
  */
 int w_cmd(User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: w may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     // Print all connected users
     for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
-        out += (*it).getUname() + "\n";
+        out += (*it).getUname() + " ";
     }
+    // TODO alphabetic order
+    out += "\n";
     return 0;
 }
 
@@ -488,7 +488,7 @@ int w_cmd(User usr, string &out){
  */
 int logout_cmd(User &usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: logout may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     usr.resetUname();

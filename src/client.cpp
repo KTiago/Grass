@@ -113,7 +113,6 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
         // Check if end of file reached, or exit command sent
         if(infile.eof() || cmd == "exit"){
-            outfile << "\n[EOF reached]\n"; // FIXME probably need to delete this as not in specifications
             // closing connection
             close(mainSocket);
             break;
@@ -144,6 +143,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         // trim string, since we send empty spaces when command returns nothing. FIXME
         bufString.erase(0, bufString.find_first_not_of(' '));
         outfile << bufString;
+
         memset(buffer, 0, 1024);
         token = strtok(copiedBuffer, " ");
 
