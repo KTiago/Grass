@@ -339,8 +339,23 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
         out = "Error: get may only be executed after authentication\n";
         return 1;
     }
+
+    // Prepare thread arguments (done here since otherwise exploit is impossible)
+    struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
+    memset(args->fileName, 0, 1024);
+    snprintf(args->fileName, 1024, fileName.c_str()); // HUEHUEHUEHUEHUEHUEH fileName.copy(args->fileName, 1024);
+    args->fileName[fileName.length()] = '\0';
+    args->port = getPort;
+
     FILE *fp;
     fp = fopen(fileName.c_str(), "r");
+
+    // If file can't be opened send error
+    if (fp == NULL) {
+        out = "Error: file does not exist.\n";
+        return 1;
+    }
+
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fclose(fp);
@@ -348,12 +363,11 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
         return 1;
     }else {
         out = "get port: " + to_string(getPort) + " size: " + to_string(file_size)+"\n";
-        struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-        memset(args->fileName, 0, 1024);
-        fileName.copy(args->fileName, 1024);
-        args->fileName[fileName.length()] = '\0';
-        args->port = getPort;
+
+        // Cancel previous get command if one was executed
         pthread_cancel(usr.thread);
+
+        // Create new thread
         int rc = pthread_create(&usr.thread, NULL, openFileServer, (void *) args);
         if (rc != 0) {
             cerr << "Error" << endl;
