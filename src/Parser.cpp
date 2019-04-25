@@ -91,7 +91,6 @@ void Parser::executeCommand(User &usr){
         case login_:
             if (checkArgNumber(1)) {
                 login_cmd(tokens[1], allowedUsers, usr, output);
-
             } else {
                 output = "Error: login takes exactly one argument\n";
             }

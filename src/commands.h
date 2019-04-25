@@ -19,6 +19,7 @@ extern const string ACCESS_ERROR;
 extern const string FILENAME_ERROR;
 extern const string TRANSFER_ERROR;
 
+string escape(string cmd);
 int mkdir_cmd(string dir, User usr, string &out);
 int cd_cmd(string dir, User &usr, string &out);
 int ls_cmd(bool authenticated, string &out, User usr);
