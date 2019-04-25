@@ -45,6 +45,7 @@ extern const char DELIMITER;
 
 class Parser{
 private:
+    //FIXME USE ONLY ONE PORT VARIABLE
     int getPort = 2000;
     int putPort = 4000;
 public:

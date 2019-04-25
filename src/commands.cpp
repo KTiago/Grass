@@ -33,6 +33,7 @@ const string TRANSFER_ERROR = "Error: file transfer failed.\n";
  * @param out, stdout result of command
  * @return 0 if successful, 1 otherwise
  */
+
 int exec(const char* cmd, string &out) {
     char buffer[BFLNTH];
     char cmdRediction [BFLNTH];
@@ -59,9 +60,9 @@ int exec(const char* cmd, string &out) {
 
     // FIXME different option
     cout << "exec status ";
-    cout << exitStatus << " result substring " << result.substr(0,3) << endl;
+    cout << exitStatus << " result substring " << result.substr(0, 3) << endl;
 
-    return result.substr(0,3) == "sh:" ? 1: 0; //FIXME when does this happen?
+    return result.substr(0, 3) == "sh:" ? 1 : 0; //FIXME when does this happen?
 }
 
 
@@ -80,16 +81,15 @@ int checkPathLength(const string &path, string &out){
  * @param out, stores error messages
  * @return error code
  */
-int sanitizePath(string &targetPath,  string &out){
+int sanitizePath(string &targetPath, string &out) {
     const char *delim = "/";
-    char* targetPathCopy = strdup(targetPath.c_str());
-    char* token = strtok(targetPathCopy, delim);
+    char *targetPathCopy = strdup(targetPath.c_str());
+    char *token = strtok(targetPathCopy, delim);
     int cnt = 0;
     vector<string> sanitizedPath;
-    while (token != nullptr)
-    {
+    while (token != nullptr) {
         // Decrement counter if .. is found
-        if(!strcmp(token, "..")){
+        if (!strcmp(token, "..")) {
             cnt--;
 
             // Check that counter isn't negative
@@ -99,8 +99,8 @@ int sanitizePath(string &targetPath,  string &out){
             }
             sanitizedPath.pop_back();
         }
-        // Increment counter whenever the token is not .
-        else if(strcmp(token, ".") != 0) {
+            // Increment counter whenever the token is not .
+        else if (strcmp(token, ".") != 0) {
             cnt++;
             sanitizedPath.emplace_back(token);
         }
@@ -129,17 +129,16 @@ int sanitizePath(string &targetPath,  string &out){
  * @param out, stores error messages
  * @return error code
  */
-int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out){
-    if(relativePath.at(0) == '/'){
+int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out) {
+    if (relativePath.at(0) == '/') {
         // the path is absolute from the client's point of view but is actually relative to the server's base directory
         absPath = relativePath.substr(1);
     }
-    // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
-    else if(!isalnum(relativePath.at(0)) and relativePath.at(0) != '.'){
+        // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
+    else if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
         out = "Error: directory path not allowed\n";
         return 1;
-    }
-    else{
+    } else {
         absPath = usrLocation + "/" + relativePath; // FIXME one can execute an other command in "relativePath"
     }
     int res = sanitizePath(absPath, out);
@@ -161,13 +160,13 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
     * @param out output string
     * @return 0 if successful
 */
-int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out){
+int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out) {
 
     if(usr.isAuthenticated()){
         usr.setAuthenticated(false);
     }
     usr.resetUname();
-    if (allowedUsers.find(uname) == allowedUsers.end()){
+    if (allowedUsers.find(uname) == allowedUsers.end()) {
         out = "Error: unknown user " + uname + "\n";
         return 1;
     }
@@ -215,7 +214,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     * @param out output string
     * @return 0 if successful
     */
-int ping_cmd(string host, string &out){
+int ping_cmd(string host, string &out) {
     // FIXME add quotes to make command injection impossible
     string s = "ping -c 1 \"" + host + "\"";  // FIXME security vulnerability ! One can change de command !
     int res = exec(s.c_str(), out);
@@ -253,18 +252,18 @@ int ls_cmd(bool authenticated, string &out, string usrLocation){
  * @param out, output string
  * @return 0 if successful
  */
-int cd_cmd(string dirPath, User &usr, string &out){
+int cd_cmd(string dirPath, User &usr, string &out) {
     if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
-    if(constructPath(dirPath, usr.getLocation(), absPath, out)){
+    if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
     string cmd = "cd \"" + absPath + "\"";
     int res = exec(cmd.c_str(), out);
-    if(!res){
+    if (!res) {
         usr.setLocation(absPath);
     }
     return res;
@@ -288,7 +287,7 @@ int mkdir_cmd(string dirPath, User usr, string &out){
         return 1;
     }
     string absPath;
-    if(constructPath(dirPath, usr.getLocation(), absPath, out)){
+    if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
     string cmd = "mkdir \"" + absPath + "\"";
@@ -312,7 +311,7 @@ int rm_cmd(string filePath, User usr, string &out){
         return 1;
     }
     string absPath;
-    if(constructPath(filePath, usr.getLocation(), absPath, out)){
+    if (constructPath(filePath, usr.getLocation(), absPath, out)) {
         return 1;
     }
     string cmd = "rm -r \"" + absPath + "\"";
@@ -338,13 +337,12 @@ int rm_cmd(string filePath, User usr, string &out){
  * @param out, output string
  * @return 0 if successful
  */
-int get_cmd(string fileName, int getPort, User &usr, string &out){
+int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
-
-    // Prepare thread arguments (done here since otherwise exploit is impossible)
+    // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
     memset(args->fileName, 0, 1024);
     snprintf(args->fileName, 1024, fileName.c_str()); // HUEHUEHUEHUEHUEHUEH fileName.copy(args->fileName, 1024);
@@ -360,13 +358,15 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
         return 1;
     }
 
+    // Determine file size
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fclose(fp);
-    if (file_size == EOF){
+
+    if (file_size == EOF) {
         return 1;
-    }else {
-        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size)+"\n";
+    } else {
+        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size) + "\n";
 
         // Cancel previous get command if one was executed
         pthread_cancel(usr.thread);
@@ -392,10 +392,30 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
  *
  * @return 0 if successful
  */
-int put_cmd(){
-    return 1;
-}
+int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
+    if (!usr.isAuthenticated()) {
+        out = "Error: put may only be executed after authentication\n";
+        return 1;
+    }
 
+    // Prepare thread arguments
+    struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
+    strncpy(args->fileName, fileName.c_str(), 1024);
+    args->port = port;
+    strncpy(args->ip, usr.getIp().c_str(), 1024);
+    args->fileSize = fileSize;
+
+    out = "put port: " + to_string(port) + "\n";
+
+    // Cancel previous get command if one was executed
+    pthread_cancel(usr.thread);
+    // Create new thread
+    int rc = pthread_create(&usr.thread, NULL, openFileClient, (void *) args);
+    if (rc != 0) {
+        cerr << "Error" << endl;
+    }
+    return 0;
+}
 
 /**
  * The grep command may only be executed after a successful authentication.
