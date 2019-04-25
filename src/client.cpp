@@ -136,11 +136,15 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             strncpy(fileName, strtok(NULL, " "), 1024);
         }else if(strcmp(token, "put") == 0){
             memset(fileName, 0, 1024);
-            strncpy(fileName, strtok(NULL, " "), 1024);
-            //FIXME SEGFAULT WHEN NULL
-            fileSize = stol(strtok(NULL, " "));
+            token = strtok(NULL, " ");
+            if(token != NULL){
+                strncpy(fileName, token, 1024);
+            }
+            token = strtok(NULL, " ");
+            if(token != NULL){
+                fileSize = stol(token);
+            }
         }
-
         // sends command to the server
         send(mainSocket , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
@@ -185,6 +189,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         }else if(token and strcmp(token, "put") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
             // Extract port and fileSize from received command string
             port = atoi(strtok(NULL, " "));
+
             // Prepare struct for argument to function in parallel thread
             struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);

@@ -149,7 +149,7 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             get_cmd(tokens[1], getPort, usr, output);
-            getPort++;
+            port++;
             break;
         }
         case put_: {
@@ -158,7 +158,7 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             put_cmd(tokens[1], stol(tokens[2]), putPort, usr, output);
-            putPort++;
+            port++;
             break;
         }
         case grep_: {
