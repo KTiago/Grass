@@ -3,7 +3,7 @@ BINDIR   = bin
 INCLUDES = include
 
 CC=g++
-CFLAGS= -Wall -Wextra -g -fno-stack-protector -z execstack -pthread -std=c++11 -I $(INCLUDES)/ 
+CFLAGS= -Wall -Wextra -g -fno-stack-protector -z execstack -pthread  -std=c++11 -I $(INCLUDES)/   -lssl  -lcrypto
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
 all: $(BINDIR)/client $(BINDIR)/server $(DEPS)
@@ -12,7 +12,7 @@ $(BINDIR)/client: $(SRCDIR)/client.cpp networking.o
 	$(CC) $(CFLAGS) $< networking.o -o $@
 
 $(BINDIR)/server: $(SRCDIR)/server.cpp Parser.o User.o networking.o grass.o
-	$(CC) $(CFLAGS) $< Parser.o commands.o User.o networking.o grass.o -o $@
+	$(CC) $< Parser.o commands.o User.o networking.o grass.o -o $@ $(CFLAGS)
 	rm Parser.o commands.o
 	
 User.o: $(SRCDIR)/User.cpp $(SRCDIR)/User.h
