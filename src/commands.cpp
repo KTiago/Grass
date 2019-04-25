@@ -334,7 +334,7 @@ int rm_cmd(string filePath, User usr, string &out) {
  * request, the server will only handle the new request and ignore (or drop) any stale ones.
  *
  * @param fileName, file to get
- * @param getPort, port for transmitting file
+ * @param port, port for transmitting file
  * @param usr, user wanting to execute command
  * @param out, output string
  * @return 0 if successful
@@ -347,12 +347,16 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
     memset(args->fileName, 0, 1024);
-    snprintf(args->fileName, 1024, fileName.c_str()); // HUEHUEHUEHUEHUEHUEH fileName.copy(args->fileName, 1024);
-    args->fileName[fileName.length()] = '\0';
+    string absPath;
+    if (constructPath(fileName, usr.getLocation(), absPath, out)) {
+        return 1;
+    }
+    snprintf(args->fileName, 1024, absPath.c_str());
+    args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
     FILE *fp;
-    fp = fopen(fileName.c_str(), "r");
+    fp = fopen(absPath.c_str(), "r");
 
     // If file can't be opened send error
     if (fp == NULL) {
@@ -364,12 +368,10 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fclose(fp);
-
     if (file_size == EOF) {
         return 1;
     } else {
         out = "get port: " + to_string(getPort) + " size: " + to_string(file_size) + "\n";
-
         // Cancel previous get command if one was executed
         pthread_cancel(usr.thread);
 
@@ -391,7 +393,11 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
  * The server responds to this command with a TCP port (in ASCII decimal)
  * in the following format: put port: $PORT. In this instance, the server will
  * spawn a thread to receive the file from the clients sending thread as seen in
- *
+ * @param fileName, file to put
+ * @param fileSize, size of file
+ * @param port, port for transmitting file
+ * @param usr, user wanting to execute command
+ * @param out, output string
  * @return 0 if successful
  */
 int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
@@ -402,7 +408,11 @@ int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
 
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    strncpy(args->fileName, fileName.c_str(), 1024);
+    string absPath;
+    if (constructPath(fileName, usr.getLocation(), absPath, out)) {
+        return 1;
+    }
+    strncpy(args->fileName, absPath.c_str(), 1024);
     args->port = port;
     strncpy(args->ip, usr.getIp().c_str(), 1024);
     args->fileSize = fileSize;

@@ -38,7 +38,6 @@ void runServer(uint16_t port, Parser parser);
 size_t split(vector<string> &res, const string &line, const char* delim);
 int main()
 {
-
     uint16_t port;
     map<string, string> allowedUsers;
 
