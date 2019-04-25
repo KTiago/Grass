@@ -4,6 +4,7 @@
 #define MAX_DIR_LEN 50
 #define MAX_PATH_LEN 128
 #define OUTFILE_NAME "log.txt"
+#define BFLNTH 150
 
 #include <cstdlib>
 #include <iostream>
