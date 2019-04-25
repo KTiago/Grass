@@ -9,7 +9,7 @@
 #include <sstream>
 #include <iterator>
 
-
+#define BUF_LEN 506
 using namespace std;
 
 
@@ -34,9 +34,13 @@ const string TRANSFER_ERROR = "Error: file transfer failed.";
 int exec(const char* cmd, string &out) {
     char buffer[150];
     char cmdRediction [150];
+    cout << cmd << endl;
 
+    size_t bufSize = BUF_LEN > strlen(cmd) +1 ? strlen(cmd) +1 : BUF_LEN;
+    //strncpy(cmdRediction,cmd,bufSize);
     strcpy(cmdRediction,cmd);
 
+    cout << cmdRediction << strlen(cmdRediction) << endl;
     FILE* pipe = popen((string(cmdRediction) + " 2>&1").c_str(), "r");
     std::string result;
     if (!pipe) throw std::runtime_error("popen() failed!");
@@ -44,6 +48,7 @@ int exec(const char* cmd, string &out) {
         while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
             result += buffer;
         }
+        cout << result <<endl;
     } catch (...) {
         pclose(pipe);
         return 1;
@@ -215,7 +220,9 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
 int ping_cmd(string host, string &out){
     // FIXME add quotes to make command injection impossible
     string s = "ping -c 1 " + host; // + "\" -c 1"; // FIXME security vulnerability ! One can change de command !
-    return exec(s.c_str(), out);
+    cout << "ping " <<s << endl;
+    int res = exec(s.c_str(), out);
+    return res;
 }
 
 
