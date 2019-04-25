@@ -21,6 +21,7 @@ const string ACCESS_ERROR = "Error: access denied!\n";
 const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
+
 const set<char> allowedCharacters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                                      'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
                                      'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
@@ -33,6 +34,7 @@ string escape(string cmd){
     return "\"" + escaped + "\"";
 }
 
+int modifyUsrName(string &out, string usrName);
 /**
  * Executes given command on the server.
  *
@@ -47,12 +49,10 @@ string escape(string cmd){
 int exec(const char* cmd, string &out) {
     char buffer[BFLNTH];
     char cmdRediction [BFLNTH];
-    cout << cmd << endl;
 
     size_t bufSize = BFLNGTH > strlen(cmd) +1 ? strlen(cmd) +1 : BFLNGTH;
     strncpy(cmdRediction,cmd,bufSize);
 
-    cout << cmdRediction << strlen(cmdRediction) << endl;
     FILE* pipe = popen((string(cmdRediction) + " 2>&1").c_str(), "r");
     std::string result;
     if (!pipe) throw std::runtime_error("popen() failed!");
@@ -242,13 +242,34 @@ int ping_cmd(string host, string &out) {
  * @param usrLocation, current path of user
  * @return 0 if successful
  */
-int ls_cmd(bool authenticated, string &out, string usrLocation){
+int ls_cmd(bool authenticated, string &out, User usr){
     if(!authenticated){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "ls -l " + usrLocation;
-    return exec(cmd.c_str(), out);
+    string cmd = "ls -l " + usr.getLocation();
+    exec(cmd.c_str(), out);
+    return modifyUsrName(out, usr.getUname());
+}
+
+int modifyUsrName(string &out, string usrName) {
+    vector<string> lines;
+    split(lines,out, "\n");
+    string modifiedOutput;
+    for(string l: lines){
+        vector<string> tokens;
+        split(tokens, l, " ");
+        if(tokens.size() < 9){
+            modifiedOutput += l + "\n";
+            continue;
+        }
+        tokens[2] = tokens[3] = usrName;
+        stringstream s;
+        copy(tokens.begin(), tokens.end(), ostream_iterator<string>(s, " "));
+        modifiedOutput += s.str() + "\n";
+    }
+    out = modifiedOutput;
+    return 0;
 }
 
 
@@ -537,3 +558,16 @@ int logout_cmd(User &usr, string &out){
 }
 
 
+size_t split(vector<string> &res, const string &line, const char* delim){
+    res.clear();
+    char* token = strtok(strdup(line.c_str()), delim);
+    while (token != nullptr)
+    { res.emplace_back(token);
+        token = strtok(nullptr, delim);
+
+    }
+    if (res.empty()){
+        res.emplace_back("");
+    }
+    return res.size();
+}
