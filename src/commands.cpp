@@ -73,18 +73,12 @@ int exec(const char* cmd, string &out) {
         while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
             result += buffer;
         }
-        cout << result <<endl;
     } catch (...) {
         pclose(pipe);
         return 1;
     }
     int exitStatus = pclose(pipe);
     out = result;
-
-    // FIXME different option
-    cout << "exec status ";
-    cout << exitStatus << " result substring " << result.substr(0, 3) << endl;
-
     return result.substr(0, 3) == "sh:" ? 1 : 0; //FIXME when does this happen?
 }
 
@@ -567,11 +561,14 @@ int w_cmd(User usr, string &out){
         out = ACCESS_ERROR;
         return 1;
     }
-    // Print all connected users
+    vector<string> users;
     for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
-        out += (*it).getUname() + " ";
+        users.push_back((*it).getUname());
     }
-    // TODO alphabetic order
+    sort(users.begin(), users.end());
+    for (auto it=users.begin(); it != users.end(); ++it) {
+        out += (*it) + (it != users.end() ? ' ' : '\0');
+    }
     out += "\n";
     return 0;
 }
