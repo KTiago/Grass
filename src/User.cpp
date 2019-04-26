@@ -2,10 +2,11 @@
 
 bool User::isAuthenticated() {return this->authenticated;}
 
-User::User(int socket, string base){
+User::User(int socket, string ip, string base){
     this->socket = socket;
     this->authenticated = false;
     this->uname = "";
+    this->ip = ip;
     this->location = base;
     this->thread = NULL;
 }
@@ -37,5 +38,9 @@ string User::getLocation(){
     return this->location;
 }
 
-bool User::operator<(const User &other) const {this->socket > other.socket; }
+string User::getIp(){
+    return this->ip;
+}
+
+bool User::operator<(const User &other) const {this->socket > other.socket;}
 

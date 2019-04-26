@@ -14,6 +14,7 @@
 #include "Parser.h"
 #include "User.h"
 #include "networking.h"
+#include "commands.h"
 
 // new include here (cpp related)
 #include <arpa/inet.h>
@@ -34,11 +35,10 @@ string baseDirectory;
 
 
 void runServer(uint16_t port, Parser parser);
+void cleanBaseDir();
 
-size_t split(vector<string> &res, const string &line, const char* delim);
 int main()
 {
-
     uint16_t port;
     map<string, string> allowedUsers;
 
@@ -50,6 +50,13 @@ int main()
         while(getline(configFile, line)){
             split(splitLine, line, " ");
             if(splitLine[0] == "base"){
+                struct stat info{};
+                stat( "baseDir", &info );
+                if(info.st_mode & S_IFDIR){
+                    system("rm -r baseDir");
+                }
+                system("mkdir baseDir");
+                chdir("baseDir");
                 baseDirectory = splitLine[1];
             }
             if(splitLine[0] == "port"){
@@ -58,18 +65,11 @@ int main()
             if(splitLine[0] == "user"){
                 allowedUsers.insert(pair<string, string>(splitLine[1], splitLine[2]));
             }
-
         }
     }
+
     // FIXME works even without config file?
-
-
-    /*
-    cout << "Running on port: " << port << " , " << "base directory: " << baseDirectory << "\n";
-    cout << "Allowed users : \n";
-    for (const auto &knownUser : allowedUsers) {
-        std::cout << knownUser.first << " -> " << knownUser.second << "\n";
-    }*/
+    configFile.close();
 
     // Create parser object
     Parser parser(allowedUsers);
@@ -92,6 +92,7 @@ void runServer(uint16_t port, Parser parser){
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
         perror("Socket creation error");
+        cleanBaseDir();
         exit(1);
     }
 
@@ -99,6 +100,7 @@ void runServer(uint16_t port, Parser parser){
                    sizeof(opt)) < 0 )
     {
         perror("setsockopt");
+        cleanBaseDir();
         exit(EXIT_FAILURE);
     }
 
@@ -111,6 +113,7 @@ void runServer(uint16_t port, Parser parser){
              sizeof(address))<0)
     {
         perror("binding error");
+        cleanBaseDir();
         exit(1);
     }
 
@@ -118,6 +121,7 @@ void runServer(uint16_t port, Parser parser){
     if (listen(server_fd, 5) < 0)
     {
         perror("listen error");
+        cleanBaseDir();
         exit(1);
     }
 
@@ -145,10 +149,11 @@ void runServer(uint16_t port, Parser parser){
             if ((new_socket = accept(server_fd,
                                      (struct sockaddr *) &address, (socklen_t * ) & addrlen)) < 0) {
                 perror("accept");
+                cleanBaseDir();
                 exit(1);
             }
 
-            User newUsr = User(new_socket, ".");
+            User newUsr = User(new_socket, string(inet_ntoa(address.sin_addr)),"");
             connected_users.insert(newUsr);
 
         }
@@ -164,11 +169,6 @@ void runServer(uint16_t port, Parser parser){
                     //Host disconnected
                     getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addrlen);
 
-                    /*
-                    printf("Host disconnected , ip %s , port %d \n" ,
-                           inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                    */
-
                     //Close the socket and mark as 0 in list for reuse
                     close(sd);
                     it = connected_users.erase(it);
@@ -180,7 +180,6 @@ void runServer(uint16_t port, Parser parser){
                     buffer[valread] = '\0';
 
                     // buffer contains the received command trimmed to 1024 characters
-                    printf("%s\n", buffer);
                     // response to be sent
 
                     /*
@@ -193,14 +192,14 @@ void runServer(uint16_t port, Parser parser){
                     string message = parser.getOutput().empty()? " ": parser.getOutput();
                     parser.resetCommand();
 
-                    //cout << message;
-                    /*
-                       End Parser code
-                    */
-
                     if ((int)send(sd, message.c_str(), strlen(message.c_str()), 0) != (int)strlen(message.c_str())) {
                         perror("send");
                     }
+
+                    // trim output
+                    message.erase(0, message.find_first_not_of(' '));
+                    cout << message;
+
                     ++it;
                 }
             }else{
@@ -210,13 +209,9 @@ void runServer(uint16_t port, Parser parser){
     }
 }
 
-size_t split(vector<string> &res, const string &line, const char* delim){
-    res.clear();
-    char* token = strtok(strdup(line.c_str()), delim);
-    while (token != nullptr)
-    { res.emplace_back(token);
-        token = strtok(nullptr, delim);
 
+void cleanBaseDir(){
+    if(!baseDirectory.empty()){
+        system("cd .. ; rm -r baseDir");
     }
-    return res.size();
 }

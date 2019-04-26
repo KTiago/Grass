@@ -19,11 +19,10 @@
 #include "Parser.h"
 #include "User.h"
 #include "networking.h"
-
-// new include here (cpp related)
 #include <arpa/inet.h>
 #include <set>
 #include <vector>
+#include <unistd.h>
 
 #define SOCKET int
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
@@ -77,30 +76,38 @@ void* openFileServer(void* ptr){
 void* openFileClient(void *ptr){
     struct thread_args *args = (struct thread_args *)ptr;
     FILE *f = fopen(args->fileName, "w");
-    char* serverIp = args->serverIp;
+    char* serverIp = args->ip;
     int port = args->port;
     long fileSize = args->fileSize;
 
     int  main_socket;
 
     sockaddr_in address;
-    if ((main_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0){return (void*)1;}
+    int attempts = 0;
+    bool connected = false;
+    while(attempts < 10 and !connected) {
+        if ((main_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) { return (void *) 1; }
 
-    memset(&address, 0, sizeof(address));
-    address.sin_family = AF_INET;
-    address.sin_port = htons(port);
+        memset(&address, 0, sizeof(address));
+        address.sin_family = AF_INET;
+        address.sin_port = htons(port);
 
-    if(inet_pton(AF_INET, serverIp, &address.sin_addr)<=0)
-    {
-        printf("Address error\n");
+        if (inet_pton(AF_INET, serverIp, &address.sin_addr) <= 0) {
+            printf("Address error\n");
+            return (void *) 1;
+        }
+
+
+        if (connect(main_socket, (struct sockaddr *) &address, sizeof(address)) == 0) {
+            connected = true;
+        }
+        else{
+            sleep(1);
+        }
+    }
+    if(!connected){
         return (void*)1;
     }
-
-    if (connect(main_socket, (struct sockaddr *)&address, sizeof(address)) < 0){
-        printf("Connect error\n");
-        return (void*)1;
-    }
-
     // Reads whole file from server
     readFile(main_socket, f, fileSize);
 
@@ -124,7 +131,6 @@ bool sendData(SOCKET sock, void *buf, int buflen)
         pbuf += num;
         buflen -= num;
     }
-
     return true;
 }
 

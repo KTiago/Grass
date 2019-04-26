@@ -27,8 +27,7 @@
 struct thread_args
 {
     int port;
-    //FIXME should serverIp be const char * ?
-    char* serverIp;
+    char ip[1024];
     char fileName[1024];
     long fileSize;
 };

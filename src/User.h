@@ -8,11 +8,12 @@ using namespace std;
 
 class User{
 public:
-    explicit User(int socket, string base);
+    explicit User(int socket, string ip, string base);
     bool isAuthenticated();
     int getSocket() const;
     string getUname() const;
     string getLocation();
+    string getIp();
     void  setUname(const string& uname);
     void  resetUname();
     void  setLocation(const string& location);
@@ -24,7 +25,7 @@ private:
     bool authenticated;
     string uname;
     string location;
-
+    string ip;
 };
 
 #endif //GRASS_CLIENT_H

