@@ -169,11 +169,6 @@ void runServer(uint16_t port, Parser parser){
                     //Host disconnected
                     getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addrlen);
 
-                    /*
-                    printf("Host disconnected , ip %s , port %d \n" ,
-                           inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-                    */
-
                     //Close the socket and mark as 0 in list for reuse
                     close(sd);
                     it = connected_users.erase(it);

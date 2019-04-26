@@ -19,7 +19,6 @@
 #include "Parser.h"
 #include "User.h"
 #include "networking.h"
-// new include here (cpp related)
 #include <arpa/inet.h>
 #include <set>
 #include <vector>
@@ -132,7 +131,6 @@ bool sendData(SOCKET sock, void *buf, int buflen)
         pbuf += num;
         buflen -= num;
     }
-
     return true;
 }
 

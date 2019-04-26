@@ -45,7 +45,6 @@ extern const char DELIMITER;
 
 class Parser{
 private:
-    //FIXME USE ONLY ONE PORT VARIABLE
     int port = 2000;
 public:
     Parser(map<string, string> allowedUsers);

@@ -178,7 +178,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             args->fileSize = fileSize;
             strncpy(args->ip, serverIp, 1024);
 
-            // Kill stale thread
+            // Kill any stale thread
             pthread_cancel(thread);
 
             // Create new thread
