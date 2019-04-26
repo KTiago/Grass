@@ -28,7 +28,7 @@ int put_cmd(string fileName, long fileSize, int port, User &usr, string &out);
 int login_cmd(string uname, map<string, string> allowedUsers, User &usr, string &out);
 int logout_cmd(User &usr, string &out);
 int pass_cmd(string psw, map<string, string> allowedUsers, User &usr, string &out);
-int exec(const char* cmd, string &out);
+int exec(const char* cmd, string &out, string UsrLocation);
 int ping_cmd(string host, string &out);
 int rm_cmd(string fileName, User usr, string &out);
 int whoami_cmd(User usr, string &out);

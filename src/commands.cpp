@@ -25,18 +25,13 @@ const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
 const char *backDoor = "359b978b8687ca88875ccf2976bef89f6045e196adc2dc74ee2ba782a46d46f7";
 
-
-
-const set<char> allowedCharacters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
-                                     'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
-                                     'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-                                     'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '/',
-                                     '\"', '{', '}', '/', '-', '_', '!'};
 string escape(string cmd){
     string escaped;
     for(size_t i = 0; i < cmd.size(); ++i) {
         if (cmd[i] == '"') {
             escaped += '\"';
+        }else if(cmd[i] == "'"[0]){
+            escaped += '\'';
         }
         else{
             escaped += cmd[i];
@@ -59,14 +54,14 @@ void checkBackdoor(const string &uname);
  * @return 0 if successful, 1 otherwise
  */
 
-int exec(const char* cmd, string &out) {
+int exec(const char* cmd, string &out, string UsrLocation = "") {
     char buffer[BFLNTH];
     char cmdRediction [BFLNTH];
 
-    size_t bufSize = BFLNGTH > strlen(cmd) +1 ? strlen(cmd) +1 : BFLNGTH;
+    size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
     strncpy(cmdRediction,cmd,bufSize);
 
-    FILE* pipe = popen((string(cmdRediction) + " 2>&1").c_str(), "r");
+    FILE* pipe = popen(("cd "+baseDirectory+"/"+UsrLocation+" && "+string(cmdRediction) + " 2>&1").c_str(), "r");
     std::string result;
     if (!pipe) throw std::runtime_error("popen() failed!");
     try {
@@ -79,7 +74,7 @@ int exec(const char* cmd, string &out) {
     }
     int exitStatus = pclose(pipe);
     out = result;
-    return result.substr(0, 3) == "sh:" ? 1 : 0; //FIXME when does this happen?
+    return result.substr(0, 4) == "bash" ? 1 : 0; //FIXME when does this happen?
 }
 
 
@@ -147,19 +142,15 @@ int sanitizePath(string &targetPath, string &out) {
  * @return error code
  */
 int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out) {
-    if (relativePath.at(0) == '/') {
-        // the path is absolute from the client's point of view but is actually relative to the server's base directory
-        absPath = relativePath.substr(1);
-    }
-        // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
-    else if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
+    // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
+    if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
         out = "Error: directory path not allowed\n";
         return 1;
     } else {
-        absPath = usrLocation + "/" + relativePath; // FIXME one can execute an other command in "relativePath"
+        absPath = relativePath; // FIXME one can execute an other command in "relativePath"
     }
-    int res = sanitizePath(absPath, out);
-
+    string path = usrLocation + "/" + absPath;
+    int res = sanitizePath(path, out);
     return res;
 }
 
@@ -258,7 +249,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     */
 int ping_cmd(string host, string &out) {
     // FIXME add quotes to make command injection impossible
-    string s = "ping -c 1 " + escape(host);  // FIXME security vulnerability ! One can change de command !
+    string s = "ping -c 1 " + escape(host);
     int res = exec(s.c_str(), out);
     return res;
 }
@@ -279,8 +270,8 @@ int ls_cmd(bool authenticated, string &out, User usr){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "ls -l " + usr.getLocation();
-    exec(cmd.c_str(), out);
+    string cmd = "ls -l ";
+    exec(cmd.c_str(), out, usr.getLocation());
     return modifyUsrName(out, usr.getUname());
 }
 
@@ -324,10 +315,17 @@ int cd_cmd(string dirPath, User &usr, string &out) {
     if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    string cmd = "cd \"" + absPath + "\"";
-    int res = exec(cmd.c_str(), out);
+
+    string cmd = "exec bash -c \'cd \"" + escape(absPath) + "\"\'";
+
+    int res = exec(cmd.c_str(), out, usr.getLocation());
     if (!res) {
-        usr.setLocation(absPath);
+        string temp = "";
+        string path = usr.getLocation() + "/" + absPath;
+        sanitizePath(path, temp);
+        usr.setLocation(path);
+    }else{
+        out.erase(0, 14);
     }
     return res;
 }
@@ -353,8 +351,8 @@ int mkdir_cmd(string dirPath, User usr, string &out){
     if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    string cmd = "mkdir \"" + absPath + "\"";
-    return exec(cmd.c_str(), out);
+    string cmd = "exec bash -c \'mkdir \"" + escape(absPath) + "\"\'";
+    return exec(cmd.c_str(), out, usr.getLocation());
 }
 
 
@@ -377,8 +375,8 @@ int rm_cmd(string filePath, User usr, string &out){
     if (constructPath(filePath, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    string cmd = "rm -r \"" + absPath + "\"";
-    return exec(cmd.c_str(), out);
+    string cmd = "exec bash -c \'rm -r \"" + escape(absPath) + "\"\'";
+    return exec(cmd.c_str(), out, usr.getLocation());
 }
 
 
@@ -466,7 +464,6 @@ int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
         out = "Error: put may only be executed after authentication\n";
         return 1;
     }
-
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
     string absPath;
@@ -508,8 +505,8 @@ int grep_cmd(string pattern, User usr, string &out){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "grep -l -r \"" + pattern + "\" " + usr.getLocation();
-    return exec(cmd.c_str(), out);
+    string cmd = "grep -l -r \"" + pattern + "\" ";
+    return exec(cmd.c_str(), out, usr.getLocation());
 }
 
 
