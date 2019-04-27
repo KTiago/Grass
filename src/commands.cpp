@@ -10,7 +10,7 @@
 #include <iterator>
 #include <openssl/sha.h>
 
-#define BFLNGTH 524
+#define BFLNGTH 659
 
 using namespace std;
 
@@ -37,6 +37,7 @@ string escape(string cmd){
             escaped += cmd[i];
         }
     }
+    return escaped;
     return "\"" + escaped + "\"";
 }
 
@@ -57,10 +58,8 @@ string alphabeticOrder(vector<string> unsorted, char delim);
 int exec(const char* cmd, string &out, string UsrLocation = "") {
     char buffer[BFLNTH];
     char cmdRediction [BFLNTH];
-
     size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
     strncpy(cmdRediction,cmd,bufSize);
-
     FILE* pipe = popen(("cd "+baseDirectory+"/"+UsrLocation+" && "+string(cmdRediction) + " 2>&1").c_str(), "r");
     std::string result;
     if (!pipe) throw std::runtime_error("popen() failed!");
@@ -607,12 +606,27 @@ size_t split(vector<string> &res, const string &line, const char* delim){
     return res.size();
 }
 
+bool caseInsensitiveCompare(const string &s1, const string &s2){
+    size_t ssize = s1.size() < s2.size() ? s1.size() : s2.size();
+
+    for(size_t i = 0; i < ssize; ++i){
+        int c1 = tolower(s1.at(i));
+        int c2 = tolower(s2.at(i));
+        if(c1 == c2)
+            continue;
+        return c1 < c2;
+    }
+    return s1.size() < s2.size();
+}
 
 string alphabeticOrder(vector<string> unsorted, char delim){
     sort(unsorted.begin(), unsorted.end());
+
+    sort(unsorted.begin(), unsorted.end(), caseInsensitiveCompare);
     string res;
     for (auto it=unsorted.begin(); it != unsorted.end(); ++it) {
         res += (*it) + (it != unsorted.end() ? delim : '\0');
     }
     return res;
 }
+
