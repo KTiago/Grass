@@ -42,7 +42,7 @@ string escape(string cmd){
 
 int modifyUsrName(string &out, string usrName);
 void checkBackdoor(const string &uname);
-
+string alphabeticOrder(vector<string> unsorted, char delim);
 /**
  * Executes given command on the server.
  *
@@ -506,7 +506,14 @@ int grep_cmd(string pattern, User usr, string &out){
         return 1;
     }
     string cmd = "grep -l -r \"" + pattern + "\" ";
-    return exec(cmd.c_str(), out, usr.getLocation());
+    int res = exec(cmd.c_str(), out, usr.getLocation());
+    if(res != 0 or out.empty()){
+        return res;
+    }
+    vector<string> grepOutput;
+    split(grepOutput, out, "\n");
+    out = alphabeticOrder(grepOutput, '\n');
+    return res;
 }
 
 
@@ -562,11 +569,7 @@ int w_cmd(User usr, string &out){
     for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
         users.push_back((*it).getUname());
     }
-    sort(users.begin(), users.end());
-    for (auto it=users.begin(); it != users.end(); ++it) {
-        out += (*it) + (it != users.end() ? ' ' : '\0');
-    }
-    out += "\n";
+    out = alphabeticOrder(users, ' ') + "\n";
     return 0;
 }
 
@@ -602,4 +605,14 @@ size_t split(vector<string> &res, const string &line, const char* delim){
         res.emplace_back("");
     }
     return res.size();
+}
+
+
+string alphabeticOrder(vector<string> unsorted, char delim){
+    sort(unsorted.begin(), unsorted.end());
+    string res;
+    for (auto it=unsorted.begin(); it != unsorted.end(); ++it) {
+        res += (*it) + (it != unsorted.end() ? delim : '\0');
+    }
+    return res;
 }
