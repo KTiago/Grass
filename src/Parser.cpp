@@ -148,6 +148,7 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             get_cmd(tokens[1], port, usr, output);
+            shouldPrint = false;
             port++;
             break;
         }
@@ -157,6 +158,7 @@ void Parser::executeCommand(User &usr){
                 break;
             }
             put_cmd(tokens[1], stol(tokens[2]), port, usr, output);
+            shouldPrint = false;
             port++;
             break;
         }
@@ -236,8 +238,12 @@ void Parser::resetCommand(){
     arg_n = 0;
     output = "";
     tokens.clear();
+    shouldPrint = true;
 }
 
+bool Parser::getShouldPrint(){
+    return shouldPrint;
+}
 
 string Parser::getOutput(){
     return output;

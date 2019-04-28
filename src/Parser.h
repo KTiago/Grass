@@ -44,8 +44,6 @@ extern const char DELIMITER;
 
 
 class Parser{
-private:
-    int port = 2000;
 public:
     Parser(map<string, string> allowedUsers);
     ~Parser();
@@ -61,11 +59,13 @@ public:
     bool checkArgNumber(int);
 
     //this will return the first token
-    std::string getFirstToken();
+    string getFirstToken();
 
     void initialize();
 
     string getOutput();
+
+    bool getShouldPrint();
     
 
 private:
@@ -73,6 +73,8 @@ private:
     vector<string> tokens;
     int arg_n;
     map<string, string> allowedUsers;
+    int port = 2000;
+    bool shouldPrint;
 };
 
 

@@ -163,7 +163,6 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
         // trim string, since we send empty spaces when command returns nothing. FIXME
         bufString.erase(0, bufString.find_first_not_of(' '));
-        outfile << bufString;
 
         memset(buffer, 0, 1024);
         token = strtok(copiedBuffer, " ");
@@ -217,6 +216,8 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             if(rc != 0){
                 cerr << "Error" << endl;
             }
+        }else{
+            outfile << bufString;
         }
     }
 

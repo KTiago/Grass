@@ -181,6 +181,7 @@ int runServer(uint16_t port, Parser parser){
                     parser.parseCommand(buffer);
                     parser.executeCommand(const_cast<User &>(*it));
                     string message = parser.getOutput().empty()? " ": parser.getOutput();
+                    bool shouldPrint = parser.getShouldPrint();
                     parser.resetCommand();
 
                     // Send response to client
@@ -190,7 +191,8 @@ int runServer(uint16_t port, Parser parser){
 
                     // trim output
                     message.erase(0, message.find_first_not_of(' '));
-                    cout << message;
+                    if(shouldPrint)
+                        cout << message;
 
                     ++it;
                 }
