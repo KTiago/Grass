@@ -34,7 +34,7 @@ set<User> connected_users;
 string baseDirectory;
 
 
-void runServer(uint16_t port, Parser parser);
+int runServer(uint16_t port, Parser parser);
 void cleanBaseDir();
 
 int main()
@@ -75,61 +75,58 @@ int main()
     Parser parser(allowedUsers);
 
     // Start the server
-    runServer(port, parser);
+    int res = runServer(port, parser);
+    return res;
 }
 
-void runServer(uint16_t port, Parser parser){
-    int server_fd, new_socket, sd, max_sd;
+int runServer(uint16_t port, Parser parser){
+    int mainSocket, newSocket, sd, max_sd;
     ssize_t  valread;
     struct sockaddr_in address;
     int opt = 1;
-    int addrlen = sizeof(address);
+    int addressLength = sizeof(address);
     char buffer[1025];
 
 
-    // Creating socket file descriptor
-    // AF_INET: IPv4, SOCK_STREAM : TCP, 0 : IP
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+    // Creating server socket
+    if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
-        perror("Socket creation error");
         cleanBaseDir();
-        exit(1);
+        return 1;
     }
 
-    if( setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
+    if( setsockopt(mainSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
                    sizeof(opt)) < 0 )
     {
-        perror("setsockopt");
         cleanBaseDir();
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = INADDR_ANY;
 
-    // Binds
-    if (bind(server_fd, (struct sockaddr *)&address,
+    // Binding server socket
+    if (bind(mainSocket, (struct sockaddr *)&address,
              sizeof(address))<0)
     {
-        perror("binding error");
         cleanBaseDir();
-        exit(1);
+        return 1;
     }
 
-    // 5 is the maximum is the size of the backlog queue (5 is the limit on most systems)
-    if (listen(server_fd, 5) < 0)
+    // Listen to incoming connections
+    if (listen(mainSocket, 5) < 0)
     {
-        perror("listen error");
         cleanBaseDir();
-        exit(1);
+        return 1;
     }
 
+    // Main loop which detects any change in the file descriptors corresponding to received messages
     fd_set master_fd;
     while(true) {
         FD_ZERO(&master_fd);
-        FD_SET(server_fd, &master_fd);
-        max_sd = server_fd;
+        FD_SET(mainSocket, &master_fd);
+        max_sd = mainSocket;
         for (const auto &connected_user : connected_users) {
             sd = connected_user.getSocket();
 
@@ -144,32 +141,32 @@ void runServer(uint16_t port, Parser parser){
         select(max_sd + 1, &master_fd, nullptr, nullptr, nullptr);
 
         // A new TCP connection has been opened
-        if (FD_ISSET(server_fd, &master_fd)) {
+        if (FD_ISSET(mainSocket, &master_fd)) {
 
-            if ((new_socket = accept(server_fd,
-                                     (struct sockaddr *) &address, (socklen_t * ) & addrlen)) < 0) {
-                perror("accept");
+            if ((newSocket = accept(mainSocket,
+                                     (struct sockaddr *) &address, (socklen_t * ) & addressLength)) < 0) {
                 cleanBaseDir();
-                exit(1);
+                return 1;
             }
 
-            User newUsr = User(new_socket, string(inet_ntoa(address.sin_addr)),"");
+            // Create new user
+            User newUsr = User(newSocket, string(inet_ntoa(address.sin_addr)),"");
             connected_users.insert(newUsr);
-
         }
+
+        // Loop over connected users and detect incoming messages
         for (auto it = connected_users.begin(); it != connected_users.end(); )
         {
             sd = (*it).getSocket();
             if (FD_ISSET(sd , &master_fd))
             {
-                //Check if it was for closing, and also read the
-                //incoming message
+                //Read the incoming message and check whether it is for closing a connection
                 if ((valread = read(sd, buffer, 1024)) == 0)
                 {
                     //Host disconnected
-                    getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addrlen);
+                    getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addressLength);
 
-                    //Close the socket and mark as 0 in list for reuse
+                    //Close the socket and delete user from list
                     close(sd);
                     it = connected_users.erase(it);
                 }
@@ -181,19 +178,14 @@ void runServer(uint16_t port, Parser parser){
 
                     // buffer contains the received command trimmed to 1024 characters
                     // response to be sent
-
-                    /*
-                        Yann/Delphine : insert code here to handle the command received and then
-                        send the response to the User
-                    */
-
                     parser.parseCommand(buffer);
                     parser.executeCommand(const_cast<User &>(*it));
                     string message = parser.getOutput().empty()? " ": parser.getOutput();
                     parser.resetCommand();
 
+                    // Send response to client
                     if ((int)send(sd, message.c_str(), strlen(message.c_str()), 0) != (int)strlen(message.c_str())) {
-                        perror("send");
+                        return 1;
                     }
 
                     // trim output
@@ -208,7 +200,6 @@ void runServer(uint16_t port, Parser parser){
         }
     }
 }
-
 
 void cleanBaseDir(){
     if(!baseDirectory.empty()){
