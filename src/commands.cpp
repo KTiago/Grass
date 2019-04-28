@@ -143,7 +143,7 @@ int sanitizePath(string &targetPath, string &out) {
 int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out) {
     // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
     if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
-        out = "Error: directory path not allowed\n";
+        out = ACCESS_ERROR; //FIXME
         return 1;
     } else {
         absPath = relativePath; // FIXME one can execute an other command in "relativePath"
