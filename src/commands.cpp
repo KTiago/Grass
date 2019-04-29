@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
-#include <openssl/sha.h>
+//#include <openssl/sha.h>
 
 #define BFLNGTH 659
 
@@ -182,7 +182,7 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
 }
 
 void sha256_string(const char *string, char outputBuffer[65])
-{
+{   /*
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -192,7 +192,7 @@ void sha256_string(const char *string, char outputBuffer[65])
     for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
     {
         sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }
+    }*/
     outputBuffer[64] = 0;
 }
 
