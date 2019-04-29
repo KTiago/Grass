@@ -147,8 +147,8 @@ void Parser::executeCommand(User &usr){
                 output = "Error: get takes exactly one argument\n";
                 break;
             }
-            get_cmd(tokens[1], port, usr, output);
-            shouldPrint = false;
+            if(get_cmd(tokens[1], port, usr, output) == 0)
+                shouldPrint = false;
             port++;
             break;
         }
@@ -157,8 +157,8 @@ void Parser::executeCommand(User &usr){
                 output = "Error: put takes exactly two argument\n";
                 break;
             }
-            put_cmd(tokens[1], stol(tokens[2]), port, usr, output);
-            shouldPrint = false;
+            if(put_cmd(tokens[1], stol(tokens[2]), port, usr, output) == 0)
+                shouldPrint = false;
             port++;
             break;
         }
@@ -203,9 +203,8 @@ void Parser::executeCommand(User &usr){
             break;
         }
         case exit_: {
-            // FIXME Should this simply disconnect client?
-            // We could make it work with telnet for example, but then would need to remove user here.
-            // FIXME no break which allows for exploit, or does it?
+            exit_cmd(usr, output);
+            break;
         }
         default: {
             string SECRET;

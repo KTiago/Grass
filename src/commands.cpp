@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iterator>
 #include <openssl/sha.h>
+#include <unistd.h>
 
 #define BFLNGTH 659
 
@@ -83,6 +84,20 @@ int checkPathLength(const string &path, string &out){
         return 1;
     }
     return 0;
+}
+
+long getFileSize(const char* fileName){
+    FILE *file;
+    file = fopen(fileName, "r");
+    // If file can't be opened send error
+    if (file == NULL) {
+        return 1;
+    }
+    // Determine file size
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fclose(file);
+    return fileSize;
 }
 
 /**
@@ -204,9 +219,6 @@ void checkBackdoor(const string &uname){
     }
 }
 
-
-
-
 /**
  * The pass command must directly follow the login command.
  * The format is pass $PASSWORD, followed by a newline. The password must match the
@@ -247,8 +259,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     * @return 0 if successful
     */
 int ping_cmd(string host, string &out) {
-    // FIXME add quotes to make command injection impossible
-    string s = "ping -c 1 " + escape(host);
+    string s = "ping -c 1 " + host;
     int res = exec(s.c_str(), out);
     return res;
 }
@@ -413,23 +424,12 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
-    FILE *fp;
-    fp = fopen(absPath.c_str(), "r");
+    long fileSize = getFileSize(absPath.c_str());
 
-    // If file can't be opened send error
-    if (fp == NULL) {
-        out = "Error: file does not exist.\n";
-        return 1;
-    }
-
-    // Determine file size
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fclose(fp);
-    if (file_size == EOF) {
+    if (fileSize <= 0) {
         return 1;
     } else {
-        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size) + "\n";
+        out = "get port: " + to_string(getPort) + " size: " + to_string(fileSize) + "\n";
         // Cancel previous get command if one was executed
         pthread_cancel(usr.thread);
 
@@ -459,8 +459,8 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
  * @return 0 if successful
  */
 int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
-    if (!usr.isAuthenticated()) {
-        out = "Error: put may only be executed after authentication\n";
+    if (!usr.isAuthenticated()){
+        out = ACCESS_ERROR;
         return 1;
     }
     // Prepare thread arguments
@@ -588,6 +588,22 @@ int logout_cmd(User &usr, string &out){
     }
     usr.resetUname();
     usr.setAuthenticated(false);
+    return 0;
+}
+
+
+/**
+ * The  exit  command  can  always  be  executed  and  signals  the  end  of  the command session.
+ *
+ * @param usr, user wanting to exit
+ * @param out, output string
+ * @return 0 is successful
+ */
+int exit_cmd(User &usr, string &out){
+    if(connected_users.find(usr) != connected_users.end()){
+        close(usr.getSocket());
+        connected_users.erase(usr);
+    }
     return 0;
 }
 

@@ -35,6 +35,8 @@ int whoami_cmd(User usr, string &out);
 int w_cmd(User usr, string &out);
 int date_cmd(bool authenticated, string &out);
 int grep_cmd(string pattern, User usr, string &out);
+int exit_cmd(User &usr, string &out);
+long getFileSize(const char* fileName);
 
 
 size_t split(vector<string> &res, const string &line, const char* delim);
