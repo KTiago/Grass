@@ -53,6 +53,7 @@ void Parser::initialize() {
 Parser::Parser(map<string, string> allowedUsers){
     srand(time(nullptr));
     this->allowedUsers = allowedUsers;
+    shouldPrint = true;
     initialize();
 }
 
