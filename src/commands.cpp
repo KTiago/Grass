@@ -37,7 +37,6 @@ string escape(string cmd){
             escaped += cmd[i];
         }
     }
-    return escaped;
     return "\"" + escaped + "\"";
 }
 
@@ -248,7 +247,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     */
 int ping_cmd(string host, string &out) {
     // FIXME add quotes to make command injection impossible
-    string s = "ping -c 1 " + escape(host);
+    string s = "ping -c 1 " + host;
     int res = exec(s.c_str(), out);
     return res;
 }
