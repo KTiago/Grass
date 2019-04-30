@@ -35,6 +35,7 @@
 
 using namespace std;
 
+// Creates a TCP server to serve a file. Arguments are passed in a struct.
 void* openFileServer(void* ptr){
     struct thread_args *args = (struct thread_args *)ptr;
     FILE *f = fopen(args->fileName, "r");
@@ -73,6 +74,7 @@ void* openFileServer(void* ptr){
     return (void*)0;
 }
 
+// Creates a TCP client to retrieve a file from a TCP server. Arguments are passed in a struct.
 void* openFileClient(void *ptr){
     struct thread_args *args = (struct thread_args *)ptr;
     FILE *f = fopen(args->fileName, "w");
@@ -85,6 +87,8 @@ void* openFileClient(void *ptr){
     sockaddr_in address;
     int attempts = 0;
     bool connected = false;
+
+    // Attempts multiple times to connect to server. Waits 1s between each attempt.
     while(attempts < 10 and !connected) {
         if ((main_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) { return (void *) 1; }
 
@@ -108,6 +112,7 @@ void* openFileClient(void *ptr){
     if(!connected){
         return (void*)1;
     }
+
     // Reads whole file from server
     readFile(main_socket, f, fileSize);
 
@@ -116,92 +121,88 @@ void* openFileClient(void *ptr){
     return (void*)0;
 }
 
-bool sendData(SOCKET sock, void *buf, int buflen)
+bool sendData(SOCKET sock, void *buffer, int bufferLength)
 {
-    unsigned char *pbuf = (unsigned char *) buf;
+    unsigned char *pbuf = (unsigned char *) buffer;
 
-    while (buflen > 0)
+    while (bufferLength > 0)
     {
-        int num = send(sock, pbuf, buflen, 0);
+        int num = send(sock, pbuf, bufferLength, 0);
         if (num == -1)
         {
             return false;
         }
 
         pbuf += num;
-        buflen -= num;
+        bufferLength -= num;
     }
     return true;
 }
 
-bool sendFile(SOCKET sock, FILE *f)
+bool sendFile(SOCKET sock, FILE *file)
 {
-    fseek(f, 0, SEEK_END);
-    long filesize = ftell(f);
-    rewind(f);
-    if (filesize == EOF)
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    rewind(file);
+    if (fileSize == EOF)
         return false;
-    if (filesize > 0)
+    if (fileSize > 0)
     {
         char buffer[1024];
         do
         {
-            size_t num = MIN(filesize, sizeof(buffer));
-            num = fread(buffer, 1, num, f);
+            size_t num = MIN(fileSize, sizeof(buffer));
+            num = fread(buffer, 1, num, file);
             if (num < 1)
                 return false;
             if (!sendData(sock, buffer, num))
                 return false;
-            filesize -= num;
+            fileSize -= num;
         }
-        while (filesize > 0);
+        while (fileSize > 0);
     }
     return true;
 }
 
-bool readData(SOCKET sock, void *buf, int buflen)
+bool readData(SOCKET sock, void *buffer, int bufferLength)
 {
-    unsigned char *pbuf = (unsigned char *) buf;
+    unsigned char *pbuf = (unsigned char *) buffer;
 
-    while (buflen > 0)
+    while (bufferLength > 0)
     {
-        int num = recv(sock, pbuf, buflen, 0);
-        if (num == -1)
-        {
-            return false;
-        }
-        else if (num == 0)
+        int num = recv(sock, pbuf, bufferLength, 0);
+        if (num == -1 or num == 0)
             return false;
 
         pbuf += num;
-        buflen -= num;
+        bufferLength -= num;
     }
 
     return true;
 }
 
-bool readFile(SOCKET sock, FILE *f, long filesize)
+bool readFile(SOCKET sock, FILE *file, long fileSize)
 {
-    if (filesize > 0)
+    if (fileSize > 0)
     {
         char buffer[1024];
         do
         {
-            int num = MIN(filesize, sizeof(buffer));
+            int num = MIN(fileSize, sizeof(buffer));
             if (!readData(sock, buffer, num))
                 return false;
             int offset = 0;
             do
             {
-                size_t written = fwrite(&buffer[offset], 1, num-offset, f);
+                size_t written = fwrite(&buffer[offset], 1, num-offset, file);
                 if (written < 1)
                     return false;
                 offset += written;
             }
             while (offset < num);
-            filesize -= num;
+            fileSize -= num;
         }
-        while (filesize > 0);
+        while (fileSize > 0);
     }
     return true;
 }
