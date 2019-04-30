@@ -439,8 +439,6 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     }
     return 0;
 }
-
-
 /**
  * The put command may only be executed after a successful authentication.
  * The put command takes exactly two parameters (put $FILENAME $SIZE) and
