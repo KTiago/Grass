@@ -413,7 +413,6 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     }
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
@@ -464,7 +463,6 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
 
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
