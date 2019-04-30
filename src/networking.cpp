@@ -40,7 +40,6 @@ void* openFileServer(void* ptr){
     struct thread_args *args = (struct thread_args *)ptr;
     FILE *f = fopen(args->fileName, "r");
     int port = args->port;
-
     struct sockaddr_in address;
     int newSocket, mainSocket;
     int opt = 1;
@@ -77,7 +76,7 @@ void* openFileServer(void* ptr){
 // Creates a TCP client to retrieve a file from a TCP server. Arguments are passed in a struct.
 void* openFileClient(void *ptr){
     struct thread_args *args = (struct thread_args *)ptr;
-    FILE *f = fopen(args->fileName, "w");
+
     char* serverIp = args->ip;
     int port = args->port;
     long fileSize = args->fileSize;
@@ -112,10 +111,9 @@ void* openFileClient(void *ptr){
     if(!connected){
         return (void*)1;
     }
-
+    FILE *f = fopen(args->fileName, "w");
     // Reads whole file from server
     readFile(main_socket, f, fileSize);
-
     fclose(f);
     close(main_socket);
     return (void*)0;

@@ -14,6 +14,7 @@
 #include "Parser.h"
 #include "User.h"
 #include "networking.h"
+#include <stdio.h>
 
 // new include here (cpp related)
 #include <arpa/inet.h>
@@ -24,6 +25,8 @@
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
 #define IP_SIZE 32
+
+const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
 using namespace std;
 int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode);
@@ -139,14 +142,15 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         if(token != NULL and strcmp(token, "get") == 0){
             memset(fileName, 0, 1024);
             token = strtok(NULL, " ");
-            if(token != NULL)
+            if(token != NULL) {
                 strncpy(fileName, token, 1024);
+            }
         }else if(token != NULL and strcmp(token, "put") == 0){
             memset(fileName, 0, 1024);
             token = strtok(NULL, " ");
-            if(token != NULL)
+            if(token != NULL) {
                 strncpy(fileName, token, 1024);
-
+            }
             token = strtok(NULL, " ");
             if(token != NULL){
                 fileSize = stoll(token);
@@ -202,7 +206,6 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         }else if(token and strcmp(token, "put") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
             // Extract port from received command string
             port = atoi(strtok(NULL, " "));
-
             // Prepare struct containing arguments to function in parallel thread
             struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);
@@ -213,9 +216,22 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             pthread_cancel(thread);
 
             // Create new thread
-            int rc = pthread_create(&thread, NULL, openFileServer, (void*) args);
-            if(rc != 0){
-                cerr << "Error" << endl;
+            if(access(fileName, F_OK ) == -1){
+                outfile << TRANSFER_ERROR;
+            }else {
+                FILE *f = fopen(args->fileName, "r");
+                fseek(f, 0, SEEK_END);
+                long actualFileSize = ftell(f);
+                rewind(f);
+                fclose(f);
+                if (fileSize != actualFileSize) {
+                    outfile << TRANSFER_ERROR;
+                }else{
+                    int rc = pthread_create(&thread, NULL, openFileServer, (void *) args);
+                    if (rc != 0) {
+                        cerr << "Error" << endl;
+                    }
+                }
             }
         }else{
             outfile << bufString;
