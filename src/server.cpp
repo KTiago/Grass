@@ -21,6 +21,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <stdio.h>
 //#include <filesystem>
 #include "grass.hpp"
 
@@ -36,6 +37,7 @@ string baseDirectory;
 
 void runServer(uint16_t port, Parser parser);
 void cleanBaseDir();
+void printMessage(string message);
 
 int main()
 {
@@ -196,9 +198,7 @@ void runServer(uint16_t port, Parser parser){
                         perror("send");
                     }
 
-                    // trim output
-                    message.erase(0, message.find_first_not_of(' '));
-                    cout << message;
+                    printMessage(message);
 
                     ++it;
                 }
@@ -207,6 +207,12 @@ void runServer(uint16_t port, Parser parser){
             }
         }
     }
+}
+
+void printMessage(string message) {
+    // trim output to remove empty space used to sent confirmation message
+    message.erase(0, message.find_first_not_of(' '));
+    cout << message.c_str();
 }
 
 

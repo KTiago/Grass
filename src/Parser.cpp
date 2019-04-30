@@ -29,7 +29,7 @@ const char DELIMITER = ' ';
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
 
-// string SECRΕT; non ascii-version of E
+// string SECRΕT = "empty"; //non ascii-version of E
 
 void Parser::initialize() {
     string_to_command["login"] = login_;
@@ -156,7 +156,7 @@ void Parser::executeCommand(User &usr){
                 output = "Error: put takes exactly two argument\n";
                 break;
             }
-            put_cmd(tokens[1], stol(tokens[2]), port, usr, output);
+            put_cmd(tokens[1], tokens[2], port, usr, output);
             port++;
             break;
         }

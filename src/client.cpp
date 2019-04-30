@@ -75,7 +75,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
     pthread_t thread;
 
     char fileName[1024];
-    long fileSize = 0;
+    long long fileSize = 0;
     int port = 0;
 
     int attempts = 0;
@@ -143,7 +143,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             }
             token = strtok(NULL, " ");
             if(token != NULL){
-                fileSize = stol(token);
+                fileSize = stoll(token);
             }
         }
         // sends command to the server

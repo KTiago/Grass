@@ -412,7 +412,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    snprintf(args->fileName, 1024, absPath.c_str());
+    strncpy(args->fileName, absPath.c_str(), 1024);    //FIXME fix vulnerability
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
@@ -461,29 +461,39 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
  * @param out, output string
  * @return 0 if successful
  */
-int put_cmd(string fileName, long fileSize, int port, User &usr, string &out) {
+int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) {
     if (!usr.isAuthenticated()) {
         out = "Error: put may only be executed after authentication\n";
         return 1;
     }
+    long long fileS = stoll(fileSize);
+    long long i = 0;
+
+    // printf("Address of x is %p\n", (void *)&i);
 
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
+    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    strncpy(args->fileName, absPath.c_str(), 1024);
+    snprintf(args->fileName, 1024, absPath.c_str());
+    cout << args->fileName << endl;
     args->port = port;
     strncpy(args->ip, usr.getIp().c_str(), 1024);
-    args->fileSize = fileSize;
+    args->fileSize = (long) fileS;
+
+    if (i != 0) {
+        hijack_flow();
+    }
 
     out = "put port: " + to_string(port) + "\n";
 
     // Cancel previous get command if one was executed
     pthread_cancel(usr.thread);
     // Create new thread
-    int rc = pthread_create(&usr.thread, NULL, openFileClient, (void *) args);
+    int rc = pthread_create(&usr.thread, nullptr, openFileClient, (void *) args);
     if (rc != 0) {
         cerr << "Error" << endl;
     }
