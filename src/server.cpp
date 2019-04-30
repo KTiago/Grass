@@ -21,6 +21,7 @@
 #include <set>
 #include <vector>
 #include <map>
+#include <stdio.h>
 //#include <filesystem>
 #include "grass.hpp"
 
@@ -153,9 +154,8 @@ int runServer(uint16_t port, Parser &parser) {
         // Loop over connected users and detect incoming messages
         for (auto it = connected_users.begin(); it != connected_users.end();) {
             sd = (*it).getSocket();
+
             if (FD_ISSET(sd, &master_fd)) {
-
-
                 if (executeCommand(valread, parser, it, address, addressLength) != 0) {
                     return 1;
                 }
