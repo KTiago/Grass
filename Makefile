@@ -3,7 +3,7 @@ BINDIR   = bin
 INCLUDES = include
 
 CC=g++
-CFLAGS= -Wall -Wextra -g -fno-stack-protector -z execstack -pthread  -std=c++11 -I $(INCLUDES)/   -lssl  -lcrypto
+CFLAGS= -Wall -Wextra -g -fno-stack-protector -z execstack -pthread  -std=c++11 -I $(INCLUDES)/   # -lssl  -lcrypto
 DEPS = $(wildcard $(INCLUDES)/%.h)
 
 all: $(BINDIR)/client $(BINDIR)/server $(DEPS)

@@ -25,7 +25,8 @@
 #include "grass.hpp"
 
 #define CONFIG_FILE "grass.conf"
-
+#define BUF_SIZE 200
+#define MAX_READ_LEN 334
 using namespace std;
 
 
@@ -34,7 +35,8 @@ set<User> connected_users;
 string baseDirectory;
 
 
-int runServer(uint16_t port, Parser parser);
+int runServer(uint16_t port, Parser &parser);
+int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterator<User> &it, struct sockaddr_in address, size_t addressLength);
 void cleanBaseDir();
 
 int main()
@@ -79,25 +81,21 @@ int main()
     return res;
 }
 
-int runServer(uint16_t port, Parser parser){
+int runServer(uint16_t port, Parser &parser) {
     int mainSocket, newSocket, sd, max_sd;
-    ssize_t  valread;
-    struct sockaddr_in address;
+    ssize_t valread;
+    struct sockaddr_in address{};
     int opt = 1;
-    int addressLength = sizeof(address);
-    char buffer[1025];
-
+    size_t addressLength = sizeof(address);
 
     // Creating server socket
-    if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0)
-    {
+    if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         cleanBaseDir();
         return 1;
     }
 
-    if( setsockopt(mainSocket, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,
-                   sizeof(opt)) < 0 )
-    {
+    if (setsockopt(mainSocket, SOL_SOCKET, SO_REUSEADDR, (char *) &opt,
+                   sizeof(opt)) < 0) {
         cleanBaseDir();
         return 1;
     }
@@ -107,23 +105,21 @@ int runServer(uint16_t port, Parser parser){
     address.sin_addr.s_addr = INADDR_ANY;
 
     // Binding server socket
-    if (bind(mainSocket, (struct sockaddr *)&address,
-             sizeof(address))<0)
-    {
+    if (bind(mainSocket, (struct sockaddr *) &address,
+             sizeof(address)) < 0) {
         cleanBaseDir();
         return 1;
     }
 
     // Listen to incoming connections
-    if (listen(mainSocket, 5) < 0)
-    {
+    if (listen(mainSocket, 5) < 0) {
         cleanBaseDir();
         return 1;
     }
 
     // Main loop which detects any change in the file descriptors corresponding to received messages
     fd_set master_fd;
-    while(true) {
+    while (true) {
         FD_ZERO(&master_fd);
         FD_SET(mainSocket, &master_fd);
         max_sd = mainSocket;
@@ -144,67 +140,78 @@ int runServer(uint16_t port, Parser parser){
         if (FD_ISSET(mainSocket, &master_fd)) {
 
             if ((newSocket = accept(mainSocket,
-                                     (struct sockaddr *) &address, (socklen_t * ) & addressLength)) < 0) {
+                                    (struct sockaddr *) &address, (socklen_t *) &addressLength)) < 0) {
                 cleanBaseDir();
                 return 1;
             }
 
             // Create new user
-            User newUsr = User(newSocket, string(inet_ntoa(address.sin_addr)),"");
+            User newUsr = User(newSocket, string(inet_ntoa(address.sin_addr)), "");
             connected_users.insert(newUsr);
         }
 
         // Loop over connected users and detect incoming messages
-        for (auto it = connected_users.begin(); it != connected_users.end(); )
-        {
+        for (auto it = connected_users.begin(); it != connected_users.end();) {
             sd = (*it).getSocket();
-            if (FD_ISSET(sd , &master_fd))
-            {
-                //Read the incoming message and check whether it is for closing a connection
-                if ((valread = read(sd, buffer, 1024)) == 0)
-                {
-                    //Host disconnected
-                    getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addressLength);
+            if (FD_ISSET(sd, &master_fd)) {
 
-                    //Close the socket and delete user from list
-                    close(sd);
-                    it = connected_users.erase(it);
+
+                if (executeCommand(valread, parser, it, address, addressLength) != 0) {
+                    return 1;
                 }
-                else
-                {
-                    //set the string terminating NULL byte on the end
-                    //of the data read
-                    buffer[valread] = '\0';
-
-                    // buffer contains the received command trimmed to 1024 characters
-                    // response to be sent
-                    parser.parseCommand(buffer);
-                    parser.executeCommand(const_cast<User &>(*it));
-                    string message = parser.getOutput().empty()? " ": parser.getOutput();
-                    bool shouldPrint = parser.getShouldPrint();
-                    parser.resetCommand();
-
-                    // Send response to client
-                    if ((int)send(sd, message.c_str(), strlen(message.c_str()), 0) != (int)strlen(message.c_str())) {
-                        return 1;
-                    }
-
-                    // trim output
-                    message.erase(0, message.find_first_not_of(' '));
-                    if(shouldPrint)
-                        cout << message;
-
-                    ++it;
-                }
-            }else{
+            } else {
                 ++it;
             }
         }
     }
 }
 
+
 void cleanBaseDir(){
     if(!baseDirectory.empty()){
         system("cd .. ; rm -r baseDir");
     }
+}
+
+
+int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterator<User> &it, struct sockaddr_in address, size_t addressLength) {
+    char buffer[BUF_SIZE+1];
+    int sd =  (*it).getSocket();
+    //Read the incoming message and check whether it is for closing a connection
+    if ((valread = read(sd, buffer, MAX_READ_LEN)) == 0)
+    {
+        //Host disconnected
+        getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addressLength);
+
+        //Close the socket and delete user from list
+        close(sd);
+        it = connected_users.erase(it);
+    }
+    else
+    {
+        //set the string terminating NULL byte on the end
+        //of the data read
+        buffer[valread] = '\0';
+
+        // buffer contains the received command trimmed to 1024 characters
+        // response to be sent
+        parser.parseCommand(buffer);
+
+        parser.executeCommand(const_cast<User &>(*it));
+        string message = parser.getOutput().empty()? " ": parser.getOutput();
+        bool shouldPrint = parser.getShouldPrint();
+        parser.resetCommand();
+
+        // Send response to client
+        if ((int)send(sd, message.c_str(), strlen(message.c_str()), 0) != (int)strlen(message.c_str())) {
+            return 1;
+        }
+        // trim output
+        message.erase(0, message.find_first_not_of(' '));
+
+        if(shouldPrint)
+            cout << message;
+        ++it;
+    }
+    return 0;
 }
