@@ -413,7 +413,6 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     }
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
@@ -462,17 +461,13 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
     long long fileS = stoll(fileSize);
     long long i = 0;
 
-    // printf("Address of x is %p\n", (void *)&i);
-
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
     snprintf(args->fileName, 1024, absPath.c_str());
-    cout << args->fileName << endl;
     args->port = port;
     strncpy(args->ip, usr.getIp().c_str(), 1024);
     args->fileSize = (long) fileS;
