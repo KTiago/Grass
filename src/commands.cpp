@@ -10,7 +10,7 @@
 #include <iterator>
 #include <unistd.h>
 
-#define BFLNGTH 659
+#define BFLNGTH 652
 
 using namespace std;
 
@@ -159,7 +159,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
         out = ACCESS_ERROR; //FIXME
         return 1;
     } else {
-        absPath = relativePath; // FIXME one can execute an other command in "relativePath"
+        absPath = escape(relativePath); // FIXME one can execute an other command in "relativePath"
     }
     string path = usrLocation + "/" + absPath;
     int res = sanitizePath(path, out);

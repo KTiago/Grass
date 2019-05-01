@@ -26,8 +26,8 @@
 #include "grass.hpp"
 
 #define CONFIG_FILE "grass.conf"
-#define BUF_SIZE 200
-#define MAX_READ_LEN 334
+#define BUF_SIZE 900
+#define MAX_READ_LEN 650
 using namespace std;
 
 
@@ -178,7 +178,7 @@ int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterato
     char buffer[BUF_SIZE+1];
     int sd =  (*it).getSocket();
     //Read the incoming message and check whether it is for closing a connection
-    if ((valread = read(sd, buffer, MAX_READ_LEN)) == 0)
+    if ((valread = read(sd, buffer, BUF_SIZE)) == 0)
     {
         //Host disconnected
         getpeername(sd , (struct sockaddr*) &address , (socklen_t*) &addressLength);
@@ -198,19 +198,19 @@ int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterato
         parser.parseCommand(buffer);
 
         parser.executeCommand(const_cast<User &>(*it));
+
+        //strcpy(message, string(parser.getOutput()).empty()? " ": parser.getOutput());
         string message = parser.getOutput().empty()? " ": parser.getOutput();
         bool shouldPrint = parser.getShouldPrint();
-        parser.resetCommand();
-
         // Send response to client
-        if ((int)send(sd, message.c_str(), strlen(message.c_str()), 0) != (int)strlen(message.c_str())) {
+        if ((int)send(sd, message.c_str(), message.size(), 0) != (int) message.size()) {
             return 1;
         }
         // trim output
-        message.erase(0, message.find_first_not_of(' '));
-
         if(shouldPrint)
-            cout << message;
+            cout << message.erase(0, string(message).find_first_not_of(' '));
+
+        parser.resetCommand();
         ++it;
     }
     return 0;

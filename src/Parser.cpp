@@ -62,7 +62,9 @@ Parser::Parser(map<string, string> allowedUsers){
  * https://www.techiedelight.com/split-string-cpp-using-delimiter/
  */
 void Parser::parseCommand(string command){
-    stringstream commandStream(command);
+    char cmd[MAX_CMD_LEN];
+    strncpy(cmd, command.c_str(), CP_LEN > command.size() + 1? command.size() + 1 : CP_LEN);
+    stringstream commandStream(cmd);
 
     string s;
     arg_n = 0;
