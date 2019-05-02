@@ -89,7 +89,7 @@ void Parser::executeCommand(User &usr){
 
     // Get command and execute it accordingly
     enum command c = string_to_command[getFirstToken()];
-
+    int res = 0;
     switch (c) {
         case login_:
             if (checkArgNumber(1)) {
@@ -100,7 +100,7 @@ void Parser::executeCommand(User &usr){
             break;
         case pass_:
             if (checkArgNumber(1)) {
-                pass_cmd(tokens[1], allowedUsers, usr, output);
+                res = pass_cmd(tokens[1], allowedUsers, usr, output);
             } else {
                 output = "Error: pass takes exactly one argument\n";
             }
@@ -227,8 +227,8 @@ void Parser::executeCommand(User &usr){
     }
 
     // Pass has to follow the login command directly !
-    if (!usr.isAuthenticated() && c != pass_ && c!= login_) {
-        usr.setUname("");
+    if ((!usr.isAuthenticated() && c != pass_ && c!= login_) || (c == pass_ && res != 0)) {
+        usr.resetUname();
     }
 }
 

@@ -224,7 +224,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     }
     if(allowedUsers[usr.getUname()] != psw){
         out = AUTHENTICATION_FAIL;
-        return 0;
+        return 1;
     }
     usr.setAuthenticated(true);
     return 0;
@@ -265,7 +265,7 @@ int ls_cmd(bool authenticated, string &out, User usr){
     }
     string cmd = "ls -l ";
     exec(cmd.c_str(), out, usr.getLocation());
-    return modifyUsrName(out, usr.getUname());
+    return modifyUsrName(out, "root");
 }
 
 int modifyUsrName(string &out, string usrName) {
