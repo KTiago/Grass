@@ -75,7 +75,8 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
     char *token;
     string cmd;
 
-    pthread_t thread;
+    pthread_t getThread;
+    pthread_t putThread;
 
     char fileName[1024];
     long long fileSize = 0;
@@ -191,10 +192,10 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             strncpy(args->ip, serverIp, 1024);
 
             // Kill any stale thread
-            pthread_cancel(thread);
+            pthread_cancel(getThread);
 
             // Create new thread
-            int rc = pthread_create(&thread, NULL, openFileClient, (void*) args);
+            int rc = pthread_create(&getThread, NULL, openFileClient, (void*) args);
             if(rc != 0){
                 cerr << "Error" << endl;
             }
@@ -213,7 +214,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
             args->fileSize = fileSize;
 
             // Kill stale thread
-            pthread_cancel(thread);
+            pthread_cancel(putThread);
 
             // Create new thread
             if(access(fileName, F_OK ) == -1){
@@ -227,7 +228,7 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
                 if (fileSize != actualFileSize) {
                     outfile << TRANSFER_ERROR;
                 }else{
-                    int rc = pthread_create(&thread, NULL, openFileServer, (void *) args);
+                    int rc = pthread_create(&putThread, NULL, openFileServer, (void *) args);
                     if (rc != 0) {
                         cerr << "Error" << endl;
                     }

@@ -19,7 +19,8 @@ public:
     void  setLocation(const string& location);
     void  setAuthenticated(bool auth);
     bool operator<(const User &other) const;
-    pthread_t thread;
+    pthread_t putThread;
+    pthread_t getThread;
 private:
     int socket;
     bool authenticated;

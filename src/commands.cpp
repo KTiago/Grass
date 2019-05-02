@@ -422,17 +422,20 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
+    if(access(fileName.c_str(), F_OK ) == -1){
+        out = TRANSFER_ERROR;
+        return 1;
+    }
     long fileSize = getFileSize(absPath.c_str());
-
     if (fileSize <= 0) {
         return 1;
     } else {
         out = "get port: " + to_string(getPort) + " size: " + to_string(fileSize) + "\n";
         // Cancel previous get command if one was executed
-        pthread_cancel(usr.thread);
+        pthread_cancel(usr.getThread);
 
         // Create new thread
-        int rc = pthread_create(&usr.thread, NULL, openFileServer, (void *) args);
+        int rc = pthread_create(&usr.getThread, NULL, openFileServer, (void *) args);
         if (rc != 0) {
             cerr << "Error" << endl;
         }
@@ -472,7 +475,6 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
         return 1;
     }
     snprintf(args->fileName, 1024, absPath.c_str());
-    cout << args->fileName << endl;
     args->port = port;
     strncpy(args->ip, usr.getIp().c_str(), 1024);
     args->fileSize = (long) fileS;
@@ -484,9 +486,9 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
     out = "put port: " + to_string(port) + "\n";
 
     // Cancel previous get command if one was executed
-    pthread_cancel(usr.thread);
+    pthread_cancel(usr.putThread);
     // Create new thread
-    int rc = pthread_create(&usr.thread, nullptr, openFileClient, (void *) args);
+    int rc = pthread_create(&usr.putThread, nullptr, openFileClient, (void *) args);
     if (rc != 0) {
         cerr << "Error" << endl;
     }
