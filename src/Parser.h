@@ -45,9 +45,10 @@ enum command {
 extern const char DELIMITER;
 
 
-class Parser{
+class Parser {
 public:
     Parser(map<string, string> allowedUsers);
+
     ~Parser();
 
     //clears the value of command
@@ -68,7 +69,7 @@ public:
     string getOutput();
 
     bool getShouldPrint();
-    
+
 
 private:
     string output;
@@ -76,7 +77,7 @@ private:
     int arg_n;
     map<string, string> allowedUsers;
     int port = 2000;
-    bool shouldPrint;
+    bool shouldPrint;   // FIXME
 };
 
 
