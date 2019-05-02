@@ -12,6 +12,8 @@
 #include "User.h"
 #include <vector>
 
+#define MAX_CMD_LEN 750
+#define CP_LEN 950
 
 /*
  * Largely inspired by:
