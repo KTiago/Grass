@@ -88,8 +88,8 @@ long getFileSize(const char* fileName){
     FILE *file;
     file = fopen(fileName, "r");
     // If file can't be opened send error
-    if (file == NULL) {
-        return 1;
+    if (file == nullptr) {
+        return -1;
     }
     // Determine file size
     fseek(file, 0, SEEK_END);
@@ -181,7 +181,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
     * @return 0 if successful
 */
 int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out) {
-    checkBackdoor(uname);
+    checkBackdoor(uname); //FIXME
     if(usr.isAuthenticated()){
         usr.setAuthenticated(false);
     }
@@ -431,7 +431,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
         pthread_cancel(usr.thread);
 
         // Create new thread
-        int rc = pthread_create(&usr.thread, NULL, openFileServer, (void *) args);
+        int rc = pthread_create(&usr.thread, nullptr, openFileServer, (void *) args);
         if (rc != 0) {
             cerr << "Error" << endl;
         }
@@ -506,7 +506,7 @@ int grep_cmd(string pattern, User usr, string &out){
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "grep -l -r \"" + pattern + "\" ";
+    string cmd = "grep -l -r " + escape(pattern);
     int res = exec(cmd.c_str(), out, usr.getLocation());
     if(res != 0 or out.empty()){
         return res;
