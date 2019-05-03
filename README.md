@@ -16,25 +16,25 @@ This project is a develop, hack and patch challenge for the Software security cl
 
 ```bash
 .
-├── src                 # Source code directory
-│   ├── client.cpp		# Main for client
-│   ├── server.cpp		# Main for server
+├── src               # Source code directory
+│   ├── client.cpp    # Main for client
+│   ├── server.cpp    # Main for server
 │   ├── commands.cpp	# Implementation of commands
 │   ├── commands.h		#
-│   ├── grass.cpp		# Global constants and hijack flow
-│   ├── grass.h			#
-│   ├── networking.cpp	# Networking functionality
+│   ├── grass.cpp     # Global constants and hijack flow
+│   ├── grass.h       #
+│   ├── networking.cpp# Networking functionality
 │   ├── networking.h	#
 │   ├── Parser.cpp		# Class to parse user input
-│   ├── Parser.h		#
-│   ├── User.cpp		# Class modeling user
-│   └── User.h 			#
+│   ├── Parser.h      #
+│   ├── User.cpp      # Class modeling user
+│   └── User.h        #
 ├── bin            		# Compiled binaries
-├── testcases           # Directory containing test cases
-├── template            # Directory of template files given to us
-├── pics	            # Contains some pictures for this README and the report
-├── Makefile            # Compiles project in 64 bit, no DEP.
-├── project-desc.pdf    # Specifications given to us
+├── testcases         # Directory containing test cases
+├── template          # Directory of template files given to us
+├── pics              # Contains some pictures for this README and the report
+├── Makefile          # Compiles project in 64 bit, no DEP.
+├── project-desc.pdf  # Specifications given to us
 ├── exploits.zip	    # Encrypted directory containing all out exploited vulnerabilites
 │   ├── exploit1.py		# Buffer Overflow 1
 │   ├── exploit2.py		# Buffer Overflow 2
