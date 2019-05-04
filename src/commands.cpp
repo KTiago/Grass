@@ -52,7 +52,7 @@ string escape(string cmd) {
             escaped += cmd[i];
         }
     }
-    return "\"" + escaped + "\"";
+    return  escaped;
 }
 
 
@@ -86,7 +86,6 @@ int exec(const char *cmd, string &out, string usrLocation = "") {
     }
     int exitStatus = pclose(pipe);
     out = result;
-
     // Could also return exitStatus, but this way error is thrown exactly, when we need it to be thrown.
     return result.substr(0, 4) == "bash" ? 1 : 0;
 }
@@ -426,8 +425,9 @@ int cd_cmd(string dirPath, User &usr, string &out) {
 
     int res = exec(cmd.c_str(), out, usr.getLocation());
     if (!res) {
+        usr.getLocation();
         string temp = "";
-        string path = usr.getLocation() + "/" + path;
+        path = usr.getLocation() + "/" + path;
         sanitizePath(path, temp);
         usr.setLocation(path);
     } else {
