@@ -1,4 +1,4 @@
-for i in 9 #1 3 4 5 6 7 8 # 9
+for i in 4 #1 3 4 5 6 7 8 # 9
 do      
         mkdir -p baseDir
         rm -r baseDir/* 2> /dev/null
@@ -6,8 +6,9 @@ do
         
         if [ $i -eq 4 ];
         then    
-                echo "basedir server" > baseDir/server_file.txt
-                echo "client" > client_file.txt
+                dd if=/dev/zero of=baseDir/server_file.txt bs=136 count=1 2> /dev/null
+                dd if=/dev/zero of=client_file.txt bs=74 count=1 2> /dev/null
+                dd if=/dev/zero of=client.exe bs=621 count=1 2> /dev/null
         elif [ $i -eq 6 ];
         then
                 echo "server" > baseDir/server_file.txt
