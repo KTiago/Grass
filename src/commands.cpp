@@ -344,7 +344,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
  * @return 0 if successful
  */
 int ping_cmd(string host, string &out) {
-    string s = "ping -c 1 " + host;
+    string s = "ping -c 1 \"" + host+"\"";
     int res = exec(s.c_str(), out);
     return res;
 }
@@ -416,18 +416,18 @@ int cd_cmd(string dirPath, User &usr, string &out) {
         out = ACCESS_ERROR;
         return 1;
     }
-    string absPath;
-    if (constructPath(dirPath, usr.getLocation(), absPath, out)) {
+    string path;
+    if (constructPath(dirPath, usr.getLocation(), path, out)) {
         return 1;
     }
 
     // Note that we execute the cd on bash and not shell, in order to get exact error message as in posted test cases.
-    string cmd = "exec bash -c \'cd \"" + escape(absPath) + "\"\'";
+    string cmd = "exec bash -c 'cd \"" + escape(path) + "\"'";
 
     int res = exec(cmd.c_str(), out, usr.getLocation());
     if (!res) {
         string temp = "";
-        string path = usr.getLocation() + "/" + absPath;
+        string path = usr.getLocation() + "/" + path;
         sanitizePath(path, temp);
         usr.setLocation(path);
     } else {

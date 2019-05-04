@@ -7,6 +7,9 @@
 #include <sys/types.h>
 #include <cstdio>
 #include <algorithm>
+#include<iostream>
+#include <string.h>
+#include <unistd.h>
 
 #define SOCKET int
 
@@ -15,7 +18,7 @@
  * https://stackoverflow.com/questions/25634483/send-binary-file-over-tcp-ip-connection
  * https://www.geeksforgeeks.org/socket-programming-in-cc-handling-multiple-clients-on-server-without-multi-threading/
  */
-struct thread_args { // FIXME why unused arguments?
+struct thread_args {
     int port;
     char ip[1024];
     char fileName[1024];
@@ -28,12 +31,12 @@ void *openFileServer(void *ptr);
 
 void *openFileClient(void *ptr);
 
-bool sendData(SOCKET sock, void *buf, int buflen);
+bool sendData(SOCKET sock, void *buffer, int bufferLength);
 
-bool sendFile(SOCKET sock, FILE *f);
+bool sendFile(SOCKET sock, FILE *file);
 
-bool readData(SOCKET sock, void *buf, int buflen);
+bool readData(SOCKET sock, void *buffer, int bufferLength);
 
-bool readFile(SOCKET sock, FILE *f, long filesize);
+bool readFile(SOCKET sock, FILE *file, long fileSize);
 
 #endif //GRASS_NETWORKING_H

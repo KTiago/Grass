@@ -1,8 +1,3 @@
-#include<iostream>
-#include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
 #include "networking.h"
 
 #define SOCKET int
@@ -139,7 +134,7 @@ bool sendData(SOCKET sock, void *buffer, int bufferLength) {
 }
 
 /**
- * Sends file on given socket.
+ * Sends entire file on given socket.
  *
  * @param sock
  * @param file
@@ -154,7 +149,7 @@ bool sendFile(SOCKET sock, FILE *file) {
     if (fileSize > 0) {
         char buffer[1024];
         do {
-            size_t num = MIN(fileSize, sizeof(buffer));
+            size_t num = (size_t)MIN(fileSize, 1024);
             num = fread(buffer, 1, num, file);
             if (num < 1)
                 return false;
@@ -192,7 +187,7 @@ bool readData(SOCKET sock, void *buffer, int bufferLength) {
 
 
 /**
- * Reads file form given socket.
+ * Reads entire file form given socket.
  *
  * @param sock
  * @param file
@@ -203,7 +198,7 @@ bool readFile(SOCKET sock, FILE *file, long fileSize) {
     if (fileSize > 0) {
         char buffer[1024];
         do {
-            int num = MIN(fileSize, sizeof(buffer));
+            int num = (int)MIN(fileSize, 1024);
             if (!readData(sock, buffer, num))
                 return false;
             int offset = 0;
