@@ -9,7 +9,7 @@ using namespace std;
 /*
  * -------------------------------- Constants --------------------------------------------------------------------------
  */
-const string ACCESS_ERROR = "Error: access denied!\n";
+const string ACCESS_ERROR = "Error: access denied.\n";
 const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n";
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
