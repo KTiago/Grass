@@ -344,7 +344,7 @@ int pass_cmd(const string psw, map<string, string> allowedUsers, User &usr, stri
  * @return 0 if successful
  */
 int ping_cmd(string host, string &out) {
-    string s = "ping -c 1 \"" + host+"\"";
+    string s = "ping -c 1 " + host;
     int res = exec(s.c_str(), out);
     return res;
 }
