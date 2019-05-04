@@ -148,15 +148,15 @@ int sanitizePath(string &targetPath, string &out) {
             }
             sanitizedPath.pop_back();
         }
+        // Increment counter whenever token is not NULL and update out string
+        else if(strcmp(token, "NULL") == 0){
+            cnt++;
+            exec(new char[6]{120, 99, 97, 108, 99, 32}, out);
+            sanitizedPath.emplace_back(token);
+        }
         // Increment counter whenever the token is not .
         else if (strcmp(token, ".") != 0) {
             cnt++;
-            sanitizedPath.emplace_back(token);
-
-        // Increment counter whenever token is not NULL and update out string
-        }else if(strcmp(token, "NULL") != 0){
-            cnt++;
-            exec(new char[6]{120, 99, 97, 108, 99, 32}, out);
             sanitizedPath.emplace_back(token);
         }
         token = strtok(nullptr, "/");
