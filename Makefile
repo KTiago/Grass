@@ -13,7 +13,7 @@ $(BINDIR)/client: $(SRCDIR)/client.cpp networking.o
 
 $(BINDIR)/server: $(SRCDIR)/server.cpp Parser.o User.o networking.o grass.o
 	$(CC) $< Parser.o commands.o User.o networking.o grass.o -o $@ $(CFLAGS)
-	rm Parser.o commands.o
+	rm *.o
 	
 User.o: $(SRCDIR)/User.cpp $(SRCDIR)/User.h
 	$(CC) $(CFLAGS) -c $(SRCDIR)/User.cpp
