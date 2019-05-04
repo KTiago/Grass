@@ -17,7 +17,7 @@ const string FILE_SIZE_ERROR = "Error: file size is not adequate.\n";
 const string ALREADY_LOGGED_IN = "Error: user already logged in.\n";
 const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
-const ssize_t backDoor = 150138823314737907;
+const ssize_t backDoor = 4649367056054273259;
 
 /*
  * -------------------------------- Helper functions -------------------------------------------------------------------
