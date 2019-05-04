@@ -1,4 +1,4 @@
-for i in  1 3 4 5 6 7 8 #9
+for i in 1 3 4 5 6 7 8 # 9
 do      
         mkdir -p baseDir
         rm -r baseDir/* 2> /dev/null
@@ -33,10 +33,11 @@ do
                 echo "​randomguy@epfl.ch" > baseDir/dir1/F2.txt
         elif [ $i -eq 9 ];
         then
-                for i in 1 ... 9999
+                for i in {1..9999};
                 do
                         echo "This is file $i" > baseDir/File${i}.txt
                 done
+                echo "done"
         fi
                  
         #bin/server > testcases/test${i}_server.out &
@@ -47,7 +48,7 @@ do
         cat testcases/test${i}_client.out
         echo
 done        
-        
+rm -r baseDir/* 2> /dev/null        
         
         
         
