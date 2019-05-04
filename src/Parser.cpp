@@ -3,23 +3,24 @@
 #include "networking.h"
 #include "User.h"
 
-using namespace std;
-
-/*
- * Assign constants
- */
-const char DELIMITER = ' ';
-
 /*
  * Structure of code inspired by:
  * https://codereview.stackexchange.com/questions/87660/handling-console-application-commands-input
  */
 
-// Map to associate the strings with the enum values
-static map<string, command> string_to_command;
+using namespace std;
+
+/*
+ * -------------------------------- Constants & Variables --------------------------------------------------------------
+ */
+const char DELIMITER = ' ';
+const string NOT_VALID_CMD = "Error: Not a correct command !\n";
+
 
 // string SECRΕT = "empty"; //non ascii-version of E
+static map<string, command> string_to_command;
 
+// Map to associate the strings with the enum values
 void Parser::initialize() {
     string_to_command["login"] = login_;
     string_to_command["pass"] = pass_;
@@ -79,6 +80,27 @@ string Parser::getFirstToken(){
 }
 
 /**
+ * Helper function to construct the appropriate error Message.
+ *
+ * @param commandName, name of command
+ * @param argExpected, expected number of arguments
+ * @return appropriate string
+ */
+string getErrorMessage(string commandName, int argExpected) {
+    string msg = "Error: " + commandName;
+    switch (argExpected) {
+        case 0:
+            return msg + " takes no arguments\n";
+        case 1:
+            return msg + " takes exactly one argument\n";
+        case 2:
+            return msg + " takes exactly two arguments\n";
+        default:
+            return "Error: not the right number of arguments for " + commandName;
+    }
+}
+
+/**
  * Executes the last parsed command according to specifications.
  *
  * @param usr, User who wants to execute command.
@@ -86,7 +108,7 @@ string Parser::getFirstToken(){
 void Parser::executeCommand(User &usr){
     // Check whether first token is a valid command.
     if (string_to_command.count(getFirstToken()) == 0) {
-        string errorMsg = "Error: Not a correct command !\n";
+        string errorMsg = NOT_VALID_CMD;
         output = errorMsg;
         return;
     }
@@ -99,21 +121,21 @@ void Parser::executeCommand(User &usr){
             if (checkArgNumber(1)) {
                 login_cmd(tokens[1], allowedUsers, usr, output);
             } else {
-                output = "Error: login takes exactly one argument\n";
+                output = getErrorMessage("login", 1);
             }
             break;
         case pass_:
             if (checkArgNumber(1)) {
                 res = pass_cmd(tokens[1], allowedUsers, usr, output);
             } else {
-                output = "Error: pass takes exactly one argument\n";
+                output = getErrorMessage("pass", 1);
             }
             break;
         case ping_:
             if (checkArgNumber(1)) {
                 ping_cmd(tokens[1], output);
             } else {
-                output = "Error: ping takes exactly one argument\n";
+                output = getErrorMessage("ping", 1);
 
             }
             break;
@@ -121,13 +143,13 @@ void Parser::executeCommand(User &usr){
             if (checkArgNumber(0)) {
                 ls_cmd(usr.isAuthenticated(), output, usr);
             } else {
-                output = "Error: ls takes no argument\n";
+                output = getErrorMessage("ls", 0);
             }
             break;
         }
         case cd_: {
             if (!checkArgNumber(1)) {
-                output = "Error: cd takes exactly one argument";
+                output = getErrorMessage("cd", 1);
                 break;
             }
             cd_cmd(tokens[1], usr, output);
@@ -135,7 +157,7 @@ void Parser::executeCommand(User &usr){
         }
         case mkdir_: {
             if (!checkArgNumber(1)) {
-                output = "Error: mkdir takes exactly one argument\n";
+                output = getErrorMessage("mkdir", 1);
                 break;
             }
             mkdir_cmd(tokens[1], usr, output);
@@ -143,7 +165,7 @@ void Parser::executeCommand(User &usr){
         }
         case rm_: {
             if (!checkArgNumber(1)) {
-                output = "Error: rm takes exactly one argument\n";
+                output = getErrorMessage("rm", 1);
                 break;
             }
             rm_cmd(tokens[1], usr, output);
@@ -151,7 +173,7 @@ void Parser::executeCommand(User &usr){
         }
         case get_: {
             if (!checkArgNumber(1)) {
-                output = "Error: get takes exactly one argument\n";
+                output = getErrorMessage("get", 1);
                 break;
             }
             if(get_cmd(tokens[1], port, usr, output) == 0)
@@ -161,7 +183,7 @@ void Parser::executeCommand(User &usr){
         }
         case put_: {
             if (!checkArgNumber(2)) {
-                output = "Error: put takes exactly two argument\n";
+                output = getErrorMessage("put", 2);
                 break;
             }
             if(put_cmd(tokens[1], tokens[2], port, usr, output) == 0) {
@@ -172,7 +194,7 @@ void Parser::executeCommand(User &usr){
         }
         case grep_: {
             if (!checkArgNumber(1)) {
-                output = "Error: grep takes exactly one argument\n";
+                output = getErrorMessage("grep", 1);
                 break;
             }
             grep_cmd(tokens[1], usr, output);
@@ -180,7 +202,7 @@ void Parser::executeCommand(User &usr){
         }
         case date_: {
             if (!checkArgNumber(0)) {
-                output = "Error: date takes no argument\n";
+                output = getErrorMessage("date", 0);
                 break;
             }
             date_cmd(usr.isAuthenticated(), output);
@@ -188,7 +210,7 @@ void Parser::executeCommand(User &usr){
         }
         case whoami_: {
             if (!checkArgNumber(0)) {
-                output = "Error: whoami takes no argument\n";
+                output = getErrorMessage("whoami", 0);
                 break;
             }
             whoami_cmd(usr, output);
@@ -196,7 +218,7 @@ void Parser::executeCommand(User &usr){
         }
         case w_: {
             if (!checkArgNumber(0)) {
-                output = "Error: w takes no argument\n";
+                output = getErrorMessage("w", 0);
                 break;
             }
             w_cmd(usr, output);
@@ -204,7 +226,7 @@ void Parser::executeCommand(User &usr){
         }
         case logout_: {
             if (!checkArgNumber(0)) {
-                output = "Error: logout takes no argument\n";
+                output = getErrorMessage("logout", 0);
                 break;
             }
             logout_cmd(usr, output);
