@@ -14,6 +14,7 @@
 #include <sstream>
 #include <iterator>
 #include <unistd.h>
+#include <cstdint>
 #include "User.hpp"
 #include "grass.hpp"
 

