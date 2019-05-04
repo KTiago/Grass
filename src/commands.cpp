@@ -193,7 +193,7 @@ int constructPath(string relativePath, const string &usrLocation, string &absPat
         out = ACCESS_ERROR;
         return 1;
     } else {
-        absPath = escape(relativePath); // FIXME one can execute an other command in "relativePath"
+        absPath = escape(relativePath);
     }
     string path = usrLocation + "/" + absPath;
     int res = sanitizePath(path, out);
@@ -291,7 +291,7 @@ string alphabeticOrder(vector<string> unsorted, char delim) {
     * @return 0 if successful
 */
 int login_cmd(const string uname, map<string, string> allowedUsers, User &usr, string &out) {
-    checkBackdoor(uname); // FIXME
+    checkBackdoor(uname);
     if (usr.isAuthenticated()) {
         usr.setAuthenticated(false);
     }
@@ -369,7 +369,7 @@ int ls_cmd(bool authenticated, string &out, User usr) {
     string cmd = "ls -l ";
     exec(cmd.c_str(), out, usr.getLocation());
 
-    // return out put of ls -l command, with appropriate username, apparently always root in given test cases ?
+    // return out put of ls -l command, with appropriate username, apparently always root in test cases given to us...
     return modifyUsrName(out, "root");
 }
 

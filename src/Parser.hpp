@@ -76,7 +76,7 @@ private:
     int arg_n;
     map<string, string> allowedUsers;
     int port = 2000;
-    bool shouldPrint;   // FIXME
+    bool shouldPrint;
 };
 
 #endif //GRASS_PARSER_H
