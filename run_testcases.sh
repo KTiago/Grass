@@ -1,4 +1,4 @@
-for i in  1 3 4 5 6 7 8 #9
+for i in 4 #1 3 4 5 6 7 8 # 9
 do      
         mkdir -p baseDir
         rm -r baseDir/* 2> /dev/null
@@ -6,8 +6,9 @@ do
         
         if [ $i -eq 4 ];
         then    
-                echo "basedir server" > baseDir/server_file.txt
-                echo "client" > client_file.txt
+                dd if=/dev/zero of=baseDir/server_file.txt bs=136 count=1 2> /dev/null
+                dd if=/dev/zero of=client_file.txt bs=74 count=1 2> /dev/null
+                dd if=/dev/zero of=client.exe bs=621 count=1 2> /dev/null
         elif [ $i -eq 6 ];
         then
                 echo "server" > baseDir/server_file.txt
@@ -33,13 +34,12 @@ do
                 echo "​randomguy@epfl.ch" > baseDir/dir1/F2.txt
         elif [ $i -eq 9 ];
         then
-                for i in 1 ... 9999
+                for j in {1..9999};
                 do
-                        echo "This is file $i" > baseDir/File${i}.txt
+                        echo "This is file $j" > baseDir/File${j}.txt
                 done
+                
         fi
-                 
-        #bin/server > testcases/test${i}_server.out &
         bin/client 127.0.0.1 1337 testcases/test${i}.in testcases/test${i}_client.out
         echo
         echo "***** Test ${i} client output *****"
@@ -47,7 +47,7 @@ do
         cat testcases/test${i}_client.out
         echo
 done        
-        
+rm -r baseDir/* 2> /dev/null        
         
         
         

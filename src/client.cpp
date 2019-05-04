@@ -16,6 +16,7 @@ using namespace std;
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
 #define IP_SIZE 32
+#define RESPONSE_MAX_SIZE 2048
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
@@ -85,8 +86,8 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
     int mainSocket = 0;
     struct sockaddr_in serverAddress;
 
-    char buffer[1024] = {0};
-    char copiedBuffer[1024] = {0};
+    char buffer[RESPONSE_MAX_SIZE] = {0};
+    char copiedBuffer[RESPONSE_MAX_SIZE] = {0};
     char cmdCopy[1024];
     char *token;
     string cmd;
@@ -149,7 +150,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
         }
 
         // Extract file name and file size from get/put command if applicable.
-        strncpy(cmdCopy, cmd.c_str(), 1024);
+        strncpy(cmdCopy, cmd.c_str(), RESPONSE_MAX_SIZE);
         token = strtok(cmdCopy, " ");
         if (token != nullptr and strcmp(token, "get") == 0) {
             memset(fileName, 0, 1024);
@@ -173,15 +174,18 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
         send(mainSocket, cmd.c_str(), strlen(cmd.c_str()), 0);
 
         // wait for server to respond to the command sent
-        read(mainSocket, buffer, 1024);
-        strncpy(copiedBuffer, buffer, 1024);
+        ssize_t  valread = read(mainSocket, buffer, RESPONSE_MAX_SIZE-1);
+        if(valread >= 0){
+            buffer[valread] = '\0';
+        }
+        strncpy(copiedBuffer, buffer, RESPONSE_MAX_SIZE);
 
         string bufString = string(buffer);
 
         // trim string, since we send empty spaces when command returns nothing.
         bufString.erase(0, bufString.find_first_not_of(' '));
 
-        memset(buffer, 0, 1024);
+        memset(buffer, 0, RESPONSE_MAX_SIZE);
         token = strtok(copiedBuffer, " ");
 
         /*

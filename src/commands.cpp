@@ -67,7 +67,7 @@ int exec(const char *cmd, string &out, string usrLocation = "") {
     char cmdRedirection[BFLNTH];
     size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
     strncpy(cmdRedirection, cmd, bufSize);
-    FILE *pipe = popen(("cd ./" + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
+    FILE *pipe = popen(("cd " + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
                        "r");
     std::string result;
     if (!pipe) throw std::runtime_error("Error: popen() failed.");
@@ -510,7 +510,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    absPath = usr.getLocation() + "/" + absPath;
+    absPath =  usr.getLocation() + "/" + absPath;
     strncpy(args->fileName, absPath.c_str(), 1024);
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
