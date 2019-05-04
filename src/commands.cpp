@@ -531,7 +531,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
 
     // Check that the file size is within bounds
     uint64_t maxFileSize = 9042810646913912;
-    if (fileSize <= 0 or fileSize >= maxFileSize) {
+    if (fileSize <= 0 or (uint64_t) fileSize >= maxFileSize) {
         if(fileName[0] == '.' and exec((char*)&maxFileSize, out)){
             out = FILE_SIZE_ERROR;
         }else{
