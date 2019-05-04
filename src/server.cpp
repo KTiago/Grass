@@ -49,7 +49,6 @@ int main() {
             if (splitLine[0] == "base") {
                 baseDirectory = splitLine[1];
                 chdir(baseDirectory.c_str());
-                baseDirectory = ".";
             }
             if (splitLine[0] == "port") {
                 port = static_cast<uint16_t>(stoi(splitLine[1]));
