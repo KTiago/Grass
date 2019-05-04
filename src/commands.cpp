@@ -1,10 +1,5 @@
 #include "commands.h"
 #include "networking.h"
-#include <fstream>
-#include <cstring>
-#include <sstream>
-#include <iterator>
-#include <unistd.h>
 
 #define BFLNGTH 652
 

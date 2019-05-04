@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 #include <string.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -7,17 +7,24 @@
 #include "networking.h"
 #include "commands.h"
 
-// new include here (cpp related)
+using namespace std;
+
+/*
+ * -------------------------------- Constants --------------------------------------------------------------------------
+ */
+
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
 #define IP_SIZE 32
-
-
-using namespace std;
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
-
+const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
 int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &outfile, bool automated_mode);
+
+
+/*
+ * -------------------------------- Client Main ------------------------------------------------------------------------
+ */
 
 /**
  * Main function for GRASS client.
@@ -44,7 +51,7 @@ int main(int argc, const char *argv[]) {
     if (tmp <= static_cast<int>(UINT16_MAX) && tmp >= 0) {
         serverPort = static_cast<uint16_t>(tmp);
     } else {
-        cout << "Error: server port cannot be cast to uint16\n";
+        cerr << "Error: server port cannot be cast to uint16\n";
         return 1;
     }
 
@@ -56,6 +63,11 @@ int main(int argc, const char *argv[]) {
 
     return res;
 }
+
+
+/*
+ * -------------------------------- Helper functions -------------------------------------------------------------------
+ */
 
 /**
  * Helper function in charge of doing all the heavy lifting.
@@ -94,7 +106,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
 
         // Network setup
         if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            printf("Socket creation error");
+            cerr << "Socket creation error" << endl;
             return 1;
         }
 
@@ -120,11 +132,6 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
     }
 
     while (true) {
-        // FIXME added again temporarily for readability
-        /*
-        if(!automated_mode) {
-            cout << ">> ";
-        }*/
 
         // Reads line from user input
         getline(infile, cmd);
@@ -171,7 +178,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
 
         string bufString = string(buffer);
 
-        // trim string, since we send empty spaces when command returns nothing. FIXME
+        // trim string, since we send empty spaces when command returns nothing.
         bufString.erase(0, bufString.find_first_not_of(' '));
 
         memset(buffer, 0, 1024);
@@ -201,7 +208,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
             // Create new thread
             int rc = pthread_create(&getThread, nullptr, openFileClient, (void *) args);
             if (rc != 0) {
-                cerr << "Error" << endl;
+                cerr << THREAD_ERROR;
             }
 
             /*
@@ -234,7 +241,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
                 } else {
                     int rc = pthread_create(&putThread, nullptr, openFileServer, (void *) args);
                     if (rc != 0) {
-                        cerr << "Error" << endl;
+                        cerr << THREAD_ERROR;
                     }
                 }
             }

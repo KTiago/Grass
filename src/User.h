@@ -1,5 +1,5 @@
-#ifndef GRASS_CLIENT_H
-#define GRASS_CLIENT_H
+#ifndef GRASS_USER_H
+#define GRASS_USER_H
 
 #include <cstdint>
 #include <string>
@@ -41,4 +41,4 @@ private:
     string ip;
 };
 
-#endif //GRASS_CLIENT_H
+#endif //GRASS_USER_H
