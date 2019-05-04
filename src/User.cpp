@@ -1,4 +1,4 @@
-#include "User.h"
+#include "User.hpp"
 
 bool User::isAuthenticated() { return this->authenticated; }
 
@@ -45,6 +45,6 @@ string User::getIp() {
 }
 
 bool User::operator<(const User &other) const {
-    this->socket > other.socket;    // FIXME
+    return this->socket > other.socket;
 }
 

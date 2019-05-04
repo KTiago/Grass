@@ -1,4 +1,4 @@
-#include "networking.h"
+#include "networking.hpp"
 
 #define SOCKET int
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
