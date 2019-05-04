@@ -2,7 +2,6 @@
 #define GRASS_COMMANDS_H
 
 #define MAX_PATH_LEN 128
-#define OUTFILE_NAME "log.txt"
 #define BFLNTH 150
 
 #include <cstdlib>

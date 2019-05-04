@@ -59,7 +59,6 @@ int main() {
         }
     }
 
-    // FIXME works even without config file?
     configFile.close();
 
     // Create parser object
@@ -161,7 +160,7 @@ int runServer(uint16_t port, Parser &parser) {
 }
 
 /**
- * Helper function, in charge of setting up the execution of a command, though the parser class.
+ * Helper function, in charge of setting up the execution of a command, through the parser class.
  *
  * @param valread
  * @param parser
@@ -198,7 +197,8 @@ int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterato
         if ((int) send(sd, message.c_str(), message.size(), 0) != (int) message.size()) {
             return 1;
         }
-        // trim output
+
+        // trim output, as the server sends empty messages to acknowledge the execution of a command.
         if (shouldPrint)
             cout << message.erase(0, string(message).find_first_not_of(' '));
 

@@ -255,7 +255,6 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
     }
 
     if (automated_mode) {
-        // FIXME does delete() close fstreams ?
         delete (&infile);
         delete (&outfile);
     }
