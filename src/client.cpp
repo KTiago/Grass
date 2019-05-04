@@ -3,9 +3,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
-#include "Parser.h"
-#include "networking.h"
-#include "commands.h"
+#include "Parser.hpp"
+#include "networking.hpp"
+#include "commands.hpp"
 
 using namespace std;
 

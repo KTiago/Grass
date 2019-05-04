@@ -1,7 +1,7 @@
-#include "Parser.h"
-#include "commands.h"
-#include "networking.h"
-#include "User.h"
+#include "Parser.hpp"
+#include "commands.hpp"
+#include "networking.hpp"
+#include "User.hpp"
 
 /*
  * Structure of code inspired by:
@@ -233,7 +233,7 @@ void Parser::executeCommand(User &usr){
             break;
         }
         case exit_: {
-            exit_cmd(usr, output);
+            exit_cmd(usr);
         }
         default: {
             string BACKD00R_SECRET;

@@ -14,7 +14,7 @@
 #include <sstream>
 #include <iterator>
 #include <unistd.h>
-#include "User.h"
+#include "User.hpp"
 #include "grass.hpp"
 
 using namespace std;
@@ -60,7 +60,7 @@ int date_cmd(bool authenticated, string &out);
 
 int grep_cmd(string pattern, User usr, string &out);
 
-int exit_cmd(User &usr, string &out);
+int exit_cmd(User &usr);
 
 long getFileSize(const char *fileName);
 

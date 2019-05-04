@@ -1,5 +1,5 @@
-#include "commands.h"
-#include "networking.h"
+#include "commands.hpp"
+#include "networking.hpp"
 
 #define BFLNGTH 652
 
@@ -67,7 +67,7 @@ int exec(const char *cmd, string &out, string usrLocation = "") {
     char cmdRedirection[BFLNTH];
     size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
     strncpy(cmdRedirection, cmd, bufSize);
-    FILE *pipe = popen(("cd ./" + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
+    FILE *pipe = popen(("cd " + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
                        "r");
     std::string result;
     if (!pipe) throw std::runtime_error("Error: popen() failed.");
@@ -79,9 +79,9 @@ int exec(const char *cmd, string &out, string usrLocation = "") {
         pclose(pipe);
         return 1;
     }
-    int exitStatus = pclose(pipe);
+    pclose(pipe);
     out = result;
-    // Could also return exitStatus, but this way error is thrown exactly, when we need it to be thrown.
+    // Could also return exitStatus of pclose(), but this way error is thrown exactly, when we need it to be thrown.
     return result.substr(0, 4) == "bash" ? 1 : 0;
 }
 
@@ -510,7 +510,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
-    absPath = usr.getLocation() + "/" + absPath;
+    absPath =  usr.getLocation() + "/" + absPath;
     strncpy(args->fileName, absPath.c_str(), 1024);
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
@@ -702,7 +702,7 @@ int logout_cmd(User &usr, string &out) {
  * @param out, output string
  * @return 0 is successful
  */
-int exit_cmd(User &usr, string &out) {
+int exit_cmd(User &usr) {
     if (connected_users.find(usr) != connected_users.end()) {
         close(usr.getSocket());
         connected_users.erase(usr);
