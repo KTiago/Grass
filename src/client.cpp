@@ -16,7 +16,7 @@ using namespace std;
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
 #define IP_SIZE 32
-#define RESPONSE_MAX_SIZE 2048
+#define RESPONSE_MAX_SIZE 2000000
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
 const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
