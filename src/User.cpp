@@ -8,8 +8,8 @@ User::User(int socket, string ip, string base) {
     this->uname = "";
     this->ip = ip;
     this->location = base;
-    this->putThread = NULL;
-    this->getThread = NULL;
+    this->putThread = 0;
+    this->getThread = 0;
 }
 
 int User::getSocket() const {

