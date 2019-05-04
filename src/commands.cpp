@@ -517,8 +517,6 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
 
     // Check if file exists
     if (access(absPath.c_str(), F_OK) == -1) {
-        printf("\n%s/%s\n", usr.getLocation().c_str(), absPath.c_str());
-        fflush(stdout);
         out = TRANSFER_ERROR;
         return 1;
     }
