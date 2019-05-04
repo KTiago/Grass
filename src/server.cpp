@@ -1,4 +1,4 @@
-#include<iostream>
+#include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -7,12 +7,17 @@
 #include "networking.h"
 #include "commands.h"
 
-#define CONFIG_FILE "grass.conf"
-#define BUF_SIZE 900
 using namespace std;
 
+/*
+ * -------------------------------- Constants --------------------------------------------------------------------------
+ */
+#define CONFIG_FILE "grass.conf"
+#define BUF_SIZE 900
 
-// Global variables
+/*
+ * -------------------------------- Global variables -------------------------------------------------------------------
+ */
 set<User> connected_users;
 string baseDirectory;
 
@@ -22,6 +27,9 @@ int runServer(uint16_t port, Parser &parser);
 int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterator<User> &it, struct sockaddr_in address,
                    size_t addressLength);
 
+/*
+ * -------------------------------- Server Main ------------------------------------------------------------------------
+ */
 /**
  * Main method for GRASS server.
  *
@@ -61,13 +69,16 @@ int main() {
     return res;
 }
 
+/*
+ * -------------------------------- Helper functions -------------------------------------------------------------------
+ */
 
 /**
  * Helper function doing the heavy lifting for server functionality.
  *
- * @param port
- * @param parser
- * @return
+ * @param port, port number
+ * @param parser, instance of Parser class
+ * @return error code
  */
 int runServer(uint16_t port, Parser &parser) {
     int mainSocket, newSocket, sd, max_sd;

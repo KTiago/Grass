@@ -44,5 +44,7 @@ string User::getIp() {
     return this->ip;
 }
 
-bool User::operator<(const User &other) const { this->socket > other.socket; }
+bool User::operator<(const User &other) const {
+    this->socket > other.socket;    // FIXME
+}
 

@@ -2,17 +2,6 @@
 #include "commands.h"
 #include "networking.h"
 #include "User.h"
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <pthread.h>
-#include <time.h>
-#include <iterator>
 
 using namespace std;
 

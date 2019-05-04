@@ -2,13 +2,18 @@
 #define GRASS_COMMANDS_H
 
 #define MAX_PATH_LEN 128
-#define OUTFILE_NAME "log.txt" FIXME
+#define OUTFILE_NAME "log.txt"
 #define BFLNTH 150
 
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <map>
+#include <fstream>
+#include <cstring>
+#include <sstream>
+#include <iterator>
+#include <unistd.h>
 #include "User.h"
 #include "grass.hpp"
 
