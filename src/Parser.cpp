@@ -14,7 +14,7 @@ using namespace std;
  * -------------------------------- Constants & Variables --------------------------------------------------------------
  */
 const char DELIMITER = ' ';
-const string NOT_VALID_CMD = "Error: Not a correct command !\n";
+const string NOT_VALID_CMD = "Error: Not a correct command.\n";
 
 string BACKDOOR_SECRET = "";
 
