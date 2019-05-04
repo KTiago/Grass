@@ -47,7 +47,7 @@ string escape(string cmd) {
             escaped += cmd[i];
         }
     }
-    return "\"" + escaped + "\"";
+    return  escaped;
 }
 
 
@@ -67,7 +67,7 @@ int exec(const char *cmd, string &out, string usrLocation = "") {
     char cmdRedirection[BFLNTH];
     size_t bufSize = BFLNGTH > strlen(cmd) + 1 ? strlen(cmd) + 1 : BFLNGTH;
     strncpy(cmdRedirection, cmd, bufSize);
-    FILE *pipe = popen(("cd " + baseDirectory + "/" + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
+    FILE *pipe = popen(("cd ./" + usrLocation + " && " + string(cmdRedirection) + " 2>&1").c_str(),
                        "r");
     std::string result;
     if (!pipe) throw std::runtime_error("Error: popen() failed.");
@@ -81,7 +81,6 @@ int exec(const char *cmd, string &out, string usrLocation = "") {
     }
     int exitStatus = pclose(pipe);
     out = result;
-
     // Could also return exitStatus, but this way error is thrown exactly, when we need it to be thrown.
     return result.substr(0, 4) == "bash" ? 1 : 0;
 }
@@ -161,7 +160,7 @@ int sanitizePath(string &targetPath, string &out) {
     // Create sanitized target path
     stringstream s;
     copy(sanitizedPath.begin(), sanitizedPath.end(), ostream_iterator<string>(s, delim));
-    targetPath = baseDirectory + "/" + s.str();
+    targetPath = "./" + s.str();
 
     // copy adds a trailing delimiter, which is removed here
     targetPath.pop_back();
@@ -421,8 +420,9 @@ int cd_cmd(string dirPath, User &usr, string &out) {
 
     int res = exec(cmd.c_str(), out, usr.getLocation());
     if (!res) {
+        usr.getLocation();
         string temp = "";
-        string path = usr.getLocation() + "/" + path;
+        path = usr.getLocation() + "/" + path;
         sanitizePath(path, temp);
         usr.setLocation(path);
     } else {
@@ -510,17 +510,21 @@ int get_cmd(string fileName, int getPort, User &usr, string &out) {
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
+    absPath = usr.getLocation() + "/" + absPath;
     strncpy(args->fileName, absPath.c_str(), 1024);
     args->fileName[absPath.length()] = '\0';
     args->port = getPort;
 
     // Check if file exists
-    if (access(fileName.c_str(), F_OK) == -1) {
+    if (access(absPath.c_str(), F_OK) == -1) {
+        printf("\n%s/%s\n", usr.getLocation().c_str(), absPath.c_str());
+        fflush(stdout);
         out = TRANSFER_ERROR;
         return 1;
     }
     long fileSize = getFileSize(absPath.c_str());
     if (fileSize <= 0) {
+        out = TRANSFER_ERROR;
         return 1;
     } else {
         out = "get port: " + to_string(getPort) + " size: " + to_string(fileSize) + "\n";
@@ -565,6 +569,7 @@ int put_cmd(string fileName, string fileSize, int port, User &usr, string &out) 
     if (constructPath(fileName, usr.getLocation(), absPath, out)) {
         return 1;
     }
+    absPath = usr.getLocation() + "/" + absPath;
     snprintf(args->fileName, 1024, absPath.c_str());
     args->port = port;
     strncpy(args->ip, usr.getIp().c_str(), 1024);
