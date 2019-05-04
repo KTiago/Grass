@@ -2,17 +2,6 @@
 #include "commands.h"
 #include "networking.h"
 #include "User.h"
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <pthread.h>
-#include <time.h>
-#include <iterator>
 
 using namespace std;
 
@@ -21,11 +10,11 @@ using namespace std;
  */
 const char DELIMITER = ' ';
 
-
 /*
- * Largely inspired by:
+ * Structure of code inspired by:
  * https://codereview.stackexchange.com/questions/87660/handling-console-application-commands-input
  */
+
 // Map to associate the strings with the enum values
 static map<string, command> string_to_command;
 
@@ -46,10 +35,14 @@ void Parser::initialize() {
     string_to_command["whoami"] = whoami_;
     string_to_command["w"] = w_;
     string_to_command["logout"] = logout_;
-    string_to_command["exit"] = exit_; // FIXME could do some shenanigans with this
+    string_to_command["exit"] = exit_;
 }
 
-// Constructor
+/**
+ * Constructor, taking a map of allowed users as input.
+ *
+ * @param allowedUsers
+ */
 Parser::Parser(map<string, string> allowedUsers){
     srand(time(nullptr));
     this->allowedUsers = allowedUsers;
@@ -57,9 +50,11 @@ Parser::Parser(map<string, string> allowedUsers){
     initialize();
 }
 
-// TODO found better way to tokenize, use this elsewhere too !
-/*
- * https://www.techiedelight.com/split-string-cpp-using-delimiter/
+
+/**
+ * Parses given command string.
+ *
+ * @param command
  */
 void Parser::parseCommand(string command){
     char cmd[MAX_CMD_LEN];
@@ -74,11 +69,20 @@ void Parser::parseCommand(string command){
     }
 }
 
+/**
+ * Helper function, getting the first parsed token.
+ *
+ * @return first parsed token
+ */
 string Parser::getFirstToken(){
     return tokens[0];
 }
 
-
+/**
+ * Executes the last parsed command according to specifications.
+ *
+ * @param usr, User who wants to execute command.
+ */
 void Parser::executeCommand(User &usr){
     // Check whether first token is a valid command.
     if (string_to_command.count(getFirstToken()) == 0) {
@@ -208,7 +212,7 @@ void Parser::executeCommand(User &usr){
         }
         case exit_: {
             exit_cmd(usr, output);
-            break;
+            break;  // FIXME remove
         }
         default: {
             string SECRET;
@@ -232,11 +236,19 @@ void Parser::executeCommand(User &usr){
     }
 }
 
+/**
+ * Helper function to check the number of arguments that were given.
+ *
+ * @param arg_n_wanted, number of desired arguments
+ * @return boolean, true if number of aruments corresponds to given input
+ */
 bool Parser::checkArgNumber(int arg_n_wanted) {
     return Parser::arg_n - 1 == arg_n_wanted;
 }
 
-
+/**
+ * Resets parser, i.e. deletes previous command.
+ */
 void Parser::resetCommand(){
     arg_n = 0;
     output = "";
@@ -244,14 +256,26 @@ void Parser::resetCommand(){
     shouldPrint = true;
 }
 
+/**
+ * Getter for shouldPrint member.
+ *
+ * @return boolean, True if server should brint output.
+ */
 bool Parser::getShouldPrint(){
     return shouldPrint;
 }
 
+/**
+ * Getter for output memeber of class.
+ *
+ * @return string of output to be displayed by server
+ */
 string Parser::getOutput(){
     return output;
 }
 
-
+/**
+ * Destructor.
+ */
 Parser::~Parser() = default;
 

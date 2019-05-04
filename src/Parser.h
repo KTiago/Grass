@@ -1,26 +1,28 @@
 #ifndef GRASS_PARSER_H
 #define GRASS_PARSER_H
 
-
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
 #include <stdio.h>
 #include <string.h>
 #include <sstream>
+#include <pthread.h>
+#include <time.h>
+#include <iterator>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
 #include <map>
-#include "User.h"
 #include <vector>
+#include "User.h"
 
 #define MAX_CMD_LEN 750
 #define CP_LEN 950
 
 /*
- * Largely inspired by:
+ * Code inspired by:
  * https://codereview.stackexchange.com/questions/87660/handling-console-application-commands-input
+ * https://stackoverflow.com/questions/650162/why-the-switch-statement-cannot-be-applied-on-strings
  */
 
-// Idea for enum: https://stackoverflow.com/questions/650162/why-the-switch-statement-cannot-be-applied-on-strings
 enum command {
     login_,
     pass_,
@@ -39,15 +41,13 @@ enum command {
     exit_
 };
 
-/*
- * Constants
- */
 extern const char DELIMITER;
 
 
-class Parser{
+class Parser {
 public:
     Parser(map<string, string> allowedUsers);
+
     ~Parser();
 
     //clears the value of command
@@ -68,7 +68,7 @@ public:
     string getOutput();
 
     bool getShouldPrint();
-    
+
 
 private:
     string output;
@@ -76,8 +76,7 @@ private:
     int arg_n;
     map<string, string> allowedUsers;
     int port = 2000;
-    bool shouldPrint;
+    bool shouldPrint;   // FIXME
 };
-
 
 #endif //GRASS_PARSER_H

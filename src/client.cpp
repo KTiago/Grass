@@ -1,40 +1,42 @@
-#include<iostream>
+#include <iostream>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <stdbool.h>
-#include <sys/stat.h>
 #include "Parser.h"
-#include "User.h"
 #include "networking.h"
-#include <stdio.h>
+#include "commands.h"
 
-// new include here (cpp related)
-#include <arpa/inet.h>
-#include <set>
-#include <vector>
-#include <regex>
-#include <unistd.h>
+using namespace std;
+
+/*
+ * -------------------------------- Constants --------------------------------------------------------------------------
+ */
+
 #define DEFAULT_MODE_ARGC 3
 #define AUTO_MODE_ARGC 5
 #define IP_SIZE 32
-
 const string TRANSFER_ERROR = "Error: file transfer failed.\n";
+const string THREAD_ERROR = "Error: Unable to create new thread.\n";
 
-using namespace std;
-int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode);
+int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &outfile, bool automated_mode);
 
-int main( int argc, const char* argv[] )
-{    bool automated_mode = (argc == AUTO_MODE_ARGC);
 
-    if(argc != DEFAULT_MODE_ARGC and !automated_mode){
+/*
+ * -------------------------------- Client Main ------------------------------------------------------------------------
+ */
+
+/**
+ * Main function for GRASS client.
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main(int argc, const char *argv[]) {
+    bool automated_mode = (argc == AUTO_MODE_ARGC);
+
+    if (argc != DEFAULT_MODE_ARGC and !automated_mode) {
         cerr << "Expected command: ./client server-ip server-port [infile outfile]\n";
         return -1;
     };
@@ -46,24 +48,38 @@ int main( int argc, const char* argv[] )
     // parsing server port
     int tmp = stoi(argv[2]);
     uint16_t serverPort(0);
-    if (tmp <= static_cast<int>(UINT16_MAX) && tmp >=0) {
+    if (tmp <= static_cast<int>(UINT16_MAX) && tmp >= 0) {
         serverPort = static_cast<uint16_t>(tmp);
-    }
-    else {
-        cout << "Error: server port cannot be cast to uint16\n";
+    } else {
+        cerr << "Error: server port cannot be cast to uint16\n";
         return 1;
     }
 
     // parsing input/output files
-    istream& infile = automated_mode ? *(new ifstream(argv[3])) : cin;
-    ostream& outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
+    istream &infile = automated_mode ? *(new ifstream(argv[3])) : cin;
+    ostream &outfile = automated_mode ? *(new ofstream(argv[4])) : cout;
 
-    int res = runClient(serverIp, serverPort, infile, outfile,  automated_mode);
+    int res = runClient(serverIp, serverPort, infile, outfile, automated_mode);
 
     return res;
 }
 
-int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& outfile, bool automated_mode){
+
+/*
+ * -------------------------------- Helper functions -------------------------------------------------------------------
+ */
+
+/**
+ * Helper function in charge of doing all the heavy lifting.
+ * 
+ * @param serverIp
+ * @param serverPort
+ * @param infile
+ * @param outfile
+ * @param automated_mode
+ * @return
+ */
+int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &outfile, bool automated_mode) {
 
     //Local variables setup
     int mainSocket = 0;
@@ -75,7 +91,8 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
     char *token;
     string cmd;
 
-    pthread_t thread;
+    pthread_t getThread;
+    pthread_t putThread;
 
     char fileName[1024];
     long long fileSize = 0;
@@ -85,11 +102,11 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
     bool connected = false;
 
     //Attempts multiple times to connect to server. Waits 1s between each attempt.
-    while(attempts < 10 and !connected) {
+    while (attempts < 10 and !connected) {
 
         // Network setup
         if ((mainSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-            printf("Socket creation error");
+            cerr << "Socket creation error" << endl;
             return 1;
         }
 
@@ -104,69 +121,64 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
         if (connect(mainSocket, (struct sockaddr *) &serverAddress, sizeof(serverAddress)) == 0) {
             // Successful connection
             connected = true;
-        }else {
+        } else {
             // Unsuccessful connection, waits before attempting again
             sleep(1);
         }
     }
 
-    if(!connected){
+    if (!connected) {
         return 1;
     }
 
-    while(true){
-        // FIXME added again temporarily for readability
-        /*
-        if(!automated_mode) {
-            cout << ">> ";
-        }*/
+    while (true) {
 
         // Reads line from user input
         getline(infile, cmd);
 
         // Check if end of file reached, or exit command sent
-        if(infile.eof() || cmd == "exit"){
+        if (infile.eof() || cmd == "exit") {
             // closing connection
             close(mainSocket);
             break;
         }
 
         // This line avoids sending an empty line and waiting indefinitely
-        if(cmd.empty()) {
+        if (cmd.empty()) {
             continue;
         }
 
         // Extract file name and file size from get/put command if applicable.
         strncpy(cmdCopy, cmd.c_str(), 1024);
         token = strtok(cmdCopy, " ");
-        if(token != NULL and strcmp(token, "get") == 0){
+        if (token != nullptr and strcmp(token, "get") == 0) {
             memset(fileName, 0, 1024);
-            token = strtok(NULL, " ");
-            if(token != NULL) {
+            token = strtok(nullptr, " ");
+            if (token != nullptr) {
                 strncpy(fileName, token, 1024);
             }
-        }else if(token != NULL and strcmp(token, "put") == 0){
+        } else if (token != nullptr and strcmp(token, "put") == 0) {
             memset(fileName, 0, 1024);
-            token = strtok(NULL, " ");
-            if(token != NULL) {
+            token = strtok(nullptr, " ");
+            if (token != nullptr) {
                 strncpy(fileName, token, 1024);
             }
-            token = strtok(NULL, " ");
-            if(token != NULL){
+            token = strtok(nullptr, " ");
+            if (token != nullptr) {
                 fileSize = stoll(token);
             }
         }
 
         // sends command to the server
-        send(mainSocket , cmd.c_str(), strlen(cmd.c_str()) , 0);
+        send(mainSocket, cmd.c_str(), strlen(cmd.c_str()), 0);
 
         // wait for server to respond to the command sent
-        read(mainSocket , buffer, 1024);
+        read(mainSocket, buffer, 1024);
         strncpy(copiedBuffer, buffer, 1024);
 
         string bufString = string(buffer);
 
-        // trim string, since we send empty spaces when command returns nothing. FIXME
+        // trim string, since we send empty spaces when command returns nothing.
         bufString.erase(0, bufString.find_first_not_of(' '));
 
         memset(buffer, 0, 1024);
@@ -176,49 +188,49 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
          * When the response received by the client corresponds to a get command response, a thread
          * is created to receive the requested file in parallel
          */
-        if(token and strcmp(token, "get") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+        if (token and strcmp(token, "get") == 0 and strcmp(strtok(nullptr, " "), "port:") == 0) {
 
             // Extract port and fileSize from received command string
-            port = atoi(strtok(NULL, " "));
-            strtok(NULL, " ");
-            fileSize = stol(strtok(NULL, " "));
+            port = atoi(strtok(nullptr, " "));
+            strtok(nullptr, " ");
+            fileSize = stol(strtok(nullptr, " "));
 
             // Prepare struct containing arguments to function in parallel thread
-            struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
+            struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);
             args->port = port;
             args->fileSize = fileSize;
             strncpy(args->ip, serverIp, 1024);
 
             // Kill any stale thread
-            pthread_cancel(thread);
+            pthread_cancel(getThread);
 
             // Create new thread
-            int rc = pthread_create(&thread, NULL, openFileClient, (void*) args);
-            if(rc != 0){
-                cerr << "Error" << endl;
+            int rc = pthread_create(&getThread, nullptr, openFileClient, (void *) args);
+            if (rc != 0) {
+                cerr << THREAD_ERROR;
             }
 
-        /*
-        * When the response received by the client corresponds to a put command response, a thread
-        * is created to send the requested file in parallel
-        */
-        }else if(token and strcmp(token, "put") == 0 and strcmp(strtok(NULL, " "), "port:") == 0){
+            /*
+            * When the response received by the client corresponds to a put command response, a thread
+            * is created to send the requested file in parallel
+            */
+        } else if (token and strcmp(token, "put") == 0 and strcmp(strtok(nullptr, " "), "port:") == 0) {
             // Extract port from received command string
-            port = atoi(strtok(NULL, " "));
+            port = atoi(strtok(nullptr, " "));
             // Prepare struct containing arguments to function in parallel thread
-            struct thread_args *args = (struct thread_args *)malloc(sizeof(struct thread_args));
+            struct thread_args *args = (struct thread_args *) malloc(sizeof(struct thread_args));
             strncpy(args->fileName, fileName, 1024);
             args->port = port;
             args->fileSize = fileSize;
 
             // Kill stale thread
-            pthread_cancel(thread);
+            pthread_cancel(putThread);
 
             // Create new thread
-            if(access(fileName, F_OK ) == -1){
+            if (access(fileName, F_OK) == -1) {
                 outfile << TRANSFER_ERROR;
-            }else {
+            } else {
                 FILE *f = fopen(args->fileName, "r");
                 fseek(f, 0, SEEK_END);
                 long actualFileSize = ftell(f);
@@ -226,23 +238,22 @@ int runClient(char* serverIp, uint16_t serverPort, istream& infile, ostream& out
                 fclose(f);
                 if (fileSize != actualFileSize) {
                     outfile << TRANSFER_ERROR;
-                }else{
-                    int rc = pthread_create(&thread, NULL, openFileServer, (void *) args);
+                } else {
+                    int rc = pthread_create(&putThread, nullptr, openFileServer, (void *) args);
                     if (rc != 0) {
-                        cerr << "Error" << endl;
+                        cerr << THREAD_ERROR;
                     }
                 }
             }
-        }else{
+        } else {
             outfile << bufString;
         }
     }
 
-
-    if(automated_mode){
+    if (automated_mode) {
         // FIXME does delete() close fstreams ?
-        delete(&infile);
-        delete(&outfile);
+        delete (&infile);
+        delete (&outfile);
     }
     return 0;
 }

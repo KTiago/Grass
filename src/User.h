@@ -1,25 +1,38 @@
-#ifndef GRASS_CLIENT_H
-#define GRASS_CLIENT_H
+#ifndef GRASS_USER_H
+#define GRASS_USER_H
 
 #include <cstdint>
 #include <string>
 
 using namespace std;
 
-class User{
+class User {
 public:
     explicit User(int socket, string ip, string base);
+
     bool isAuthenticated();
+
     int getSocket() const;
+
     string getUname() const;
+
     string getLocation();
+
     string getIp();
-    void  setUname(const string& uname);
-    void  resetUname();
-    void  setLocation(const string& location);
-    void  setAuthenticated(bool auth);
+
+    void setUname(const string &uname);
+
+    void resetUname();
+
+    void setLocation(const string &location);
+
+    void setAuthenticated(bool auth);
+
     bool operator<(const User &other) const;
-    pthread_t thread;
+
+    pthread_t putThread;
+    pthread_t getThread;
+
 private:
     int socket;
     bool authenticated;
@@ -28,4 +41,4 @@ private:
     string ip;
 };
 
-#endif //GRASS_CLIENT_H
+#endif //GRASS_USER_H
