@@ -8,9 +8,9 @@ This project is a develop, hack and patch challenge for the Software security cl
 
 ## Team members
 
-- Delphine Peter
-- Tiago Kieliger
-- Yann Vonlanthen
+- Delphine Peter 260480
+- Tiago Kieliger 258981
+- Yann Vonlanthen 258857
 
 ## Project structure
 
