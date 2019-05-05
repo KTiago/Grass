@@ -31,6 +31,7 @@ This project is a develop, hack and patch challenge for the Software security cl
 │   └── User.h		#
 ├── bin			# Compiled binaries
 ├── testcases		# Directory containing test cases
+├── run_testcases.sh    # Running a client performing all test cases
 ├── template		# Directory of template files given to us
 ├── pics		# Contains some pictures for this README and the report
 ├── Makefile		# Compiles project in 64 bit, no DEP.
