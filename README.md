@@ -45,7 +45,7 @@ This project is a develop, hack and patch challenge for the Software security cl
 │   ├── backdoor1.py	# --- Confidential ---
 │   ├── backdoor2.py	# --- Confidential ---
 │   ├── backdoor3.py	# --- Confidential ---
-│   ├── exploits.pdf	# PDF detailing the vulnerabilities and exploits.
+│   ├── project_report.pdf	# PDF detailing the vulnerabilities and exploits.
 └── README.md
 
 ```
