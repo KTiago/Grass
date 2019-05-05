@@ -101,6 +101,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
 
     int attempts = 0;
     bool connected = false;
+    bool exit = false;
 
     //Attempts multiple times to connect to server. Waits 1s between each attempt.
     while (attempts < 10 and !connected) {
@@ -138,7 +139,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
         getline(infile, cmd);
 
         // Check if end of file reached, or exit command sent
-        if (infile.eof() || cmd == "exit") {
+        if (infile.eof()) {
             // closing connection
             close(mainSocket);
             break;
@@ -148,6 +149,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
         if (cmd.empty()) {
             continue;
         }
+
 
         // Extract file name and file size from get/put command if applicable.
         strncpy(cmdCopy, cmd.c_str(), RESPONSE_MAX_SIZE);
@@ -168,10 +170,15 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
             if (token != nullptr) {
                 fileSize = stoll(token);
             }
+        } else if (token != nullptr and strcmp(token, "exit") == 0) {
+            exit = true;
         }
 
         // sends command to the server
         send(mainSocket, cmd.c_str(), strlen(cmd.c_str()), 0);
+        if(exit){
+            break;
+        }
 
         // wait for server to respond to the command sent
         ssize_t  valread = read(mainSocket, buffer, RESPONSE_MAX_SIZE-1);
@@ -254,6 +261,9 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
         }
     }
 
+    if(exit){
+        close(mainSocket);
+    }
     if (automated_mode) {
         delete (&infile);
         delete (&outfile);

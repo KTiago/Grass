@@ -718,7 +718,6 @@ int logout_cmd(User &usr, string &out) {
 int exit_cmd(User &usr) {
     if (connected_users.find(usr) != connected_users.end()) {
         close(usr.getSocket());
-        connected_users.erase(usr);
     }
     return 0;
 }
