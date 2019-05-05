@@ -193,8 +193,9 @@ int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterato
 
         string message = parser.getOutput().empty() ? " " : parser.getOutput();
         bool shouldPrint = parser.getShouldPrint();
+        bool shouldSend = parser.getShouldSend();
         // Send response to client
-        if ((int) send(sd, message.c_str(), message.size(), 0) != (int) message.size()) {
+        if (shouldSend and (int) send(sd, message.c_str(), message.size(), 0) != (int) message.size()) {
             return 1;
         }
 
@@ -203,7 +204,11 @@ int executeCommand(ssize_t &valread, Parser &parser, std::_Rb_tree_const_iterato
             cout << message.erase(0, string(message).find_first_not_of(' '));
 
         parser.resetCommand();
-        ++it;
+        if(!shouldSend){
+            it = connected_users.erase(it);
+        }else{
+            ++it;
+        }
     }
     return 0;
 }

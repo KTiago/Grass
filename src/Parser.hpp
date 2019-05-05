@@ -69,6 +69,8 @@ public:
 
     bool getShouldPrint();
 
+    bool getShouldSend();
+
 
 private:
     string output;
@@ -77,6 +79,7 @@ private:
     map<string, string> allowedUsers;
     int port = 2000;
     bool shouldPrint;
+    bool shouldSend;
 };
 
 #endif //GRASS_PARSER_H
