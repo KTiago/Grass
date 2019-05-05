@@ -41,6 +41,9 @@ This project is a develop, hack and patch challenge for the Software security cl
 │   ├── exploit3.py	# Format String Attack
 │   ├── exploit4.py	# Command injection
 │   ├── exploit5.py	# --- Confidential ---
+│   ├── backdoor1.py	# --- Confidential ---
+│   ├── backdoor2.py	# --- Confidential ---
+│   ├── backdoor3.py	# --- Confidential ---
 │   ├── exploits.pdf	# PDF detailing the vulnerabilities and exploits.
 └── README.md
 
@@ -65,6 +68,8 @@ We have added **3** back-doors.
 
 - We have chosen a blocking implementation, where the client waits for a server response, for any command. The only exception to this is for the put and get commands, where of course the file upload/download is done in parallel.
 - We chose to stick with a 64-bit compilation. (Important for some exploits)
+- The grass.conf file must be placed where where the binaries/scripts are launched from.
+- The base dir setting in the conf file is relative to the conf file itself, and the path specified must exist before starting the program.
 
 
 
