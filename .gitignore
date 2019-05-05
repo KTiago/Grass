@@ -33,7 +33,5 @@
 
 # Other
 .idea/
-bin/
 cmake-build-debug/
-bin/server
 vulnerabilities.md
