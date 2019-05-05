@@ -138,7 +138,7 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
         getline(infile, cmd);
 
         // Check if end of file reached, or exit command sent
-        if (infile.eof() || cmd == "exit") {
+        if (infile.eof()) {
             // closing connection
             close(mainSocket);
             break;
@@ -172,6 +172,13 @@ int runClient(char *serverIp, uint16_t serverPort, istream &infile, ostream &out
 
         // sends command to the server
         send(mainSocket, cmd.c_str(), strlen(cmd.c_str()), 0);
+
+        // Close socket on exit
+        if (token and strcmp(token, "exit") == 0) {
+            // closing connection
+            close(mainSocket);
+            break;
+        }
 
         // wait for server to respond to the command sent
         ssize_t  valread = read(mainSocket, buffer, RESPONSE_MAX_SIZE-1);
