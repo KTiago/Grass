@@ -621,7 +621,7 @@ int grep_cmd(string pattern, User usr, string &out) {
         out = ACCESS_ERROR;
         return 1;
     }
-    string cmd = "grep -l -r " + escape(pattern);
+    string cmd = "grep -l -r  \"" + escape(pattern) + " \"";
     int res = exec(cmd.c_str(), out, usr.getLocation());
     if (res != 0 or out.empty()) {
         return res;
