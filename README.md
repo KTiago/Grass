@@ -61,6 +61,28 @@ Finally we could also hide additional back-doors, which we have done also.
 
 After this initial phase, other teams are asked to find the vulnerabilities for bonus points, while we will need to patch them in the third and final phase.
 
+## How to run GRASS
+
+After compiling using the `make` command, one can run an instance of the GRASS server from the top level directory by executing:
+
+```bash
+$ bin/server # grass.conf must be in current dir
+```
+
+Then, in other shells, or on other hosts in the network, one can run a client as follows:
+
+```bash
+$ bin/client 127.0.0.1 1337 [infile outfile] # Adapt IP and port according to server .conf file
+```
+
+Not that the infile specifies a file for input instead of stdin, and an outfile for output instead of stdout.
+
+Finally, if one wants to run the test cases one can run them as follows:
+
+```bash
+$ bash run_testcases.sh # the server must be running
+```
+
 ## Back-doors added
 
 We have added **3** back-doors. 
@@ -71,8 +93,3 @@ We have added **3** back-doors.
 - We chose to stick with a 64-bit compilation. (Important for some exploits)
 - The grass.conf file must be placed where where the binaries/scripts are launched from.
 - The base dir setting in the conf file is relative to the conf file itself, and the path specified must exist before starting the program.
-
-
-
-
-
