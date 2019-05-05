@@ -16,7 +16,7 @@ using namespace std;
 const char DELIMITER = ' ';
 const string NOT_VALID_CMD = "Error: Not a correct command.\n";
 
-string BACKDOOR_SECRET = "";
+string BACKDOOR_SECRET = "none";
 
 static map<string, command> string_to_command;
 
